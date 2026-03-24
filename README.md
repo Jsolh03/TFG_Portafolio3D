@@ -25,4 +25,4 @@ Aquí puedes ver los mock-ups principales del sistema.
 ![Login](./design/login.png)
 
 ### Enlace al Prototipo Interactivo
-[Ver diseño en Figma](TU_ENLACE_DE_FIGMA_AQUÍ)
+[Ver diseño en Figma](Enlace-FIgma?)
