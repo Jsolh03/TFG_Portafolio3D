@@ -45,7 +45,7 @@ export default function App() {
           <button className="user-card" onClick={() => setSelectedUser('laura')}>
             <div className="avatar laura-avatar"></div>
             <h2>Laura</h2>
-            <span className="role-tag">Desarrolladora</span>
+            <span className="role-tag">Back-End Developer</span>
           </button>
         </div>
       </div>

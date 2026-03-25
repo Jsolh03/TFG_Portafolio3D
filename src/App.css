@@ -6,6 +6,20 @@
   overflow: hidden; 
 }
 
+/*Fuente de Texto Descargada*/
+@font-face {
+  font-family: 'fuente_retro'; 
+  src: url('./assets/font_pixel.otf') format('truetype'); /* Ajusta la extensión si es .otf o .woff */
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Aplicamos la fuente a todo los textos:*/
+* {
+  font-family: 'fuente_retro', sans-serif !important;
+  font-size: 10px;
+}
+
 /* MENÚ DE INICIO (Cristal Oscuro Contrastado) */
 .overlay-start { 
   position: absolute; inset: 0; 
