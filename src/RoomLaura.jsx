@@ -11,28 +11,42 @@ export default function App() {
   const [lang, setLang] = useState('ES');
   const splineRef = useRef();
 
-  // 2. DICCIONARIO DE IDIOMAS (Datos puros)
+  // 2. DICCIONARIO DE IDIOMAS (Información Real y Corregida)
   const content = {
     ES: {
-      start: "01. INICIAR EXPERIENCIA", github: "02. GITHUB", contact: "03. CONTACTO",
-      cvTitle: "CURRICULUM_VITAE", pcTitle: "SISTEMA_OPERATIVO", profile: "PERFIL PROFESIONAL",
-      exp: "EXPERIENCIA", edu: "FORMACIÓN", skills: "HABILIDADES IT",
-      dsaRole: "Programador Full-Stack con IA integrada en IDE",
-      hospitalRole: "Prácticas Técnico en Sistemas - Hospital José Germain",
-      aiSkill: "Prompt Engineering y Programación con IA",
+      start: "01. INICIAR EXPERIENCIA", 
+      github: "02. GITHUB", 
+      cvTitle: "CURRICULUM_VITAE", 
+      pcTitle: "SISTEMA_OPERATIVO", 
+      profile: "PERFIL PROFESIONAL",
+      exp: "TRAYECTORIA", 
+      edu: "FORMACIÓN", 
+      skills_title: "HABILIDADES TÉCNICAS",
+      profileDesc: "Estudiante de 2º de DAM especializada en lógica Back-End, gestión de datos SQL/NoSQL y resolución de problemas técnicos.",
+      dsaRole: "...",
+      dsaDesc: "...",
+      hospitalRole: "...",
+      hospitalDesc: "...",
       dam: "2º CFGS Desarrollo de Aplicaciones Multiplataforma (IES Lope de Vega)",
-      smr: "Grado Medio Sistemas Microinformáticos y Redes (IES Luis Vives)",
+      smr: "CFGM Auxiliar de Operaciones de Laboratorio (IES Lope de Vega)",
       bedMsg: "Guardando partida... Descansando."
     },
     EN: {
-      start: "01. START EXPERIENCE", github: "02. GITHUB", contact: "03. CONTACT",
-      cvTitle: "CURRICULUM_VITAE", pcTitle: "OPERATING_SYSTEM", profile: "PROFESSIONAL PROFILE",
-      exp: "EXPERIENCE", edu: "EDUCATION", skills: "IT SKILLS",
-      dsaRole: "Full-Stack Developer with AI integration in IDE",
-      hospitalRole: "System Technician Internship - José Germain Hospital",
-      aiSkill: "Prompt Engineering and AI-driven Programming",
+      start: "01. START EXPERIENCE", 
+      github: "02. GITHUB", 
+      cvTitle: "CURRICULUM_VITAE", 
+      pcTitle: "OPERATING_SYSTEM", 
+      profile: "PROFESSIONAL PROFILE",
+      exp: "EXPERIENCE", 
+      edu: "EDUCATION", 
+      skills_title: "TECHNICAL SKILLS",
+      profileDesc: "2nd year Multiplatform App Development student. Focused on Back-End logic, SQL/NoSQL data management, and technical problem solving.",
+      dsaRole: "...",
+      dsaDesc: "...",
+      hospitalRole: "...",
+      hospitalDesc: "...",
       dam: "2nd year Multiplatform App Development (Higher Degree)",
-      smr: "Microinformatic Systems and Networks (Middle Degree)",
+      smr: "Lab Operations Assistant (Middle Degree)",
       bedMsg: "Saving game... Resting."
     }
   };
@@ -48,25 +62,12 @@ export default function App() {
 
       // Leemos la variable directamente de Spline
       const zona = splineRef.current.getVariable('zona_activa');
-      
-      // CHIVATO: Imprime en consola (F12) lo que está pasando
-      console.log(`Tecla: [${key}] | Valor de zona_activa:`, zona);
 
-      // [E] -> Ordenador (Zona 1)
-      if (key === 'e' ) {
-        setShowDesktop(true); setShowCV(false); setShowBed(false);
-        document.exitPointerLock?.();
-      }
-
-      // [R] -> Curriculum (Zona 2)
-      if (key === 'e' && zona === 2) {
-        setShowCV(true); setShowDesktop(false); setShowBed(false);
-        document.exitPointerLock?.();
-      }
-
-      // [F] -> Cama (Zona 3)
-      if (key === 'e' && zona === 3) {
-        setShowBed(true); setShowCV(false); setShowDesktop(false);
+      // [E] -> Interacción unificada por zonas
+      if (key === 'e') {
+        if (zona === 1) { setShowDesktop(true); setShowCV(false); setShowBed(false); }
+        if (zona === 2) { setShowCV(true); setShowDesktop(false); setShowBed(false); }
+        if (zona === 3) { setShowBed(true); setShowCV(false); setShowDesktop(false); }
         document.exitPointerLock?.();
       }
 
@@ -82,10 +83,10 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isStarted]);
+
   // 4. INTERFAZ GRÁFICA (JSX)
   return (
     <div className="main-container">
-      {/* MOTOR 3D (Con optimización de rendimiento para tu profesor) */}
       <Spline
         scene="https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode"
         onLoad={(app) => { splineRef.current = app; }}
@@ -105,7 +106,7 @@ export default function App() {
 
             <nav className="menu-list">
               <button className="btn-nav" onClick={() => setIsStarted(true)}>{t.start}</button>
-              <button className="btn-nav" onClick={() => window.open('https://github.com/Jsolh03', '_blank')}>{t.github}</button>
+              <button className="btn-nav" onClick={() => window.open('https://github.com/drakensita', '_blank')}>{t.github}</button>
               <button className="btn-nav">03. {lang === 'ES' ? 'Más información' : 'MORE INFORMATION'}</button>
             </nav>
             <p className="hint-text">{lang === 'ES' ? '[Usa WASD para moverte una vez dentro]' : '[Use WASD to move once inside]'}</p>
@@ -113,7 +114,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL ORDENADOR (E) */}
+      {/* MODAL ORDENADOR (E - Zona 1) */}
       {showDesktop && (
         <div className="modal-glass">
           <div className="modal-content terminal">
@@ -122,23 +123,23 @@ export default function App() {
               <button onClick={() => setShowDesktop(false)}>✕</button>
             </header>
             <div className="grid-projects">
-              <div className="card">PROYECTO_WEB</div>
-              <div className="card">IA_INTEGRATION</div>
-              <div className="card">DATABASE_MGR</div>
-              <div className="card">NETWORK_CONFIG</div>
+              <div className="card">...</div>
+              <div className="card">...</div>
+              <div className="card">...</div>
+              <div className="card">...</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL CURRICULUM (R) */}
+      {/* MODAL CURRICULUM (E - Zona 2) */}
       {showCV && (
         <div className="modal-glass">
           <div className="modal-content portfolio-cv">
             <header className="cv-header">
               <div className="header-main">
-                <h1>KHALED SOLH EL HAJJI</h1>
-                <p className="subtitle">Full-Stack Developer | AI Implementation Specialist | System Tech</p>
+                <h1>LAURA JARA LORO</h1>
+                <p className="subtitle">Desarrolladora Back-End</p>
               </div>
               <button onClick={() => setShowCV(false)}>✕</button>
             </header>
@@ -148,49 +149,50 @@ export default function App() {
                 <section className="cv-section">
                   <h4><span className="text-accent">//</span> CONTACT</h4>
                   <p>📍 Madrid, ES</p>
-                  <p>📞 652 20 44 10</p>
-                  <p>📧 khaledsolhelhajji@gmail.com</p>
+                  <p>📧 laurajaraloro@gmail.com</p>
+                  <p>🔗 github.com/drakensita</p>
                 </section>
                 <section className="cv-section">
                   <h4><span className="text-accent">//</span> CORE_STACK</h4>
                   <div className="tag-container">
                     <span className="tag">Java</span> <span className="tag">Python</span>
-                    <span className="tag">React</span> <span className="tag">Node.js</span>
-                    <span className="tag">Active Directory</span> <span className="tag">Networks</span>
+                    <span className="tag">MySQL</span> <span className="tag">MongoDB</span>
+                    <span className="tag">SQL Server</span> <span className="tag">Git</span>
                   </div>
                 </section>
                 <section className="cv-section">
-                  <h4><span className="text-accent">//</span> AI_MASTERY</h4>
+                  <h4><span className="text-accent">//</span> HABILIDADES</h4>
                   <ul className="skill-list">
-                    <li>Prompt Engineering</li>
-                    <li>AI-Driven Development</li>
-                    <li>IDE AI Integration Workflow</li>
+                    <li>Lógica Back-End</li>
+                    <li>Gestión de Datos</li>
+                    <li>Documentación Técnica</li>
+                    <li>SourceTree / Git</li>
                   </ul>
                 </section>
               </aside>
 
               <main className="cv-main">
                 <section className="cv-section">
-                  <h3 className="section-title">{lang === 'ES' ? 'TRAYECTORIA PROFESIONAL' : 'PROFESSIONAL EXPERIENCE'}</h3>
+                  <h3 className="section-title">{t.exp}</h3>
                   <div className="experience-item highlight">
                     <div className="exp-header">
-                      <strong>DSA NEXUX</strong>
-                      <span>2025 - {lang === 'ES' ? 'Actualidad' : 'Present'}</span>
+                      <strong>NTER </strong>
+                      <span>2025</span>
                     </div>
-                    <p className="role">Full-Stack Developer & AI Integrator</p>
-                    <ul><li>{t.dsaRole}</li></ul>
+                    <p className="role">{t.dsaRole}</p>
+                    <p style={{fontSize: '0.85rem'}}>{t.dsaDesc}</p>
                   </div>
                   <div className="experience-item">
                     <div className="exp-header">
-                      <strong>HOSPITAL U. JOSÉ GERMAIN</strong>
-                      <span>2023</span>
+                      <strong>LEDME EUROPA</strong>
+                      <span>2024</span>
                     </div>
-                    <p className="role">IT Systems Technician (Internship)</p>
-                    <ul><li>{t.hospitalRole}</li></ul>
+                    <p className="role">{t.hospitalRole}</p>
+                    <p style={{fontSize: '0.85rem'}}>{t.hospitalDesc}</p>
                   </div>
                 </section>
                 <section className="cv-section">
-                  <h3 className="section-title">{lang === 'ES' ? 'FORMACIÓN ACADÉMICA' : 'ACADEMIC BACKGROUND'}</h3>
+                  <h3 className="section-title">{t.edu}</h3>
                   <div className="edu-item"><strong>{t.dam}</strong></div>
                   <div className="edu-item"><strong>{t.smr}</strong></div>
                 </section>
@@ -200,7 +202,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL CAMA (F) */}
+      {/* MODAL CAMA (E - Zona 3) */}
       {showBed && (
         <div className="modal-glass">
           <div className="modal-content" style={{ width: '40%', textAlign: 'center' }}>
@@ -212,7 +214,7 @@ export default function App() {
         </div>
       )}
 
-      {/* HUD DE TECLAS (Visible siempre que estemos jugando) */}
+      {/* HUD DE TECLAS */}
       {isStarted && !showDesktop && !showCV && !showBed && (
         <div className="hud-keys">
           <span>Pulsa [E] para interactuar</span>
