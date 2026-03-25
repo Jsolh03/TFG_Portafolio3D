@@ -6,6 +6,19 @@
   overflow: hidden; 
 }
 
+/*Fuente de Texto Descargada*/
+@font-face {
+  font-family: 'fuente_retro'; 
+  src: url('./assets/font_orange.otf') format('truetype'); /* Ajusta la extensión si es .otf o .woff */
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Aplicamos la fuente a todo los textos:*/
+* {
+  font-family: 'fuente_retro', sans-serif !important;
+}
+
 /* MENÚ DE INICIO (Cristal Oscuro Contrastado) */
 .overlay-start { 
   position: absolute; inset: 0; 
@@ -87,8 +100,9 @@ header button:hover { color: #ff7979; transform: scale(1.1); } /* Botón de cerr
 
 /* HUD DE TECLAS */
 .hud-keys { 
-  position: absolute; top: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; 
+  position: absolute; top: 15px; right: 30px; display: flex; flex-direction: column; gap: 10px; 
   background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);
   padding: 15px 20px; border-radius: 8px; border-left: 4px solid #9c88ff; 
   color: #333; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  z-index: 50; /* Para que siempre esté por encima del 3D */
 }

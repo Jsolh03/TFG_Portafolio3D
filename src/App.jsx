@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Spline from '@splinetool/react-spline';
-import './App.css'; // Importamos el diseño visual
+import './App.css'; // Styles
 
 export default function App() {
   // 1. ESTADOS (Memoria de React)
   const [isStarted, setIsStarted] = useState(false);
   const [showDesktop, setShowDesktop] = useState(false);
   const [showCV, setShowCV] = useState(false);
-  const [showBed, setShowBed] = useState(false); // Nuevo estado para la cama
+  const [showBed, setShowBed] = useState(false);
   const [lang, setLang] = useState('ES');
   const splineRef = useRef();
 
