@@ -141,7 +141,7 @@ export default function App() {
                 <h1>LAURA JARA LORO</h1>
                 <p className="subtitle">Desarrolladora Back-End</p>
               </div>
-              <button onClick={() => window.open('portfolio_lau.html', '_blank')}>
+              <button onClick={() => window.open('cv_web_lau.html', '_blank')}>
                 Abrir Portfolio Web
               </button>
             </header>
