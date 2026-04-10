@@ -14,13 +14,13 @@ export default function App() {
   // 2. DICCIONARIO DE IDIOMAS (Información Real y Corregida)
   const content = {
     ES: {
-      start: "01. INICIAR EXPERIENCIA", 
-      github: "02. GITHUB", 
-      cvTitle: "CURRICULUM_VITAE", 
-      pcTitle: "SISTEMA_OPERATIVO", 
+      start: "01. INICIAR EXPERIENCIA",
+      github: "02. GITHUB",
+      cvTitle: "CURRICULUM_VITAE",
+      pcTitle: "SISTEMA_OPERATIVO",
       profile: "PERFIL PROFESIONAL",
-      exp: "TRAYECTORIA", 
-      edu: "FORMACIÓN", 
+      exp: "TRAYECTORIA",
+      edu: "FORMACIÓN",
       skills_title: "HABILIDADES TÉCNICAS",
       profileDesc: "Estudiante de 2º de DAM especializada en lógica Back-End, gestión de datos SQL/NoSQL y resolución de problemas técnicos.",
       dsaRole: "...",
@@ -28,17 +28,17 @@ export default function App() {
       hospitalRole: "...",
       hospitalDesc: "...",
       dam: "2º CFGS Desarrollo de Aplicaciones Multiplataforma (IES Lope de Vega)",
-      smr: "CFGM Auxiliar de Operaciones de Laboratorio (IES Lope de Vega)",
+      tol: "CFGM Auxiliar de Operaciones de Laboratorio (IES Lope de Vega)",
       bedMsg: "Guardando partida... Descansando."
     },
     EN: {
-      start: "01. START EXPERIENCE", 
-      github: "02. GITHUB", 
-      cvTitle: "CURRICULUM_VITAE", 
-      pcTitle: "OPERATING_SYSTEM", 
+      start: "01. START EXPERIENCE",
+      github: "02. GITHUB",
+      cvTitle: "CURRICULUM_VITAE",
+      pcTitle: "OPERATING_SYSTEM",
       profile: "PROFESSIONAL PROFILE",
-      exp: "EXPERIENCE", 
-      edu: "EDUCATION", 
+      exp: "EXPERIENCE",
+      edu: "EDUCATION",
       skills_title: "TECHNICAL SKILLS",
       profileDesc: "2nd year Multiplatform App Development student. Focused on Back-End logic, SQL/NoSQL data management, and technical problem solving.",
       dsaRole: "...",
@@ -46,7 +46,7 @@ export default function App() {
       hospitalRole: "...",
       hospitalDesc: "...",
       dam: "2nd year Multiplatform App Development (Higher Degree)",
-      smr: "Lab Operations Assistant (Middle Degree)",
+      tol: "Lab Operations Assistant (Middle Degree)",
       bedMsg: "Saving game... Resting."
     }
   };
@@ -141,7 +141,9 @@ export default function App() {
                 <h1>LAURA JARA LORO</h1>
                 <p className="subtitle">Desarrolladora Back-End</p>
               </div>
-              <button onClick={() => setShowCV(false)}>✕</button>
+              <button onClick={() => window.open('portfolio_lau.html', '_blank')}>
+                Abrir Portfolio Web
+              </button>
             </header>
 
             <div className="cv-grid">
@@ -156,8 +158,9 @@ export default function App() {
                   <h4><span className="text-accent">//</span> CORE_STACK</h4>
                   <div className="tag-container">
                     <span className="tag">Java</span> <span className="tag">Python</span>
-                    <span className="tag">MySQL</span> <span className="tag">MongoDB</span>
-                    <span className="tag">SQL Server</span> <span className="tag">Git</span>
+                    <span className="tag">SpringBoot</span><span className="tag">SQL Server</span>
+                    <span className="tag">Git</span>
+                    <span className="tag">JavaScript</span>
                   </div>
                 </section>
                 <section className="cv-section">
@@ -177,24 +180,24 @@ export default function App() {
                   <div className="experience-item highlight">
                     <div className="exp-header">
                       <strong>NTER </strong>
-                      <span>2025</span>
+                      <span>Actual</span>
                     </div>
                     <p className="role">{t.dsaRole}</p>
-                    <p style={{fontSize: '0.85rem'}}>{t.dsaDesc}</p>
+                    <p style={{ fontSize: '0.85rem' }}>{t.dsaDesc}</p>
                   </div>
                   <div className="experience-item">
                     <div className="exp-header">
                       <strong>LEDME EUROPA</strong>
-                      <span>2024</span>
+                      <span>2025</span>
                     </div>
                     <p className="role">{t.hospitalRole}</p>
-                    <p style={{fontSize: '0.85rem'}}>{t.hospitalDesc}</p>
+                    <p style={{ fontSize: '0.85rem' }}>{t.hospitalDesc}</p>
                   </div>
                 </section>
                 <section className="cv-section">
                   <h3 className="section-title">{t.edu}</h3>
                   <div className="edu-item"><strong>{t.dam}</strong></div>
-                  <div className="edu-item"><strong>{t.smr}</strong></div>
+                  <div className="edu-item"><strong>{t.tol}</strong></div>
                 </section>
               </main>
             </div>
