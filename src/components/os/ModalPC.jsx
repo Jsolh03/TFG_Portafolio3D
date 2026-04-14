@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import TerminalApp from './TerminalApp';
 import IdeApp from './IdeApp';
 
+// Apps Laura PC:
+import LauraEncuestaApp from './LauraEncuestaApp';
+
 // (En el futuro, aquí importarás tu propia app, por ejemplo: import LauraPixelApp from './LauraPixelApp')
 
 export default function ModalPC({ onClose, user }) {
@@ -18,21 +21,13 @@ export default function ModalPC({ onClose, user }) {
                 return <TerminalApp />;
             case 'ide':
                 return <IdeApp />;
-            
-            // Apps de Laura (Por ahora mostramos un mensaje de "En construcción")
-            case 'pixel-world':
+
+            // Apps de Laura
+            case 'encuesta':
+                return <LauraEncuestaApp />;
+            case 'cv-web':
                 return (
-                    <div style={{ padding: '20px', color: '#ff7979', textAlign: 'center', marginTop: '20%' }}>
-                        <h2>👾 MUNDO 2D PIXEL EN CONSTRUCCIÓN 👾</h2>
-                        <p>Aquí irá tu entorno personalizado.</p>
-                    </div>
-                );
-            case 'projects':
-                return (
-                    <div style={{ padding: '20px', color: 'white' }}>
-                        <h3>Mis Proyectos Back-End</h3>
-                        <p>Próximamente...</p>
-                    </div>
+                    <iframe src="/cv_web_lau.html" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
                 );
             default:
                 return null;
@@ -42,7 +37,7 @@ export default function ModalPC({ onClose, user }) {
     return (
         <div className="modal-glass">
             <div className="os-container">
-                
+
                 {/* BARRA SUPERIOR DEL SISTEMA */}
                 <header className="os-header">
                     <div className="os-controls">
@@ -55,11 +50,11 @@ export default function ModalPC({ onClose, user }) {
 
                 {/* ÁREA DE TRABAJO (Escritorio o App abierta) */}
                 <div className="os-workspace">
-                    
+
                     {activeApp === null ? (
                         // --- ESCRITORIO ---
                         <div className="desktop-grid">
-                            
+
                             {/* ICONOS SI EL USUARIO ES KHALED */}
                             {user === 'khaled' && (
                                 <>
@@ -77,13 +72,15 @@ export default function ModalPC({ onClose, user }) {
                             {/* ICONOS SI EL USUARIO ES LAURA */}
                             {user === 'laura' && (
                                 <>
-                                    <button className="desktop-icon" onClick={() => setActiveApp('pixel-world')}>
-                                        <div className="icon-img" style={{ background: '#2d2a3d', border: '1px solid #ff7979' }}>👾</div>
-                                        <span>PixelApp.exe</span>
+                                    <button className="desktop-icon" onClick={() => setActiveApp('encuesta')}>
+                                        <div className="icon-img" style={{ background: '#4f46e5', color: 'white' }}>📝</div>
+                                        <span>Encuesta.exe</span>
                                     </button>
-                                    <button className="desktop-icon" onClick={() => setActiveApp('projects')}>
-                                        <div className="icon-img" style={{ background: '#2d2a3d', border: '1px solid #f6e58d' }}>📁</div>
-                                        <span>Proyectos</span>
+
+                                    {/* Aquí puedes dejar el icono de tu juego Pixel si lo tenías, o el del CV */}
+                                    <button className="desktop-icon" onClick={() => setActiveApp('cv-web')}>
+                                        <div className="icon-img" style={{ background: '#f59e0b', color: 'white' }}>👤</div>
+                                        <span>Mi_CV.html</span>
                                     </button>
                                 </>
                             )}
