@@ -76,7 +76,7 @@ export default function RoomLaura({ onLogout }) {
         </div>
       )}
 
-      {/* Ventana del Ordenador (Conectado a tu nuevo PC dinámico) */}
+      {/* Ventana del Ordenador (Zona 1) */}
       {showDesktop && <ModalPC onClose={() => setShowDesktop(false)} user="laura" />}
 
       {/* Ventana del Currículum (Con el botón de HTML) */}

@@ -90,8 +90,8 @@ export default function RoomKhaled({ onLogout }) {
         </div>
       )}
 
-      {/* VENTANAS MODALES */}
-      {showDesktop && <ModalPC onClose={() => setShowDesktop(false)} />}
+      {/* MODAL ORDENADOR (E) */}
+      {showDesktop && <ModalPC onClose={() => setShowDesktop(false)} user="khaled" />}
 
       {showCV && (
         <div className="modal-glass">
