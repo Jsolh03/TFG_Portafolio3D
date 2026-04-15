@@ -8,14 +8,15 @@ export default function LauraEncuestaApp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
+    // Corregido: Obtenemos el valor directamente del formData
     const nuevaOpinion = {
       nombre: formData.get('nombre'),
-      comentario: formData.get('opinion') // Ahora capturamos la opinión
+      comentario: formData.get('opinion'),
+      puntuacion: parseInt(formData.get('puntuacion'))
     };
 
-    // 1. Guardamos la opinión en la base de datos
     const { error: errorInsert } = await supabase
       .from('encuestas')
       .insert([nuevaOpinion]);
@@ -25,7 +26,6 @@ export default function LauraEncuestaApp() {
       return;
     }
 
-    // 2. Recuperamos todas las opiniones para mostrarlas
     const { data: datos, error: errorSelect } = await supabase
       .from('encuestas')
       .select('*')
@@ -39,53 +39,101 @@ export default function LauraEncuestaApp() {
     }
   };
 
-  // PANTALLA DE RESULTADOS (Muro de Opiniones)
+  // VISTA DE VALORACIONES (ESTILO FORO)
   if (enviado) {
     return (
-      <div style={{ padding: '20px', color: 'white', display: 'flex', flexDirection: 'column', gap: '15px', height: '100%', overflowY: 'auto' }}>
-        <h3 style={{ borderBottom: '1px solid #4af626', paddingBottom: '10px', color: '#4af626' }}>¡Gracias por tu feedback!</h3>
-        <p style={{ fontSize: '0.9em', color: '#aaa' }}>Opiniones de otros visitantes:</p>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ padding: '25px', color: 'white', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', overflowY: 'auto', background: '#0d0d12' }}>
+        <div style={{ borderLeft: '4px solid #a034e7', paddingLeft: '15px' }}>
+          <h3 style={{ margin: 0, color: '#a034e7', fontSize: '1.8rem' }}>FEEDBACK RECIBIDO</h3>
+          <p style={{ fontSize: '1rem', color: '#aaa', marginTop: '5px' }}>Comunidad de visitantes</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {opiniones.map((item) => (
-            <div key={item.id} style={{ background: '#222', padding: '15px', borderRadius: '8px', border: '1px solid #444' }}>
-              <strong style={{ color: '#4f46e5', display: 'block', marginBottom: '5px' }}>{item.nombre} escribió:</strong>
-              <p style={{ margin: 0, fontSize: '0.95em', fontStyle: 'italic', color: '#eee' }}>"{item.comentario}"</p>
+            <div key={item.id} style={{ 
+              background: 'rgba(160, 52, 231, 0.05)', 
+              padding: '20px', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(160, 52, 231, 0.3)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <strong style={{ color: '#cbbceb', fontSize: '1.2rem' }}>@{item.nombre.toLowerCase().replace(/\s+/g, '_')}</strong>
+                <span style={{ background: '#a034e7', color: 'white', padding: '2px 10px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                  ★ {item.puntuacion}/10
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '1.1rem', lineHeight: '1.5', color: '#eee', fontStyle: 'italic' }}>
+                "{item.comentario}"
+              </p>
+              <small style={{ display: 'block', marginTop: '10px', color: '#555', fontSize: '0.8rem' }}>
+                Enviado el {new Date(item.created_at).toLocaleDateString()}
+              </small>
             </div>
           ))}
         </div>
+        
       </div>
     );
   }
 
-  // FORMULARIO DE OPINIÓN
+  // FORMULARIO DE ENTRADA
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      onKeyDown={(e) => e.stopPropagation()} 
-      style={{ padding: '20px', color: 'white', display: 'flex', flexDirection: 'column', gap: '15px', height: '100%' }}
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(e) => e.stopPropagation()}
+      style={{ padding: '30px', color: 'white', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', background: '#0d0d12' }}
     >
-      <h3 style={{ borderBottom: '1px solid #444', paddingBottom: '10px' }}>VALORA MI PORTFOLIO</h3>
-      <p style={{ fontSize: '0.85em', color: '#ccc' }}>Tu opinión me ayuda a seguir mejorando como desarrolladora Back-End.</p>
-      
-      {errorTexto && <p style={{ color: '#ff4444', fontSize: '0.8em' }}>Error: {errorTexto}</p>}
+      <header>
+        <h2 style={{ color: '#a034e7', margin: 0, fontSize: '2rem' }}>DEJA TU HUELLA</h2>
+        <p style={{ color: '#888', fontSize: '1rem' }}>Tu feedback es clave para mi evolución Full-Stack.</p>
+      </header>
 
-      <label style={{ fontSize: '0.9em' }}>Tu Nombre:
-        <input name="nombre" type="text" placeholder="Ej: Invitado" required 
-          style={{ width: '100%', background: '#1a1a1a', border: '1px solid #444', color: 'white', padding: '10px', marginTop: '5px', borderRadius: '4px' }} 
+      {errorTexto && <div style={{ background: 'rgba(255, 68, 68, 0.1)', color: '#ff4444', padding: '10px', borderRadius: '4px', fontSize: '0.9rem', border: '1px solid #ff4444' }}>
+        Error: {errorTexto}
+      </div>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '1rem', fontWeight: 'bold', color: '#cbbceb' }}>Alias del desarrollador / Visitante:</label>
+        <input name="nombre" type="text" placeholder="Ej: User_404" required
+          style={{ width: '100%', background: '#1a1a24', border: '1px solid #333', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', borderFocus: '1px solid #a034e7' }}
         />
-      </label>
-      
-      <label style={{ fontSize: '0.9em' }}>¿Qué te ha parecido el portfolio?:
-        <textarea name="opinion" placeholder="Cuéntame qué te ha parecido el entorno 3D, la terminal..." required 
-          style={{ width: '100%', background: '#1a1a1a', border: '1px solid #444', color: 'white', padding: '10px', marginTop: '5px', height: '100px', borderRadius: '4px', resize: 'none' }} 
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '1rem', fontWeight: 'bold', color: '#cbbceb' }}>Puntuación de la Experiencia (1-10):</label>
+        <input name="puntuacion" type="range" min="1" max="10" defaultValue="10"
+          style={{ width: '100%', accentColor: '#a034e7', cursor: 'pointer' }}
         />
-      </label>
-      
-      <button type="submit" 
-        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '12px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px', borderRadius: '4px', transition: '0.3s' }}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#a034e7', fontWeight: 'bold' }}>
+          <span>1</span><span>5</span><span>10</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ fontSize: '1rem', fontWeight: 'bold', color: '#cbbceb' }}>Review técnica:</label>
+        <textarea name="opinion" placeholder="¿Qué te ha parecido la integración 3D y el OS?" required
+          style={{ width: '100%', background: '#1a1a24', border: '1px solid #333', color: 'white', padding: '12px', height: '120px', borderRadius: '8px', resize: 'none', outline: 'none' }}
+        />
+      </div>
+
+      <button type="submit"
+        style={{ 
+          background: '#a034e7', 
+          color: 'white', 
+          border: 'none', 
+          padding: '15px', 
+          cursor: 'pointer', 
+          fontWeight: 'bold', 
+          fontSize: '1.1rem',
+          borderRadius: '8px', 
+          boxShadow: '0 4px 15px rgba(160, 52, 231, 0.3)',
+          transition: '0.3s'
+        }}
+        onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+        onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
       >
-        Enviar opinión
+        Publicar Comentario
       </button>
     </form>
   );
