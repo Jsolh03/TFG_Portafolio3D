@@ -50,7 +50,7 @@ export default function RoomLaura({ onLogout }) {
   return (
     <div className="main-container">
       <Spline
-        scene="https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode"
+        scene="https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1"
         onLoad={(app) => { splineRef.current = app; }}
         style={{ width: '100%', height: '100%' }}
       />
@@ -91,18 +91,7 @@ export default function RoomLaura({ onLogout }) {
               
               {/* BOTONERA: Abrir Web + Cerrar */}
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <button 
-                  onClick={() => window.open('cv_web_lau.html', '_blank')}
-                  style={{
-                    background: '#e0e7ff', color: '#4f46e5', border: 'none', 
-                    padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', 
-                    fontWeight: 'bold', transition: '0.2s'
-                  }}
-                  onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-                >
-                  {lang === 'ES' ? '🌐 Abrir Portfolio Web' : '🌐 Open Web Portfolio'}
-                </button>
+                
                 <button 
                   onClick={() => setShowCV(false)} 
                   style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#9c88ff' }}

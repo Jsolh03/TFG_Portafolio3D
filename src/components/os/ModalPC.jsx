@@ -6,6 +6,9 @@ import IdeApp from './IdeApp';
 
 // Apps Laura PC:
 import LauraEncuestaApp from './LauraEncuestaApp';
+import iconEncuesta from '/src/assets/icons_laura/icon_encuesta.jpg';
+import iconCV from '/src/assets/icons_laura/icon_cv.jpg';
+import iconMail from '/src/assets/icons_laura/icon_email.jpg';
 
 // (En el futuro, aquí importarás tu propia app, por ejemplo: import LauraPixelApp from './LauraPixelApp')
 
@@ -72,15 +75,34 @@ export default function ModalPC({ onClose, user }) {
                             {/* ICONOS SI EL USUARIO ES LAURA */}
                             {user === 'laura' && (
                                 <>
+                                    {/* Aplicación de Encuesta */}
                                     <button className="desktop-icon" onClick={() => setActiveApp('encuesta')}>
-                                        <div className="icon-img" style={{ background: '#4f46e5', color: 'white' }}>📝</div>
-                                        <span>Encuesta.exe</span>
+                                        <div className="icon-wrapper">
+                                            <img src={iconEncuesta} alt="Feedback" className="custom-app-icon" />
+                                        </div>
+                                        <span>Feedback.exe</span>
                                     </button>
 
-                                    {/* Aquí puedes dejar el icono de tu juego Pixel si lo tenías, o el del CV */}
-                                    <button className="desktop-icon" onClick={() => setActiveApp('cv-web')}>
-                                        <div className="icon-img" style={{ background: '#f59e0b', color: 'white' }}>👤</div>
+                                    {/* Aplicación de CV */}
+                                    <button
+                                        className="desktop-icon"
+                                        onClick={() => window.open('/cv_web_lau.html', '_blank')}
+                                    >
+                                        <div className="icon-wrapper">
+                                            <img src={iconCV} alt="CV" className="custom-app-icon" />
+                                        </div>
                                         <span>Mi_CV.html</span>
+                                    </button>
+
+                                    {/* Aplicación de Correo*/}
+                                    <button
+                                        className="desktop-icon"
+                                        onClick={() => window.location.href = 'mailto:laurajaraloro@gmail.com?subject=Contacto desde el Portfolio 3D'}
+                                    >
+                                        <div className="icon-wrapper">
+                                            <img src={iconMail} alt="Correo" className="custom-app-icon" />
+                                        </div>
+                                        <span>Mail.exe</span>
                                     </button>
                                 </>
                             )}

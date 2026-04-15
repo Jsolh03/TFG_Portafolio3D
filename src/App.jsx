@@ -1,6 +1,9 @@
 import React, { useState, Suspense, lazy } from 'react';
 import './styles/App.css';
 
+
+import iconoLaura from './assets/icons_laura/perfil_icon_lau.jpg';
+
 // Cargamos las habitaciones desde la carpeta pages
 const RoomKhaled = lazy(() => import('./pages/RoomKhaled'));
 const RoomLaura = lazy(() => import('./pages/RoomLaura'));
@@ -28,7 +31,6 @@ export default function App() {
     );
   }
 
-  // PANTALLA DE LOGIN
   return (
     <div className="main-container login-screen">
       <div className="login-box">
@@ -43,7 +45,21 @@ export default function App() {
           </button>
 
           <button className="user-card" onClick={() => setSelectedUser('laura')}>
-            <div className="avatar laura-avatar"></div>
+            
+            <div className="avatar laura-avatar" style={{
+              border: '3px solid #a034e7',
+              overflow: 'hidden',
+              boxShadow: '0 0 15px rgba(160, 52, 231, 0.4)',
+              padding: 0,
+              backgroundColor: 'transparent'
+            }}>
+              <img 
+                src={iconoLaura} 
+                alt="Perfil Laura" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            </div>
+            
             <h2>Laura Jara</h2>
             <span className="role-tag">Back-End Developer</span>
           </button>
