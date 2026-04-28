@@ -64,7 +64,7 @@ export default function RoomKhaled({ onLogout }) {
     <div className="main-container">
       {/* MOTOR 3D */}
       <Spline
-        scene="https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1"
+        scene="https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode"
         onLoad={(app) => { splineRef.current = app; }}
         style={{ width: '100%', height: '100%' }}
       />
