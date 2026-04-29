@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '/src/styles/index.css' // Carga los estilos globales (reset)
+import '/front-end/src/styles/index.css' // Carga los estilos globales (reset)
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

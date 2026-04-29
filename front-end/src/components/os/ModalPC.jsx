@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 
-// Apps de Khaled
+// Apps del ordenador
 import TerminalApp from './TerminalApp';
 import IdeApp from './IdeApp';
 import InfoApp from './InfoApp';
 
-// Apps de Laura
-import LauraEncuestaApp from './LauraEncuestaApp';
-import iconEncuesta from '/src/assets/icons_laura/icon_encuesta.jpg';
-import iconCV from '/src/assets/icons_laura/icon_cv.jpg';
-import iconMail from '/src/assets/icons_laura/icon_email.jpg';
+import EncuestaApp from './EncuestaApp';
+import iconEncuesta from '/front-end/src/assets/icons_laura/icon_encuesta.jpg';
+import iconCV from '/front-end/src/assets/icons_laura/icon_cv.jpg';
+import iconMail from '/front-end/src/assets/icons_laura/icon_email.jpg';
 
 export default function ModalPC({ onClose, user }) {
     const [activeApp, setActiveApp] = useState(null);
@@ -21,7 +20,7 @@ export default function ModalPC({ onClose, user }) {
             case 'ide':
                 return <IdeApp />;
             case 'encuesta':
-                return <LauraEncuestaApp />;
+                return <EncuestaApp />;
             case 'info':
                 return (
                     <InfoApp 
@@ -32,8 +31,7 @@ export default function ModalPC({ onClose, user }) {
                         }}
                     />
                 );
-            // case 'Reseñas':
-            //     return
+
             default:
                 return null;
         }
