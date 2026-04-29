@@ -8,8 +8,8 @@
 
 /*Fuente de Texto Descargada*/
 @font-face {
-  font-family: 'fuente_retro'; 
-  src: url('./assets/font_pixel.otf') format('truetype'); /* Ajusta la extensión si es .otf o .woff */
+  font-family: 'fuente_retro';
+  src: url('../assets/font_pixel.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
@@ -241,4 +241,94 @@ header button:hover { color: #ff7979; transform: scale(1.1); } /* Botón de cerr
 @keyframes float {
   from { transform: translateY(0px); }
   to { transform: translateY(-3px); }
+}
+/* ===================== MODAL PC ===================== */
+.pc-layout {
+  width: 75% !important;
+  height: 85% !important;
+  max-height: 85% !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0d0d12 !important;
+  border: 2px solid #2a2a35 !important;
+  color: #cbbceb !important;
+}
+
+.pc-header {
+  background: #1a1a24;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #2a2a35;
+  flex-shrink: 0;
+}
+
+.pc-header span {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0 auto;
+}
+
+.pc-header button {
+  background: none;
+  border: none;
+  color: #9c88ff;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.pc-header button:hover { color: #ff5f56; }
+
+.pc-body {
+  flex-grow: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background: radial-gradient(circle at top, #1a1a2e 0%, #0d0d12 100%);
+}
+
+.icons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 120px);
+  gap: 20px;
+}
+
+.app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 0.2s;
+  color: #cbbceb;
+}
+
+.app-icon:hover {
+  background: rgba(156, 136, 255, 0.1);
+  border-color: rgba(156, 136, 255, 0.3);
+}
+
+.app-icon .icon-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem !important;
+  background: #1e1e2e;
+  border: 1px solid #2a2a35;
+}
+
+.app-icon span {
+  font-size: 0.75rem !important;
+  text-align: center;
+  color: #cbbceb;
 }

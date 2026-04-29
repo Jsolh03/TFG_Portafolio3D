@@ -8,26 +8,40 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = "mongodb://portfolio-bbdd:7W2Cmdv0KlJWUHG6@ac-hsd1veq-shard-00-00.birtgpa.mongodb.net:27017,ac-hsd1veq-shard-00-01.birtgpa.mongodb.net:27017,ac-hsd1veq-shard-00-02.birtgpa.mongodb.net:27017/tfg_portfolio?replicaSet=atlas-3g6dnn-shard-0&ssl=true&authSource=admin";
+const uri = process.env.MONGODB_URI || "mongodb://portfolio-bbdd:7W2Cmdv0KlJWUHG6@ac-hsd1veq-shard-00-00.birtgpa.mongodb.net:27017,ac-hsd1veq-shard-00-01.birtgpa.mongodb.net:27017,ac-hsd1veq-shard-00-02.birtgpa.mongodb.net:27017/tfg_portfolio?replicaSet=atlas-3g6dnn-shard-0&ssl=true&authSource=admin";
 
 mongoose.connect(uri)
-  .then(() => console.log("✅ Servidor conectado a MongoDB Atlas"))
-  .catch(err => console.error("❌ Error:", err.message));
+  .then(() => console.log("Servidor conectado a MongoDB Atlas"))
+  .catch(err => console.error("Error de conexión:", err.message));
 
-// --- MODELO DE USUARIO (Basado en tu User.jsx) ---
 const userSchema = new mongoose.Schema({
-  id: String,
+  id: { type: String, required: true },
   name: String,
-  subtitle: String,
-  splineScene: String,
-  contact: { location: String, phone: String, email: String, githubHandle: String },
-  coreStack: [String],
-  experience: [{ company: String, period: String, role: String, descKey: String }],
-}, { strict: false });
+  tagline: String,
+  profileImg: String,
+  aboutMe: String,
+  education: [{
+    title: String,
+    institution: String,
+    period: String
+  }],
+  skills: [String],
+  projects: [{
+    title: String,
+    description: String
+  }],
+  contact: {
+    email: String,
+    github: String,
+    linkedin: String
+  }
+}, {
+  strict: false,
+  timestamps: true
+});
 
 const User = mongoose.model('User', userSchema, 'users');
 
-// --- MODELO DE ENCUESTAS (Para sustituir a Supabase) ---
 const encuestaSchema = new mongoose.Schema({
   nombre: String,
   comentario: String,
@@ -37,27 +51,36 @@ const encuestaSchema = new mongoose.Schema({
 
 const Encuesta = mongoose.model('Encuesta', encuestaSchema, 'encuestas');
 
-// --- RUTAS ---
-
-// 1. Obtener un usuario
 app.get('/api/users/:userId', async (req, res) => {
+  try {
     const userFound = await User.findOne({ id: req.params.userId });
-    userFound ? res.json(userFound) : res.status(404).json({ error: "No encontrado" });
+    userFound
+      ? res.json(userFound)
+      : res.status(404).json({ error: "No encontrado" });
+  } catch (err) {
+    console.error("Error en GET /api/users:", err.message);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 });
 
-// 2. Guardar una nueva encuesta
 app.post('/api/encuestas', async (req, res) => {
-    try {
-        const nueva = new Encuesta(req.body);
-        await nueva.save();
-        res.status(201).json(nueva);
-    } catch (err) { res.status(500).json(err); }
+  try {
+    const nueva = new Encuesta(req.body);
+    await nueva.save();
+    res.status(201).json(nueva);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 3. Leer todas las encuestas (para el estilo Foro)
 app.get('/api/encuestas', async (req, res) => {
+  try {
     const lista = await Encuesta.find().sort({ created_at: -1 });
     res.json(lista);
+  } catch (err) {
+    console.error("Error en GET /api/encuestas:", err.message);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 });
 
 app.listen(5000, () => console.log("🚀 Backend en puerto 5000"));

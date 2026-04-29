@@ -1,49 +1,40 @@
 import React, { useState, Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import iconoLaura from './assets/icons_laura/perfil_icon_lau.jpg';
+import DynamicCVPage from './pages/DynamicCVPage';
+import ProjectIntro from './components/os/ProjectIntro';
+import { API_BASE } from './config';
 
-// IMPORTANTE: Ahora solo cargamos UN componente genérico
 const Room = lazy(() => import('./pages/Room'));
 
-export default function App() {
-  const [userData, setUserData] = useState(null); // Guardamos el objeto completo del usuario
+function Portfolio() {
+  const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
 
-  // Función para cargar datos desde Mongo
   const handleLogin = async (userId) => {
     setIsLoading(true);
-    
     try {
-      // 1. Hacemos la petición a tu servidor Node.js
-      const response = await fetch(`http://localhost:5000/api/users/${userId}`);
-      
-      if (!response.ok) {
-        throw new Error('No se encontró el usuario en la base de datos');
-      }
-
-      // 2. Convertimos la respuesta a JSON
+      const response = await fetch(`${API_BASE}/api/users/${userId}`);
+      if (!response.ok) throw new Error('Usuario no encontrado');
       const data = await response.json();
-      
-      // 3. Guardamos los datos reales en el estado
+      console.log("=== DATOS LLEGANDO DEL SERVIDOR ===");
+      console.log(data);
       setUserData(data);
-      
+      setShowIntro(true);
     } catch (error) {
-      console.error("Error al conectar con MongoDB:", error);
-      alert("Error de conexión: Asegúrate de que el servidor (backend) esté encendido.");
+      alert("Error de conexión con MongoDB");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    setUserData(null);
-  };
-
-  // Si hay datos de usuario, mostramos la habitación genérica
   if (userData) {
+    if (showIntro) return <ProjectIntro onContinue={() => setShowIntro(false)} />;
     return (
-      <Suspense fallback={<div className="loading-screen">Sincronizando entorno 3D...</div>}>
-        <Room userData={userData} onLogout={handleLogout} />
+      <Suspense fallback={<div className="loading-screen">Cargando 3D...</div>}>
+        <Room userData={userData} onLogout={() => setUserData(null)} />
       </Suspense>
     );
   }
@@ -52,36 +43,31 @@ export default function App() {
     <div className="main-container login-screen">
       <div className="login-box">
         <h1 className="login-title">SYSTEM_LOGIN</h1>
-        <p className="login-subtitle">Selecciona el perfil de acceso</p>
-        
-        {isLoading ? (
-          <div className="loading-text">Accediendo a la base de datos...</div>
-        ) : (
-          <div className="user-grid">
-            {/* BOTÓN KHALED */}
-            <button className="user-card" onClick={() => handleLogin('khaled')}>
-              <div className="avatar khaled-avatar"></div>
-              <h2>Khaled Solh</h2>
-              <span className="role-tag">Full-Stack & AI</span>
-            </button>
-
-            {/* BOTÓN LAURA */}
-            <button className="user-card" onClick={() => handleLogin('laura')}>
-              <div className="avatar laura-avatar" style={{
-                border: '3px solid #a034e7',
-                overflow: 'hidden',
-                boxShadow: '0 0 15px rgba(160, 52, 231, 0.4)',
-                padding: 0,
-                backgroundColor: 'transparent'
-              }}>
-                <img src={iconoLaura} alt="Perfil Laura" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <h2>Laura Jara</h2>
-              <span className="role-tag">Back-End Developer</span>
-            </button>
-          </div>
-        )}
+        {isLoading && <p style={{ color: '#a034e7', textAlign: 'center' }}>Conectando...</p>}
+        <div className="user-grid">
+          <button className="user-card" onClick={() => handleLogin('khaled')} disabled={isLoading}>
+            <div className="avatar khaled-avatar"></div>
+            <h2>Khaled Solh</h2>
+          </button>
+          <button className="user-card" onClick={() => handleLogin('laura')} disabled={isLoading}>
+            <div className="avatar laura-avatar">
+              <img src={iconoLaura} alt="Laura" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <h2>Laura Jara</h2>
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Portfolio />} />
+        <Route path="/cv/:userId" element={<DynamicCVPage />} />
+      </Routes>
+    </Router>
   );
 }

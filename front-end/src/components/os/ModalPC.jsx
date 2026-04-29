@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import DynamicCV from './DynamicCV';
+import { API_BASE } from '../../config';
 
-// Apps del ordenador
+// Apps de Khaled
 import TerminalApp from './TerminalApp';
 import IdeApp from './IdeApp';
 import InfoApp from './InfoApp';
 
-import EncuestaApp from './EncuestaApp';
-import iconEncuesta from '/front-end/src/assets/icons_laura/icon_encuesta.jpg';
-import iconCV from '/front-end/src/assets/icons_laura/icon_cv.jpg';
-import iconMail from '/front-end/src/assets/icons_laura/icon_email.jpg';
+// Apps de Laura
+import LauraEncuestaApp from './EncuestaApp';
+import iconEncuesta from '../../assets/icons_laura/icon_encuesta.jpg';
+import iconCV from '../../assets/icons_laura/icon_cv.jpg';
+import iconMail from '../../assets/icons_laura/icon_email.jpg';
 
 export default function ModalPC({ onClose, user }) {
     const [activeApp, setActiveApp] = useState(null);
+    const [fullData, setFullData] = useState(null);
+
+    // Cargamos los datos de la API al iniciar (necesarios para el CV interno)
+    useEffect(() => {
+        fetch(`${API_BASE}/api/users/${user}`)
+            .then(res => res.json())
+            .then(data => setFullData(data))
+            .catch(err => console.error("Error cargando datos API:", err));
+    }, [user]);
 
     const renderAppContent = () => {
         switch (activeApp) {
@@ -20,18 +32,21 @@ export default function ModalPC({ onClose, user }) {
             case 'ide':
                 return <IdeApp />;
             case 'encuesta':
-                return <EncuestaApp />;
+                return <LauraEncuestaApp />;
+            case 'cv':
+                // Ahora el CV se renderiza internamente usando los datos de la API
+                return (
+                    <div className="cv-internal-view" style={{ overflowY: 'auto', height: '100%', background: '#0d1117' }}>
+                        <DynamicCV user={fullData} />
+                    </div>
+                );
             case 'info':
                 return (
                     <InfoApp 
                         user={user} 
-                        onOpenCV={() => {
-                            const cvUrl = user === 'khaled' ? '/cvs/cv_web_khaled.html' : '/cvs/cv_web_lau.html';
-                            window.open(cvUrl, '_blank');
-                        }}
+                        onOpenCV={() => setActiveApp('cv')} // Cambiado para abrir interno
                     />
                 );
-
             default:
                 return null;
         }
@@ -43,11 +58,14 @@ export default function ModalPC({ onClose, user }) {
 
                 <header className="os-header">
                     <div className="os-controls">
-                        <span className="dot close" onClick={onClose}></span>
+                        {/* Si hay una app abierta, el botón de cerrar vuelve al escritorio. Si no, cierra el modal */}
+                        <span className="dot close" onClick={activeApp ? () => setActiveApp(null) : onClose}></span>
                         <span className="dot minimize"></span>
                         <span className="dot maximize"></span>
                     </div>
-                    <span className="os-title">K-OS Terminal_</span>
+                    <span className="os-title">
+                        {activeApp ? `K-OS System / ${activeApp.toUpperCase()}` : 'K-OS Terminal_'}
+                    </span>
                 </header>
 
                 <div className="os-workspace">
@@ -55,6 +73,7 @@ export default function ModalPC({ onClose, user }) {
                     {activeApp === null ? (
                         <div className="desktop-grid">
 
+                            {/* --- ICONOS KHALED --- */}
                             {user === 'khaled' && (
                                 <>
                                     <button className="desktop-icon" onClick={() => setActiveApp('terminal')}>
@@ -72,6 +91,7 @@ export default function ModalPC({ onClose, user }) {
                                 </>
                             )}
 
+                            {/* --- ICONOS LAURA --- */}
                             {user === 'laura' && (
                                 <>
                                     <button className="desktop-icon" onClick={() => setActiveApp('encuesta')}>
@@ -81,14 +101,11 @@ export default function ModalPC({ onClose, user }) {
                                         <span>Feedback.exe</span>
                                     </button>
 
-                                    <button
-                                        className="desktop-icon"
-                                        onClick={() => window.open('/cvs/cv_web_lau.html', '_blank')}
-                                    >
+                                    <button className="desktop-icon" onClick={() => setActiveApp('cv')}>
                                         <div className="icon-wrapper">
                                             <img src={iconCV} alt="CV" className="custom-app-icon" />
                                         </div>
-                                        <span>Mi_CV.html</span>
+                                        <span>Mi_CV.exe</span>
                                     </button>
 
                                     <button
@@ -103,8 +120,15 @@ export default function ModalPC({ onClose, user }) {
                                 </>
                             )}
 
+                            {/* Icono de GitHub (Opcional, de tu versión anterior) */}
+                            <button className="desktop-icon" onClick={() => window.open(fullData?.contact?.github || fullData?.githubUrl, '_blank')}>
+                                <div className="icon-img">📂</div>
+                                <span>GitHub</span>
+                            </button>
+
                         </div>
                     ) : (
+                        /* --- VENTANA DE APLICACIÓN ABIERTA --- */
                         <div className="app-window">
                             <div className="app-header">
                                 <span>{activeApp.toUpperCase()}</span>
