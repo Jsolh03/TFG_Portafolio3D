@@ -83,4 +83,4 @@ app.get('/api/encuestas', async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("🚀 Backend en puerto 5000"));
+app.listen(5000, () => console.log(" -- Backend en puerto 5000 --"));

@@ -19,22 +19,22 @@ function Portfolio() {
       const response = await fetch(`${API_BASE}/api/users/${userId}`);
       if (!response.ok) throw new Error('Usuario no encontrado');
       const data = await response.json();
-      console.log("=== DATOS LLEGANDO DEL SERVIDOR ===");
-      console.log(data);
       setUserData(data);
       setShowIntro(true);
     } catch (error) {
-      alert("Error de conexión con MongoDB");
+      alert('Error de conexión con MongoDB');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Room se carga siempre que haya userData.
+  // ProjectIntro aparece encima como overlay cerrable.
   if (userData) {
-    if (showIntro) return <ProjectIntro onContinue={() => setShowIntro(false)} />;
     return (
       <Suspense fallback={<div className="loading-screen">Cargando 3D...</div>}>
-        <Room userData={userData} onLogout={() => setUserData(null)} />
+        <Room userData={userData} onLogout={() => { setUserData(null); setShowIntro(false); }} />
+        {showIntro && <ProjectIntro onContinue={() => setShowIntro(false)} />}
       </Suspense>
     );
   }
@@ -42,15 +42,15 @@ function Portfolio() {
   return (
     <div className="main-container login-screen">
       <div className="login-box">
-        <h1 className="login-title">SYSTEM_LOGIN</h1>
-        {isLoading && <p style={{ color: '#a034e7', textAlign: 'center' }}>Conectando...</p>}
+        <h1 className="login-title">SYSTEM_LOGIN<span>_</span></h1>
+        {isLoading && <p style={{ color: '#6e7681', textAlign: 'center', marginTop: 0 }}>Conectando...</p>}
         <div className="user-grid">
           <button className="user-card" onClick={() => handleLogin('khaled')} disabled={isLoading}>
-            <div className="avatar khaled-avatar"></div>
+            <div className="avatar"></div>
             <h2>Khaled Solh</h2>
           </button>
           <button className="user-card" onClick={() => handleLogin('laura')} disabled={isLoading}>
-            <div className="avatar laura-avatar">
+            <div className="avatar">
               <img src={iconoLaura} alt="Laura" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <h2>Laura Jara</h2>

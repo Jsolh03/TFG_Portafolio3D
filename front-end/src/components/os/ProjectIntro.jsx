@@ -2,63 +2,43 @@ import React from 'react';
 
 export default function ProjectIntro({ onContinue }) {
   return (
-    <div className="intro-overlay" style={{
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100vw', 
-        height: '100vh',
-        background: 'radial-gradient(circle, #1a1a24 0%, #0d0d12 100%)',
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        zIndex: 9999 // ← Cambiado de z-index a zIndex
-    }}>
-      <div className="os-window" style={{
-          width: '600px', 
-          background: '#0d1117', 
-          border: '2px solid #a034e7',
-          boxShadow: '0 0 30px rgba(160, 52, 231, 0.3)', 
-          color: 'white'
-      }}>
-        <header style={{ 
-            background: '#161b22', 
-            padding: '10px', 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            borderBottom: '1px solid #333' 
-        }}>
-          <span>SYSTEM_INFO_v1.0.exe</span>
-          <div style={{ cursor: 'pointer', color: '#a034e7', fontWeight: 'bold' }} onClick={onContinue}>✕</div>
+    <div className="intro-overlay">
+      <div className="intro-window">
+
+        <header className="intro-header" style={{ position: 'relative' }}>
+          <div className="intro-header-controls">
+            <span className="dot close" onClick={onContinue} title="Cerrar"></span>
+            <span className="dot minimize"></span>
+            <span className="dot maximize"></span>
+          </div>
+          <span className="intro-title-bar">SYSTEM_INFO_v1.0</span>
+          <button className="intro-close-btn" onClick={onContinue}>✕</button>
         </header>
 
-        <div style={{ padding: '30px' }}>
-          <h1 style={{ color: '#a034e7', marginTop: 0 }}>PROYECTO: PORTFOLIO 3D</h1>
-          <p>Bienvenido al entorno de desarrollo. Este sistema integra:</p>
-          <ul style={{ lineHeight: '1.8', listStyle: 'none', padding: 0 }}>
-            <li><span style={{ color: '#a034e7' }}>▶</span> <strong>Frontend:</strong> React + Three.js</li>
-            <li><span style={{ color: '#a034e7' }}>▶</span> <strong>Backend:</strong> Node.js + Express</li>
-            <li><span style={{ color: '#a034e7' }}>▶</span> <strong>BBDD:</strong> MongoDB Atlas</li>
-          </ul>
-          
-          <button 
-            onClick={onContinue}
-            style={{
-                marginTop: '20px', 
-                background: '#a034e7', 
-                color: 'white', 
-                border: 'none',
-                padding: '15px 24px', 
-                cursor: 'pointer', 
-                fontWeight: 'bold', 
-                width: '100%',
-                borderRadius: '4px',
-                fontSize: '1rem'
-            }}
-          >
-            INICIALIZAR ENTORNO_
+        <div className="intro-body">
+          <h2>PORTFOLIO 3D</h2>
+          <p className="intro-subtitle">Trabajo de Fin de Grado</p>
+
+          <div className="intro-stack">
+            <div className="intro-stack-item">
+              <span>Frontend</span>
+              <span>React + Spline 3D</span>
+            </div>
+            <div className="intro-stack-item">
+              <span>Backend</span>
+              <span>Node.js + Express</span>
+            </div>
+            <div className="intro-stack-item">
+              <span>Base de datos</span>
+              <span>MongoDB Atlas</span>
+            </div>
+          </div>
+
+          <button className="intro-btn" onClick={onContinue}>
+            INICIALIZAR ENTORNO
           </button>
         </div>
+
       </div>
     </div>
   );
