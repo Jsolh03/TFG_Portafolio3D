@@ -3,9 +3,9 @@ import { API_BASE } from '../../config';
 
 const MAX_CHARS = 280;
 
-export default function EncuestaApp() {
-  const [enviado, setEnviado] = useState(() => {
-    return localStorage.getItem('encuesta_realizada') === 'true';
+export default function EncuestaApp({ targetUserId }) {
+  const [view, setView] = useState(() => {
+    return localStorage.getItem(`encuesta_realizada_${targetUserId}`) === 'true' ? 'list' : 'form';
   });
 
   const [opiniones, setOpiniones] = useState([]);
@@ -13,17 +13,18 @@ export default function EncuestaApp() {
   const [chars, setChars] = useState(0);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/encuestas`)
+    fetch(`${API_BASE}/api/encuestas?targetUserId=${targetUserId}`)
       .then(res => res.json())
       .then(data => setOpiniones(data))
       .catch(err => console.error('Error cargando encuestas:', err));
-  }, [enviado]);
+  }, [view, targetUserId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (puntuacion === 0) return;
     const formData = new FormData(e.target);
     const nuevaOpinion = {
+      targetUserId,
       nombre: formData.get('nombre'),
       comentario: formData.get('opinion'),
       puntuacion
@@ -35,8 +36,10 @@ export default function EncuestaApp() {
     });
 
     if (response.ok) {
-      localStorage.setItem('encuesta_realizada', 'true');
-      setEnviado(true);
+      localStorage.setItem(`encuesta_realizada_${targetUserId}`, 'true');
+      setView('list');
+      setPuntuacion(0); // Reset form
+      e.target.reset();
     }
   };
 
@@ -67,11 +70,17 @@ export default function EncuestaApp() {
     e.stopPropagation();
   };
 
-  if (enviado) {
+  if (view === 'list') {
     return (
       <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', overflowY: 'auto', background: colors.bg }}>
-        <header style={{ borderBottom: `1px solid ${colors.accent}`, paddingBottom: '10px', marginBottom: '10px' }}>
+        <header style={{ borderBottom: `1px solid ${colors.accent}`, paddingBottom: '10px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ color: colors.softAccent, letterSpacing: '2px', margin: 0, fontSize: '0.85rem' }}>FEEDBACK DEL SISTEMA</h3>
+          <button 
+            onClick={() => setView('form')}
+            style={{ background: 'transparent', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+          >
+            + NUEVA RESEÑA
+          </button>
         </header>
         
         {opiniones.map((item) => (
@@ -110,9 +119,18 @@ export default function EncuestaApp() {
       overflowY: 'auto',
       borderTop: `4px solid ${colors.accent}` 
     }}>
-      <h2 style={{ color: colors.softAccent, margin: 0, letterSpacing: '3px', fontSize: '0.9rem', textTransform: 'uppercase' }}>
-        Registro de Feedback<span>_</span>
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ color: colors.softAccent, margin: 0, letterSpacing: '3px', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+          Registro de Feedback<span>_</span>
+        </h2>
+        <button 
+          type="button"
+          onClick={() => setView('list')}
+          style={{ background: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+        >
+          VER RESEÑAS
+        </button>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <label style={{ color: colors.textMuted, fontSize: '0.7rem', letterSpacing: '1px' }}>ID_USUARIO</label>

@@ -3,6 +3,7 @@ import Spline from '@splinetool/react-spline';
 import { translations } from '../data/translations';
 import ModalPC from '../components/os/ModalPC';
 import ProjectIntro from '../components/os/ProjectIntro';
+import { ROOM_URLS } from '../data/roomUrls';
 
 export default function Room({ userData, onLogout }) {
   const [showDesktop, setShowDesktop] = useState(false);
@@ -14,7 +15,11 @@ export default function Room({ userData, onLogout }) {
   const [showProjectInfo, setShowProjectInfo] = useState(false);
 
   const splineRef = useRef(null);
-  const SCENE_URL = "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1";
+
+  const getSceneUrl = () => {
+    if (!userData) return ROOM_URLS.generic1;
+    return ROOM_URLS[userData.roomType] || ROOM_URLS.generic1;
+  };
 
   // Lógica de interacción (Teclado)
   useEffect(() => {
@@ -24,15 +29,35 @@ export default function Room({ userData, onLogout }) {
 
       const zona = splineRef.current.getVariable('zona_activa');
 
-      if (key === 'e') {
-        if (zona === 1) setShowDesktop(true);
+      if (key === 'e' && zona) {
+        // Obtenemos qué función tiene asignada esta zona el usuario
+        // Por defecto: zona1=pc, zona2=cv, zona3=bed
+        const zoneFunctions = userData?.zoneFunctions || { zona1: 'pc', zona2: 'cv', zona3: 'bed' };
+        let action = 'none';
 
-        if (zona === 2) {
-          const idSeguro = userData?.id || userData?._id || 'laura';
-          window.open(`/cv/${idSeguro}`, '_blank');
+        if (zona === 1) action = zoneFunctions.zona1;
+        if (zona === 2) action = zoneFunctions.zona2;
+        if (zona === 3) action = zoneFunctions.zona3;
+
+        switch (action) {
+          case 'pc':
+            setShowDesktop(true);
+            break;
+          case 'cv':
+            const idSeguro = userData?.id || 'guest';
+            window.open(`/cv/${idSeguro}`, '_blank');
+            break;
+          case 'bed':
+            setShowBed(true);
+            break;
+          case 'encuesta':
+            // Si quieres abrir algo específico, o simplemente abrir el PC en la app de encuesta
+            setShowDesktop(true);
+            break;
+          default:
+            break;
         }
-
-        if (zona === 3) setShowBed(true);
+        
         document.exitPointerLock?.();
       }
 
@@ -47,14 +72,18 @@ export default function Room({ userData, onLogout }) {
   }, [showDesktop, showBed]);
 
   return (
-    <div className="room-container">
+    <div className="room-container" style={{ 
+      fontFamily: userData?.font || 'Inter, sans-serif',
+      '--sys-font': userData?.font || 'Inter, sans-serif'
+    }}>
 
-      {/* 1. LA HABITACIÓN*/}
       <div className="spline-fixed-bg">
         <Spline
           style={{ width: '100%', height: '100%' }}
-          scene={userData?.splineScene || SCENE_URL}
-          onLoad={(spline) => { splineRef.current = spline; }}
+          scene={getSceneUrl()}
+          onLoad={(spline) => { 
+            splineRef.current = spline;
+          }}
         />
       </div>
 
@@ -91,7 +120,7 @@ export default function Room({ userData, onLogout }) {
 
       {/* 3. MODALES (PC, Cama, Info) */}
       {showDesktop && (
-        <ModalPC onClose={() => setShowDesktop(false)} user={userData?.id} />
+        <ModalPC onClose={() => setShowDesktop(false)} user={userData?.id} userData={userData} />
       )}
 
       {showProjectInfo && (

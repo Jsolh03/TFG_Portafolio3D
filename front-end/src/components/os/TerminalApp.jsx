@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-export default function TerminalApp() {
+export default function TerminalApp({ fullData, user }) {
   // --- 1. ESTADOS (Memoria de la Terminal) ---
   // 'input' guarda lo que el usuario está escribiendo en este momento
   const [input, setInput] = useState('');
@@ -32,23 +32,27 @@ export default function TerminalApp() {
       let output = '';
 
       // Evaluamos qué comando ha escrito el usuario
+      const data = fullData || {};
       switch (cmd) {
         case 'help':
-          output = 'Comandos: whoami, experience, skills, clear, github';
+          output = 'Comandos: whoami, about, skills, clear, github';
           break;
         case 'whoami':
-          output = 'Khaled Solh El Hajji - Full-Stack Developer & AI Integrator.';
+          output = `${data.name || user} - ${data.tagline || 'Usuario de K-OS'}`;
           break;
-        case 'experience':
-          output = '1. DSA NEXUX (Full-Stack & IA)\n2. Hospital U. José Germain (IT Systems)';
+        case 'about':
+          output = data.aboutMe || 'Sin información adicional.';
           break;
         case 'skills':
-          output = 'Java, Python, React, Node.js, Active Directory, Prompt Engineering.';
+          output = data.skills?.join(', ') || 'No hay habilidades registradas.';
           break;
         case 'github':
-          output = 'Abriendo conexión segura con github.com/Jsolh03...';
-          // Abre el enlace en una pestaña nueva
-          window.open('https://github.com/Jsolh03', '_blank');
+          if (data.contact?.github) {
+            output = `Abriendo conexión segura con ${data.contact.github}...`;
+            window.open(data.contact.github, '_blank');
+          } else {
+            output = 'Error: GitHub no configurado para este usuario.';
+          }
           break;
         case 'clear':
           // Borra el historial y vacía el input. El 'return' evita que se ejecute el código de abajo.

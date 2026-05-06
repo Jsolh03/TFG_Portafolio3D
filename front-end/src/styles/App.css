@@ -7,7 +7,7 @@
 }
 
 * {
-  font-family: 'fuente_retro', monospace !important;
+  font-family: var(--sys-font, 'fuente_retro'), monospace !important;
   font-size: 12px;
   box-sizing: border-box;
 }

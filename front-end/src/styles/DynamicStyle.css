@@ -16,7 +16,7 @@ html, body {
 .cv-dynamic-wrapper {
   background-color: #0d1117;
   color: #c9d1d9;
-  font-family: 'fuente_retro', monospace;
+  font-family: var(--sys-font, 'fuente_retro'), monospace;
   min-height: 100vh;
   display: flex;
   justify-content: center;

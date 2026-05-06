@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function InfoApp({ user, onOpenCV }) {
+export default function InfoApp({ user, fullData, onOpenCV }) {
     const [selectedOption, setSelectedOption] = useState(null);
 
     const options = [
@@ -10,24 +10,25 @@ export default function InfoApp({ user, onOpenCV }) {
     ];
 
     const getContentForOption = () => {
+        const data = fullData || {};
         switch (selectedOption) {
             case 'cv':
                 return onOpenCV();
             case 'resumen':
                 return (
                     <div style={{ padding: '30px', color: '#c9d1d9' }}>
-                        <h2 style={{ color: '#a034e7' }}>{user.name}</h2>
-                        <p>{user.subtitle}</p>
-                        <p><strong>Stack Principal:</strong> {user.coreStack?.join(', ')}</p>
+                        <h2 style={{ color: '#a034e7' }}>{data.name || user}</h2>
+                        <p>{data.tagline || ''}</p>
+                        <p><strong>Stack Principal:</strong> {data.skills?.join(', ') || ''}</p>
                     </div>
                 );
             case 'contacto':
                 return (
                     <div style={{ padding: '30px', color: '#c9d1d9' }}>
                         <h2 style={{ color: '#a034e7' }}>Contacto</h2>
-                        <p><strong>Email:</strong> {user.contact?.email}</p>
-                        <p><strong>Ubicación:</strong> {user.contact?.location}</p>
-                        <p><strong>GitHub:</strong> {user.contact?.githubHandle}</p>
+                        <p><strong>Email:</strong> {data.contact?.email || 'No disponible'}</p>
+                        <p><strong>LinkedIn:</strong> {data.contact?.linkedin || 'No disponible'}</p>
+                        <p><strong>GitHub:</strong> {data.contact?.github || 'No disponible'}</p>
                     </div>
                 );
             default: return null;

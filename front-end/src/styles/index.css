@@ -11,5 +11,5 @@ body, html, #root {
   height: 100%;
   overflow: hidden;
   background-color: #f4f0ff; /* Blanco con un tono mínimo de morado pastel */
-  font-family: 'Courier New', monospace;
+  font-family: var(--sys-font, 'Courier New'), monospace;
 }
