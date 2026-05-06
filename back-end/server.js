@@ -47,6 +47,8 @@ const encuestaSchema = new mongoose.Schema({
   comentario: String,
   puntuacion: Number,
   created_at: { type: Date, default: Date.now }
+}, { 
+  versionKey: false // <--- Esto evita que se cree el campo __v
 });
 
 const Encuesta = mongoose.model('Encuesta', encuestaSchema, 'encuestas');

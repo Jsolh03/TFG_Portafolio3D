@@ -7,7 +7,7 @@ export default function DynamicCV({ user }) {
 
   const skills = user.skills || user.coreStack || [];
 
-  // Usa la imagen importada por userId (fiable con Vite).
+  // Usa la imagen importada por userId .
   // Si no hay mapeo, intenta la URL de MongoDB como fallback.
   const avatar = avatars[user.id] || user.profileImg || null;
 

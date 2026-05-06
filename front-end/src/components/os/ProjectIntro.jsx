@@ -1,44 +1,57 @@
 import React from 'react';
 
-export default function ProjectIntro({ onContinue }) {
-  return (
-    <div className="intro-overlay">
-      <div className="intro-window">
+// Aceptamos ambos nombres para que no falle en ningún sitio
+export default function ProjectIntro({ onClose, onContinue }) {
+  
+  // Usamos el que esté disponible (uno será para el inicio y otro para el menú)
+  const handleAction = onClose || onContinue;
 
-        <header className="intro-header" style={{ position: 'relative' }}>
+  return (
+    <div className="modal-glass" onClick={handleAction}>
+      <div className="intro-window" onClick={(e) => e.stopPropagation()}>
+
+        <header className="intro-header">
           <div className="intro-header-controls">
-            <span className="dot close" onClick={onContinue} title="Cerrar"></span>
+            {/* Si el punto close no funciona, es porque handleAction no llegaba */}
+            <span className="dot close" onClick={handleAction} title="Cerrar"></span>
             <span className="dot minimize"></span>
             <span className="dot maximize"></span>
           </div>
-          <span className="intro-title-bar">SYSTEM_INFO_v1.0</span>
-          <button className="intro-close-btn" onClick={onContinue}>✕</button>
+          <span className="intro-title-bar">SYSTEM_INFO.log</span>
+          <button className="intro-close-btn" onClick={handleAction}>✕</button>
         </header>
 
         <div className="intro-body">
-          <h2>PORTFOLIO 3D</h2>
-          <p className="intro-subtitle">Trabajo de Fin de Grado</p>
+          <h2>PORTFOLIO 3D<span>_</span></h2>
+          <p className="intro-subtitle">TRABAJO DE FIN DE GRADO</p>
+
+          <div className="intro-info-item">
+            <span>
+              Este proyecto es un <b>Portfolio 3D interactivo</b> en el que puedes explorar 
+              los distintos usuarios con sus <b>CV personalizados</b> y habitaciones propias.
+            </span>
+          </div>
 
           <div className="intro-stack">
             <div className="intro-stack-item">
-              <span>Frontend</span>
+              <span>FRONTEND</span>
               <span>React + Spline 3D</span>
             </div>
             <div className="intro-stack-item">
-              <span>Backend</span>
+              <span>BACKEND</span>
               <span>Node.js + Express</span>
             </div>
             <div className="intro-stack-item">
-              <span>Base de datos</span>
+              <span>DATABASE</span>
               <span>MongoDB Atlas</span>
+            </div>
+            <div className="intro-stack-item">
+              <span>AUTORES</span>
+              <span>Khaled Solh y Laura Jara</span>
             </div>
           </div>
 
-          <button className="intro-btn" onClick={onContinue}>
-            INICIALIZAR ENTORNO
-          </button>
         </div>
-
       </div>
     </div>
   );

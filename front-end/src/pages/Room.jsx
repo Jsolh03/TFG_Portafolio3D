@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Spline from '@splinetool/react-spline';
 import { translations } from '../data/translations';
 import ModalPC from '../components/os/ModalPC';
+import ProjectIntro from '../components/os/ProjectIntro';
 
 export default function Room({ userData, onLogout }) {
   const [showDesktop, setShowDesktop] = useState(false);
@@ -13,7 +14,7 @@ export default function Room({ userData, onLogout }) {
   const [showProjectInfo, setShowProjectInfo] = useState(false);
 
   const splineRef = useRef(null);
-  const SCENE_URL = "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=2";
+  const SCENE_URL = "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1";
 
   // Lógica de interacción (Teclado)
   useEffect(() => {
@@ -24,7 +25,13 @@ export default function Room({ userData, onLogout }) {
       const zona = splineRef.current.getVariable('zona_activa');
 
       if (key === 'e') {
-        if (zona === 1 || zona === 2) setShowDesktop(true);
+        if (zona === 1) setShowDesktop(true);
+
+        if (zona === 2) {
+          const idSeguro = userData?.id || userData?._id || 'laura';
+          window.open(`/cv/${idSeguro}`, '_blank');
+        }
+
         if (zona === 3) setShowBed(true);
         document.exitPointerLock?.();
       }
@@ -42,16 +49,16 @@ export default function Room({ userData, onLogout }) {
   return (
     <div className="room-container">
 
-      {/* 1. LA HABITACIÓN (Fondo Fijo) */}
+      {/* 1. LA HABITACIÓN*/}
       <div className="spline-fixed-bg">
         <Spline
-          style={{ width: '100%', height: '100%' }} // Estilo directo para forzar
+          style={{ width: '100%', height: '100%' }}
           scene={userData?.splineScene || SCENE_URL}
           onLoad={(spline) => { splineRef.current = spline; }}
         />
       </div>
 
-      {/* 2. MENU LATERAL (Sidebar) */}
+      {/* 2. MENU LATERAL */}
       <div className={`sidebar-room ${isMenuOpen ? 'expanded' : 'collapsed'}`}>
         <button className="sidebar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? '◀' : '▶'}
@@ -88,27 +95,22 @@ export default function Room({ userData, onLogout }) {
       )}
 
       {showProjectInfo && (
-        <div className="modal-glass" onClick={() => setShowProjectInfo(false)}>
-          <div className="modal-content info-box" onClick={e => e.stopPropagation()}>
-            <header className="info-header">
-              <h3>INFORMACIÓN DEL PROYECTO</h3>
-              <button onClick={() => setShowProjectInfo(false)}>✕</button>
-            </header>
-            <div className="info-body">
-              <p><b>Desarrollo:</b> Portfolio Interactivo 3D</p>
-              <p><b>Tecnologías:</b> React, Spline, Node.js, MongoDB Atlas.</p>
-              <p><b>Estado:</b> v1.0.4 - Room_Environment</p>
-            </div>
-          </div>
-        </div>
+        <ProjectIntro onClose={() => setShowProjectInfo(false)} />
       )}
 
+      {/*CAMA MENU SALIR */}
       {showBed && (
-        <div className="modal-glass">
-          <div className="modal-content" style={{ textAlign: 'center' }}>
-            <h2>¿Quieres salir?</h2>
-            <button className="btn-nav" onClick={onLogout}>SÍ, SALIR</button>
-            <button className="btn-nav" onClick={() => setShowBed(false)}>NO, QUEDARME</button>
+        <div className="modal-glass" onClick={() => setShowBed(false)}>
+          <div className="modal-content bed-modal-content" onClick={e => e.stopPropagation()}>
+            <h2>¿DESEAS SALIR?</h2>
+            <div className="bed-btn-group">
+              <button className="btn-nav" onClick={onLogout} style={{ color: '#f85149' }}>
+                SÍ, SALIR DE LA HABITACIÓN
+              </button>
+              <button className="btn-nav" onClick={() => setShowBed(false)}>
+                NO, SEGUIR EXPLORANDO
+              </button>
+            </div>
           </div>
         </div>
       )}

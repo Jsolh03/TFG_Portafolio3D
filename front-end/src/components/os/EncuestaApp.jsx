@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../../config';
 
+const MAX_CHARS = 280;
+
 export default function EncuestaApp() {
-  const [enviado, setEnviado] = useState(false);
+  const [enviado, setEnviado] = useState(() => {
+    return localStorage.getItem('encuesta_realizada') === 'true';
+  });
+
   const [opiniones, setOpiniones] = useState([]);
-  const [puntuacion, setPuntuacion] = useState(5);
+  const [puntuacion, setPuntuacion] = useState(0);
+  const [chars, setChars] = useState(0);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/encuestas`)
@@ -15,76 +21,174 @@ export default function EncuestaApp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (puntuacion === 0) return;
     const formData = new FormData(e.target);
     const nuevaOpinion = {
       nombre: formData.get('nombre'),
       comentario: formData.get('opinion'),
-      puntuacion: parseInt(formData.get('puntuacion'))
+      puntuacion
     };
     const response = await fetch(`${API_BASE}/api/encuestas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevaOpinion)
     });
-    if (response.ok) setEnviado(true);
+
+    if (response.ok) {
+      localStorage.setItem('encuesta_realizada', 'true');
+      setEnviado(true);
+    }
+  };
+
+  const colors = {
+    bg: '#0f0f1a',          
+    card: '#161b22',        
+    accent: '#a034e7',      
+    softAccent: '#cbbceb',  
+    border: '#3d375e',      
+    textMuted: '#8b949e'
+  };
+
+  const inputStyle = {
+    background: colors.bg,
+    color: '#c9d1d9',
+    padding: '10px 12px',
+    border: `1px solid ${colors.border}`,
+    borderRadius: '4px',
+    fontFamily: 'inherit',
+    fontSize: '0.85rem',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s'
+  };
+
+  const handleCaptureKeys = (e) => {
+    e.stopPropagation();
   };
 
   if (enviado) {
     return (
-      <div style={{ padding: '25px', color: 'white', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', overflowY: 'auto', background: '#0d0d12' }}>
-        <h3 style={{ color: '#a034e7', letterSpacing: '2px', margin: 0 }}>FEEDBACK RECIBIDO</h3>
+      <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', overflowY: 'auto', background: colors.bg }}>
+        <header style={{ borderBottom: `1px solid ${colors.accent}`, paddingBottom: '10px', marginBottom: '10px' }}>
+          <h3 style={{ color: colors.softAccent, letterSpacing: '2px', margin: 0, fontSize: '0.85rem' }}>FEEDBACK DEL SISTEMA</h3>
+        </header>
+        
         {opiniones.map((item) => (
-          <div key={item._id} style={{ background: 'rgba(160, 52, 231, 0.05)', padding: '14px 18px', borderRadius: '8px', border: '1px solid rgba(160, 52, 231, 0.25)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <strong style={{ color: '#cbbceb' }}>@{item.nombre}</strong>
-              <span style={{ color: '#a034e7', fontSize: '0.85rem' }}>★ {item.puntuacion}/10</span>
+          <div key={item._id} style={{ 
+            background: colors.card, 
+            padding: '14px', 
+            borderRadius: '4px', 
+            border: `1px solid ${colors.border}`,
+            borderLeft: `3px solid ${colors.accent}`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <strong style={{ color: '#fff', fontSize: '0.85rem' }}>@{item.nombre}</strong>
+              <span style={{ color: colors.accent, fontSize: '0.8rem' }}>
+                {/* Límite ajustado a 5 estrellas */}
+                {'★'.repeat(item.puntuacion)}{'☆'.repeat(5 - item.puntuacion)}
+              </span>
             </div>
-            <p style={{ color: '#8b949e', margin: 0, fontSize: '0.85rem', lineHeight: '1.7' }}>"{item.comentario}"</p>
+            <p style={{ color: '#b1b8c0', margin: 0, fontSize: '0.85rem', lineHeight: '1.6', fontStyle: 'italic' }}>
+              "{item.comentario}"
+            </p>
           </div>
         ))}
-        <button onClick={() => setEnviado(false)} style={{ color: '#a034e7', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit', fontSize: '0.85rem', textAlign: 'left', padding: 0, marginTop: '8px' }}>← Volver a escribir</button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ padding: '28px', color: 'white', display: 'flex', flexDirection: 'column', gap: '16px', background: '#0d0d12', height: '100%', boxSizing: 'border-box' }}>
-      <h2 style={{ color: '#a034e7', margin: 0, letterSpacing: '2px', fontSize: '1rem' }}>DEJA TU HUELLA</h2>
-
-      <input
-        name="nombre"
-        placeholder="Tu alias..."
-        required
-        style={{ background: '#1a1a24', color: 'white', padding: '10px 14px', border: '1px solid rgba(160,52,231,0.3)', borderRadius: '6px', fontFamily: 'inherit', fontSize: '0.85rem', outline: 'none' }}
-      />
+    <form onSubmit={handleSubmit} style={{ 
+      padding: '25px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '18px', 
+      background: colors.bg, 
+      height: '100%', 
+      boxSizing: 'border-box', 
+      overflowY: 'auto',
+      borderTop: `4px solid ${colors.accent}` 
+    }}>
+      <h2 style={{ color: colors.softAccent, margin: 0, letterSpacing: '3px', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+        Registro de Feedback<span>_</span>
+      </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <label style={{ color: '#8b949e', fontSize: '0.78rem', letterSpacing: '1px' }}>
-          PUNTUACIÓN: <span style={{ color: '#a034e7' }}>{puntuacion}/10</span>
-        </label>
-        <input
-          name="puntuacion"
-          type="range"
-          min="1"
-          max="10"
-          value={puntuacion}
-          onChange={e => setPuntuacion(e.target.value)}
-          style={{ accentColor: '#a034e7' }}
+        <label style={{ color: colors.textMuted, fontSize: '0.7rem', letterSpacing: '1px' }}>ID_USUARIO</label>
+        <input 
+          name="nombre" 
+          placeholder="Introduce tu alias..." 
+          required 
+          style={inputStyle} 
+          onFocus={e => e.target.style.borderColor = colors.accent}
+          onBlur={e => e.target.style.borderColor = colors.border}
+          onKeyDown={handleCaptureKeys}
         />
       </div>
 
-      <textarea
-        name="opinion"
-        placeholder="Review técnica..."
-        required
-        style={{ background: '#1a1a24', color: 'white', padding: '10px 14px', border: '1px solid rgba(160,52,231,0.3)', borderRadius: '6px', height: '100px', resize: 'none', fontFamily: 'inherit', fontSize: '0.85rem', outline: 'none' }}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <label style={{ color: colors.textMuted, fontSize: '0.7rem', letterSpacing: '1px' }}>
+          VALORACIÓN_SISTEMA {puntuacion === 0 && <span style={{ color: '#f85149', fontSize: '0.6rem' }}>[!]</span>}
+        </label>
+        <div style={{ display: 'flex', gap: '8px', background: colors.card, padding: '10px', borderRadius: '4px', border: `1px solid ${colors.border}`, justifyContent: 'center' }}>
+          {/* Mapeo limitado a 5 estrellas */}
+          {[1, 2, 3, 4, 5].map(n => (
+            <span
+              key={n}
+              onClick={() => setPuntuacion(n)}
+              style={{
+                cursor: 'pointer',
+                fontSize: '1.5rem', // Un poco más grandes al ser menos
+                color: n <= puntuacion ? colors.softAccent : '#30363d',
+                transition: 'all 0.2s',
+                userSelect: 'none'
+              }}
+            >
+              ★
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ color: colors.textMuted, fontSize: '0.7rem', letterSpacing: '1px' }}>MENSAJE_LOG</label>
+        <textarea
+          name="opinion"
+          placeholder="Escribe tu opinión técnica aquí..."
+          required
+          maxLength={MAX_CHARS}
+          onChange={e => setChars(e.target.value.length)}
+          style={{ ...inputStyle, height: '100px', resize: 'none' }}
+          onFocus={e => e.target.style.borderColor = colors.accent}
+          onBlur={e => e.target.style.borderColor = colors.border}
+          onKeyDown={handleCaptureKeys}
+        />
+        <span style={{ color: chars >= MAX_CHARS ? '#f85149' : colors.textMuted, fontSize: '0.7rem', textAlign: 'right' }}>
+          CHARS: {chars}/{MAX_CHARS}
+        </span>
+      </div>
 
       <button
         type="submit"
-        style={{ background: 'rgba(160,52,231,0.15)', color: '#a034e7', padding: '12px', borderRadius: '6px', border: '1px solid rgba(160,52,231,0.5)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', letterSpacing: '1px', transition: 'background 0.2s' }}
+        style={{
+          background: colors.accent, 
+          color: '#fff',
+          padding: '12px', 
+          borderRadius: '4px',
+          border: 'none', 
+          cursor: 'pointer',
+          fontFamily: 'inherit', 
+          fontSize: '0.85rem',
+          fontWeight: 'bold',
+          letterSpacing: '2px', 
+          marginTop: '10px',
+          transition: 'background 0.3s'
+        }}
+        onMouseEnter={e => e.target.style.background = '#8a2be2'}
+        onMouseLeave={e => e.target.style.background = colors.accent}
       >
-        PUBLICAR COMENTARIO
+        ENVIAR_DATOS
       </button>
     </form>
   );

@@ -157,33 +157,6 @@ canvas {
   overflow: hidden;
 }
 
-/* --- BLOQUEO TOTAL DE LA HABITACIÓN --- */
-.spline-fixed-bg {
-  position: fixed; /* Cambiado de absolute a fixed */
-  top: 0;
-  left: 0;
-  width: 100vw; /* Ancho de la ventana */
-  height: 100vh; /* Alto de la ventana */
-  z-index: 0; /* Al fondo de todo */
-  overflow: hidden;
-  pointer-events: auto; /* Permite que el ratón llegue al 3D */
-}
-
-/* Forzamos al canvas a ignorar cualquier redimensionamiento extraño */
-.spline-fixed-bg canvas {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover; /* Mantiene la habitación llenando el espacio */
-  touch-action: none; /* Evita que el zoom táctil mueva la cámara */
-}
-
-/* --- AJUSTE DEL CONTENEDOR PADRE --- */
-.room-container {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  overflow: hidden; /* Evita que aparezcan barras de scroll con el zoom */
-}
 
 /* --- SIDEBAR DENTRO DE ROOM --- */
 .sidebar-room {
@@ -277,27 +250,71 @@ canvas {
   letter-spacing: 1px;
 }
 
-/* --- ESTILO EXTRA PARA EL MODAL DE INFO --- */
-.info-box {
-  background: #0d1117;
-  border: 1px solid #a034e7;
-  padding: 0 !important;
-  width: 450px !important;
+/* --- INFO DEL PROYECTO --- */
+.intro-window {
+  width: 680px; 
+  background: rgba(13, 13, 18, 0.95);
+  border: 1px solid #30363d;
+  border-top: 4px solid #a034e7; 
+  border-radius: 4px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
 }
 
-.info-header {
-  background: #161b22;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(160, 52, 231, 0.3);
+.intro-header {
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
 }
 
-.info-body {
-  padding: 25px 20px;
+.intro-body { 
+  padding: 45px 50px; 
+}
+
+.intro-body h2 {
+  font-size: 1.8rem;
+  color: #ffffff;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+}
+
+.intro-subtitle {
+  color: #a034e7 !important;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  margin-bottom: 40px !important;
+}
+
+.intro-stack {
+  gap: 15px !important;
+}
+
+.intro-stack-item {
+  background: transparent !important; /* Limpieza visual */
+  border: none !important;
+  border-bottom: 1px solid #21262d !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
+}
+
+.intro-info-item {
+  margin-bottom: 40px;
+  padding: 25px;
+  background: rgba(244, 239, 248, 0.03);
+  border-left: 3px solid #a034e7;
+}
+
+.intro-info-item span {
+ 
+  color: #ffffff !important; 
+  font-size: 1.1rem;
   line-height: 1.8;
-  color: #c9d1d9;
+  display: block;
 }
+
+.intro-stack-item span:first-child {
+  color: #6e7681 !important;
+  font-weight: bold;
+}
+
 
 /* ── FONDOS DE CARGA Y LOGIN ── */
 .login-screen { 
@@ -358,7 +375,6 @@ canvas {
   padding: 30px; 
   width: 230px; 
   cursor: pointer; 
-  /* QUITAMOS TRANSFORM DE LA TRANSICIÓN */
   transition: border-color 0.3s ease, background 0.3s ease;
   display: flex; 
   flex-direction: column; 
@@ -366,10 +382,8 @@ canvas {
 }
 
 .user-card:hover {
-  /* SOLO CAMBIA EL COLOR DEL BORDE Y EL FONDO */
   border-color: #a034e7; 
   background: rgba(160, 52, 231, 0.06);
-  /* SIN TRANSFORM (NO SE MUEVE) */
   box-shadow: 0 0 20px rgba(160, 52, 231, 0.1); 
 }
 
@@ -392,13 +406,11 @@ canvas {
   background: #0d1117; 
   border: 2px solid #30363d;
   overflow: hidden;
-  /* SOLO TRANSICIÓN DE COLOR */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .user-card:hover .avatar {
   border-color: #a034e7;
-  /* SIN SCALE (EL AVATAR NO CRECE) */
   box-shadow: 0 0 15px rgba(160, 52, 231, 0.2);
 }
 
@@ -414,7 +426,7 @@ canvas {
   overflow: hidden;
 }
 
-/* ── MODAL BASE (backdrop) ── */
+/* ── MODAL BASE  ── */
 .modal-glass {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -516,6 +528,8 @@ canvas {
   opacity: 1;
   transform: translateY(-2px);
 }
+
+
 
 /* ── VENTANA DE APP ABIERTA ── */
 .app-window {
@@ -677,3 +691,67 @@ canvas {
 }
 
 .intro-btn:hover { background: #30363d; border-color: #484f58; }
+
+
+/* ── MENÚ DE SALIDA (CAMA) ── */
+
+/* Contenedor pequeño y minimalista */
+.bed-modal-content {
+  width: 380px !important;       /* Ancho controlado para que no ocupe toda la pantalla */
+  padding: 50px !important;
+  text-align: center;
+  background: #161b22 !important; /* Gris oscuro de la caja */
+  border: 1px solid #30363d !important;
+  border-top: 3px solid #a034e7 !important; /* El toque morado característico */
+  border-radius: 4px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+/* Título de la pregunta */
+.bed-modal-content h2 {
+  color: #ffffff !important;      /* Forzamos el blanco para que se vea */
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  margin-bottom: 35px;
+  font-weight: normal;
+}
+
+/* Grupo de botones en columna */
+.bed-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilo de los botones del menú */
+.bed-btn-group .btn-nav {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #30363d;
+  padding: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  text-align: center;
+  border-radius: 4px;
+  display: block;
+  width: 100%;
+}
+
+/* Efecto Hover para los botones */
+.bed-btn-group .btn-nav:hover {
+  background: rgba(160, 52, 231, 0.1);
+  border-color: #a034e7;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+/* El botón de "Seguir explorando" en un tono más discreto */
+.bed-btn-group .btn-nav:last-child {
+  color: #8b949e;
+}
+
+.bed-btn-group .btn-nav:last-child:hover {
+  color: #ffffff;
+}

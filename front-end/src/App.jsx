@@ -42,7 +42,7 @@ function Portfolio() {
   return (
     <div className="main-container login-screen">
       <div className="login-box">
-        <h1 className="login-title">SYSTEM_LOGIN<span>_</span></h1>
+        <h1 className="login-title">SYSTEM_LOGIN</h1>
         {isLoading && <p style={{ color: '#6e7681', textAlign: 'center', marginTop: 0 }}>Conectando...</p>}
         <div className="user-grid">
           <button className="user-card" onClick={() => handleLogin('khaled')} disabled={isLoading}>
