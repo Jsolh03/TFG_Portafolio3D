@@ -1,7 +1,7 @@
 import React, { useState, Suspense } from 'react';
 import Spline from '@splinetool/react-spline';
 import { API_BASE } from '../../config';
-import { ROOM_URLS, ROOM_NAMES } from '../../data/roomUrls';
+import { ROOM_URLS, ROOM_NAMES ,ROOM_IMAGES} from '../../data/roomUrls';
 
 const ROOM_KEYS = Object.keys(ROOM_URLS);
 
@@ -19,8 +19,11 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     skillsString: '', // comma separated
     email: '',
     linkedin: '',
-    github: ''
+    github: '',
+    profileImg: ''
   });
+
+  const [imgStatus, setImgStatus] = useState('idle'); // idle | loading | ok | error
   
   const [roomIndex, setRoomIndex] = useState(0);
   const [error, setError] = useState('');
@@ -42,6 +45,33 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     { id: 'encuesta', label: 'Feedback' },
     { id: 'none', label: 'Nada' }
   ];
+
+  // Valida que la URL apunte a una imagen real
+  const validateImageUrl = (url) => {
+    if (!url) { setImgStatus('idle'); return; }
+    // Comprobación rápida por extensión
+    const hasImgExtension = /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?.*)?$/i.test(url);
+    if (!hasImgExtension) {
+      // Intenta igualmente cargarla (Imgur, CDNs sin extensión, etc.)
+    }
+    setImgStatus('loading');
+    const img = new Image();
+    img.onload  = () => setImgStatus('ok');
+    img.onerror = () => setImgStatus('error');
+    img.src = url;
+  };
+
+  const validateGithub = (url) => {
+    if (!url) { setGithubStatus('idle'); return; }
+    const valid = /^https?:\/\/(www\.)?github\.com\/[A-Za-z0-9_.-]+\/?$/.test(url.trim());
+    setGithubStatus(valid ? 'ok' : 'error');
+  };
+ 
+  const validateLinkedin = (url) => {
+    if (!url) { setLinkedinStatus('idle'); return; }
+    const valid = /^https?:\/\/(www\.)?linkedin\.com\/(in|pub|company)\/[A-Za-z0-9_-]+\/?/.test(url.trim());
+    setLinkedinStatus(valid ? 'ok' : 'error');
+  };
 
   const fontOptions = [
     { id: 'Inter', label: 'Inter (Moderna)' },
@@ -80,6 +110,8 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     setError('');
     setLoading(true);
     
+    if (imgStatus === 'error') { setError('La URL de la foto no es una imagen válida.'); setLoading(false); return; }
+
     // Preparar el objeto final separando los strings
     const finalData = {
       ...formData,
@@ -121,30 +153,31 @@ export default function Register({ onRegisterSuccess, onCancel }) {
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* CAROUSEL 3D */}
+        {/* CAROUSEL HABITACIONES */}
         <div style={{ background: '#010409', borderRadius: '8px', padding: '15px', border: '1px solid #30363d' }}>
-          <h3 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#c9d1d9' }}>SELECCIONA TU HABITACIÓN</h3>
-          
+          <h3 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#c9d1d9', fontSize: '0.85rem', letterSpacing: '1px' }}>SELECCIONA TU HABITACIÓN</h3>
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-            <button type="button" onClick={prevRoom} style={{ background: '#21262d', color: '#c9d1d9', border: 'none', padding: '15px', borderRadius: '4px', cursor: 'pointer' }}>◀</button>
-            
-            <div style={{ width: '100%', height: '400px', background: '#000', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-              <Suspense fallback={<div style={{color:'white', padding:'20px'}}>Cargando modelo 3D...</div>}>
-                 <Spline 
-                   scene={ROOM_URLS[ROOM_KEYS[roomIndex]]} 
-                   onLoad={(spline) => {
-                     // Alejar la cámara para que se vea más de la habitación
-                     spline.setZoom(0.6); 
-                   }}
-                 />
-              </Suspense>
-              {/* Overlay prevent clicks */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'transparent' }}></div>
+            <button type="button" onClick={prevRoom} style={{ background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', padding: '12px 16px', borderRadius: '4px', cursor: 'pointer', flexShrink: 0 }}>◀</button>
+
+            <div style={{ flex: 1, height: '260px', borderRadius: '6px', overflow: 'hidden', position: 'relative', background: '#0d1117', border: '1px solid #21262d' }}>
+              {ROOM_IMAGES?.[ROOM_KEYS[roomIndex]]
+                ? <img
+                    src={ROOM_IMAGES[ROOM_KEYS[roomIndex]]}
+                    alt={ROOM_NAMES[ROOM_KEYS[roomIndex]]}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#484f58', flexDirection: 'column', gap: '8px' }}>
+                    <span style={{ fontSize: '2rem' }}>🏠</span>
+                    <span style={{ fontSize: '0.78rem' }}>{ROOM_NAMES[ROOM_KEYS[roomIndex]]}</span>
+                  </div>
+              }
             </div>
 
-            <button type="button" onClick={nextRoom} style={{ background: '#21262d', color: '#c9d1d9', border: 'none', padding: '15px', borderRadius: '4px', cursor: 'pointer' }}>▶</button>
+            <button type="button" onClick={nextRoom} style={{ background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', padding: '12px 16px', borderRadius: '4px', cursor: 'pointer', flexShrink: 0 }}>▶</button>
           </div>
-          <p style={{ textAlign: 'center', marginTop: '10px', color: '#58a6ff', fontWeight: 'bold' }}>
+
+          <p style={{ textAlign: 'center', marginTop: '10px', color: '#8b949e', fontSize: '0.82rem', letterSpacing: '1px' }}>
             {ROOM_NAMES[ROOM_KEYS[roomIndex]]}
           </p>
         </div>
@@ -215,6 +248,58 @@ export default function Register({ onRegisterSuccess, onCancel }) {
               <input type="url" placeholder="LinkedIn URL" value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} style={{ flex: 1, padding: '8px', background: '#0d1117', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px' }} />
               <input type="url" placeholder="GitHub URL" value={formData.github} onChange={e => setFormData({...formData, github: e.target.value})} style={{ flex: 1, padding: '8px', background: '#0d1117', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px' }} />
             </div>
+          </div>
+        </div>
+
+        {/* FOTO DE PERFIL */}
+        <div style={{ borderTop: '1px solid #30363d', paddingTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h3 style={{ margin: '0 0 4px 0', color: '#c9d1d9' }}>FOTO DE PERFIL</h3>
+          <p style={{ margin: 0, color: '#6e7681', fontSize: '0.78rem' }}>
+            Pega una URL pública de tu foto (Imgur, GitHub, LinkedIn, etc.)
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+
+            {/* Preview */}
+            <div style={{
+              width: '72px', height: '72px', borderRadius: '50%', flexShrink: 0,
+              background: '#161b22', border: `2px solid ${imgStatus === 'ok' ? '#6e40c9' : imgStatus === 'error' ? '#f85149' : '#30363d'}`,
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'border-color 0.2s'
+            }}>
+              {imgStatus === 'ok'
+                ? <img src={formData.profileImg} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ fontSize: '1.6rem', color: '#484f58' }}>👤</span>
+              }
+            </div>
+
+            {/* Input + estado */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <input
+                type="url"
+                placeholder="https://i.imgur.com/tu-foto.jpg"
+                value={formData.profileImg}
+                onChange={e => {
+                  const url = e.target.value;
+                  setFormData(prev => ({ ...prev, profileImg: url }));
+                  validateImageUrl(url);
+                }}
+                style={{
+                  width: '100%', padding: '8px',
+                  background: '#0d1117', color: '#c9d1d9',
+                  border: `1px solid ${imgStatus === 'error' ? '#f85149' : '#30363d'}`,
+                  borderRadius: '4px', outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+              />
+              <span style={{ fontSize: '0.75rem', color: imgStatus === 'ok' ? '#3fb950' : imgStatus === 'error' ? '#f85149' : '#484f58' }}>
+                {imgStatus === 'idle'    && 'Sin foto — se usará el avatar por defecto'}
+                {imgStatus === 'loading' && '⏳ Verificando imagen...'}
+                {imgStatus === 'ok'      && '✓ Imagen válida'}
+                {imgStatus === 'error'   && '✗ No se pudo cargar — revisa la URL'}
+              </span>
+            </div>
+
           </div>
         </div>
 
