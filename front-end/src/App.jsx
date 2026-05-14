@@ -129,7 +129,7 @@ function Portfolio() {
             </div>
             
             {!devAuth ? (
-              <form onSubmit={handleDevAuth} style={{ display: 'flex', gap: '10px' }}>
+              <form onSubmit={handleDevAuth} style={{ display: 'flex', gap: '20px' }}>
                 <input type="password" placeholder="Contraseña de administrador..." value={devPass} onChange={e => setDevPass(e.target.value)} style={{ flex: 1, padding: '10px', background: '#0d1117', color: 'white', border: '1px solid #30363d', borderRadius: '4px' }} />
                 <button type="submit" className="sidebar-link" style={{ padding: '10px 20px', background: '#f85149', color: 'white', border: 'none', borderRadius: '4px' }}>VERIFICAR</button>
               </form>
@@ -144,7 +144,7 @@ function Portfolio() {
                         <div style={{ fontSize: '11px', color: '#a034e7' }}>Habitación: {u.roomType}</div>
                       </div>
                       {u.id !== 'khaled' && u.id !== 'laura' && (
-                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>🗑️ Eliminar</button>
+                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Eliminar</button>
                       )}
                     </div>
                   ))}

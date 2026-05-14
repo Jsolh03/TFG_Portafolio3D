@@ -1,13 +1,8 @@
 /* ── RESET Y FUENTE ── */
-@font-face {
-  font-family: 'fuente_retro';
-  src: url('../assets/font_pixel.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 * {
-  font-family: var(--sys-font, 'fuente_retro'), monospace !important;
+  font-family: var(--sys-font, 'Inter'), sans-serif !important;
   font-size: 12px;
   box-sizing: border-box;
 }
