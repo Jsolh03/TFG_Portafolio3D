@@ -294,7 +294,7 @@ export default function Register({ onRegisterSuccess, onCancel }) {
               />
               <span style={{ fontSize: '0.75rem', color: imgStatus === 'ok' ? '#3fb950' : imgStatus === 'error' ? '#f85149' : '#484f58' }}>
                 {imgStatus === 'idle'    && 'Sin foto — se usará el avatar por defecto'}
-                {imgStatus === 'loading' && '⏳ Verificando imagen...'}
+                {imgStatus === 'loading' && 'Verificando imagen...'}
                 {imgStatus === 'ok'      && '✓ Imagen válida'}
                 {imgStatus === 'error'   && '✗ No se pudo cargar — revisa la URL'}
               </span>

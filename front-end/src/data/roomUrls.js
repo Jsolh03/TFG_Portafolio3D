@@ -1,7 +1,7 @@
 export const ROOM_URLS = {
   khaled: "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode",
   laura: "https://prod.spline.design/0AAbLARUIfS9i4Qa/scene.splinecode?v=1",
-  generic1: "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1",
+  generic1: "https://prod.spline.design/a-34zknZfKmyRW4X/scene.splinecode?v=1",
   generic2: "https://prod.spline.design/a-34zknZfKmyRW4X/scene.splinecode?v=1",
   generic3: "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1",
   generic4: "https://prod.spline.design/cveZhllWScLLehFW/scene.splinecode?v=1",

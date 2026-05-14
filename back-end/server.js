@@ -14,38 +14,22 @@ mongoose.connect(uri)
   .then(() => console.log("Servidor conectado a MongoDB Atlas"))
   .catch(err => console.error("Error de conexión:", err.message));
 
+// ESQUEMA LIMPIO: Sin campos duplicados
 const userSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  name: String,
-  tagline: String,
-  profileImg: String,
-  aboutMe: String,
-  education: [{
-    title: String,
-    institution: String,
-    period: String
-  }],
-  skills: [String],
-  projects: [{
-    title: String,
-    description: String
-  }],
-  contact: {
-    email: String,
-    github: String,
-    linkedin: String
-  },
-  isGuest: { type: Boolean, default: false },
-  roomType: { type: String, default: 'generic1' },
-  font: { type: String, default: 'Inter' },
-  apps: { type: [String], default: ['terminal', 'cv'] },
+  name: { type: String, default: '' },
   tagline: { type: String, default: '' },
+  profileImg: { type: String, default: '' },
   aboutMe: { type: String, default: '' },
   skills: { type: [String], default: [] },
   experience: { type: Array, default: [] },
   education: { type: Array, default: [] },
   projects: { type: Array, default: [] },
   contact: { type: Object, default: {} },
+  isGuest: { type: Boolean, default: false },
+  roomType: { type: String, default: 'generic1' },
+  font: { type: String, default: 'Inter' },
+  apps: { type: [String], default: ['terminal', 'cv'] },
   zoneFunctions: {
     zona1: { type: String, default: 'pc' },
     zona2: { type: String, default: 'cv' },
@@ -120,7 +104,7 @@ app.post('/api/register', async (req, res) => {
   try {
     const { 
       id, name, roomType, font, apps, zoneFunctions,
-      tagline, aboutMe, skills, experience, education, projects, contact
+      tagline, profileImg, aboutMe, skills, experience, education, projects, contact
     } = req.body;
     
     // Validar datos básicos
@@ -140,6 +124,7 @@ app.post('/api/register', async (req, res) => {
       font: font || 'Inter',
       apps: apps || ['terminal', 'cv'],
       tagline: tagline || '',
+      profileImg: profileImg || '',
       aboutMe: aboutMe || '',
       skills: skills || [],
       experience: experience || [],

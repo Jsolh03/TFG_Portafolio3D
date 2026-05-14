@@ -1,7 +1,6 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
-import iconoLaura from './assets/icons_laura/perfil_icon_lau.jpg';
 import DynamicCVPage from './pages/DynamicCVPage';
 import ProjectIntro from './components/os/ProjectIntro';
 import Register from './components/auth/Register';
@@ -98,7 +97,7 @@ function Portfolio() {
   if (view === 'register') {
     return (
       <div className="main-container login-screen">
-        <Register 
+        <Register
           onRegisterSuccess={(data) => {
             setUserData(data);
             setShowIntro(true);
@@ -113,7 +112,7 @@ function Portfolio() {
     <div className="main-container login-screen">
 
       {/* DEV MODE BUTTON */}
-      <button 
+      <button
         onClick={() => setDevMode(true)}
         style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: '1px solid #30363d', color: '#8b949e', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '10px' }}>
         ⚙ MODO DEV
@@ -125,9 +124,9 @@ function Portfolio() {
           <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '30px', width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h2 style={{ color: '#f85149', margin: 0 }}>PANEL DE DESARROLLADOR</h2>
-              <button onClick={() => {setDevMode(false); setDevAuth(false); setDevPass('');}} style={{ background: 'none', border: 'none', color: '#c9d1d9', cursor: 'pointer' }}>✕ Cerrar</button>
+              <button onClick={() => { setDevMode(false); setDevAuth(false); setDevPass(''); }} style={{ background: 'none', border: 'none', color: '#c9d1d9', cursor: 'pointer' }}>✕ Cerrar</button>
             </div>
-            
+
             {!devAuth ? (
               <form onSubmit={handleDevAuth} style={{ display: 'flex', gap: '20px' }}>
                 <input type="password" placeholder="Contraseña de administrador..." value={devPass} onChange={e => setDevPass(e.target.value)} style={{ flex: 1, padding: '10px', background: '#0d1117', color: 'white', border: '1px solid #30363d', borderRadius: '4px' }} />
@@ -144,7 +143,7 @@ function Portfolio() {
                         <div style={{ fontSize: '11px', color: '#a034e7' }}>Habitación: {u.roomType}</div>
                       </div>
                       {u.id !== 'khaled' && u.id !== 'laura' && (
-                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>🗑️ Eliminar</button>
+                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Eliminar</button>
                       )}
                     </div>
                   ))}
@@ -160,12 +159,17 @@ function Portfolio() {
         {isLoading && <p style={{ color: '#6e7681', textAlign: 'center', marginTop: 0 }}>Conectando...</p>}
         <div className="user-grid">
           <button className="user-card" onClick={() => handleLogin('khaled')} disabled={isLoading}>
-            <div className="avatar"></div>
+            <div className="avatar">
+            </div>
             <h2>Khaled Solh</h2>
           </button>
           <button className="user-card" onClick={() => handleLogin('laura')} disabled={isLoading}>
             <div className="avatar">
-              <img src={iconoLaura} alt="Laura" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src="https://i.pinimg.com/736x/f3/8f/70/f38f7066edb3f22c64e57faa320abad5.jpg"
+                alt="Laura"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
             <h2>Laura Jara</h2>
           </button>
@@ -174,9 +178,9 @@ function Portfolio() {
         {/* LOG IN MANUAL PARA OTROS USUARIOS */}
         <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <input 
-              type="text" 
-              placeholder="Introduce tu ID de usuario..." 
+            <input
+              type="text"
+              placeholder="Introduce tu ID de usuario..."
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
               style={{ flex: 1, padding: '10px', background: '#0d1117', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '4px' }}
@@ -186,9 +190,9 @@ function Portfolio() {
                 }
               }}
             />
-            <button 
-              className="sidebar-link" 
-              onClick={() => handleLogin(loginId.toLowerCase().trim())} 
+            <button
+              className="sidebar-link"
+              onClick={() => handleLogin(loginId.toLowerCase().trim())}
               disabled={isLoading || !loginId.trim()}
               style={{ padding: '10px 20px', background: '#21262d', border: '1px solid #30363d', borderRadius: '4px', color: '#c9d1d9', cursor: 'pointer' }}
             >

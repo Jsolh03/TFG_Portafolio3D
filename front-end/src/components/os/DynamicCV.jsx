@@ -1,15 +1,13 @@
 import React from 'react';
 import '../../styles/DynamicStyle.css';
-import avatars from '../../data/avatars';
 
 export default function DynamicCV({ user }) {
   if (!user) return <p style={{ color: 'white', padding: '20px' }}>Cargando datos del sistema...</p>;
 
   const skills = user.skills || user.coreStack || [];
 
-  // Usa la imagen importada por userId .
-  // Si no hay mapeo, intenta la URL de MongoDB como fallback.
-  const avatar = avatars[user.id] || user.profileImg || null;
+
+  const avatar =  user.profileImg || null;
 
   return (
     <div className="cv-dynamic-wrapper">
