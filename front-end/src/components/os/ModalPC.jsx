@@ -9,9 +9,7 @@ import InfoApp from './InfoApp';
 
 // Apps
 import EncuestaApp from './EncuestaApp';
-import iconEncuesta from '../../assets/icons_laura/icon_encuesta.jpg';
-import iconCV from '../../assets/icons_laura/icon_cv.jpg';
-import iconMail from '../../assets/icons_laura/icon_email.jpg';
+import MailApp from './MailApp';
 
 export default function ModalPC({ onClose, user, userData }) {
     const [activeApp, setActiveApp] = useState(null);
@@ -48,12 +46,14 @@ export default function ModalPC({ onClose, user, userData }) {
                 );
             case 'info':
                 return (
-                    <InfoApp 
-                        user={user} 
+                    <InfoApp
+                        user={user}
                         fullData={fullData}
-                        onOpenCV={() => setActiveApp('cv')} 
+                        onOpenCV={() => setActiveApp('cv')}
                     />
                 );
+            case 'mail':
+                return <MailApp fullData={fullData} />;
             default:
                 return null;
         }
@@ -87,47 +87,41 @@ export default function ModalPC({ onClose, user, userData }) {
                                     <span>Terminal.exe</span>
                                 </button>
                             )}
-                            
+
                             {apps.includes('ide') && (
                                 <button className="desktop-icon" onClick={() => setActiveApp('ide')}>
                                     <div className="icon-img ide-icon">{'</>'}</div>
                                     <span>IDE_Dev.app</span>
                                 </button>
                             )}
-                            
+
                             {apps.includes('info') && (
                                 <button className="desktop-icon" onClick={() => setActiveApp('info')}>
                                     <div className="icon-img cv-icon">{'📄'}</div>
                                     <span>Información</span>
                                 </button>
                             )}
-                            
+
                             {apps.includes('encuesta') && (
                                 <button className="desktop-icon" onClick={() => setActiveApp('encuesta')}>
-                                    <div className="icon-wrapper">
-                                        <img src={iconEncuesta} alt="Feedback" className="custom-app-icon" />
-                                    </div>
+                                    <div className="icon-img cv-icon">{'📄'}</div>
                                     <span>Feedback.exe</span>
                                 </button>
                             )}
-                            
+
                             {apps.includes('cv') && (
                                 <button className="desktop-icon" onClick={() => setActiveApp('cv')}>
-                                    <div className="icon-wrapper">
-                                        <img src={iconCV} alt="CV" className="custom-app-icon" />
-                                    </div>
+                                    <div className="icon-img cv-icon">{'📄'}</div>
                                     <span>Mi_CV.exe</span>
                                 </button>
                             )}
-                            
+
                             {apps.includes('mail') && (
                                 <button
                                     className="desktop-icon"
-                                    onClick={() => window.location.href = 'mailto:laurajaraloro@gmail.com?subject=Contacto desde el Portfolio 3D'}
+                                    onClick={() => setActiveApp('mail')}
                                 >
-                                    <div className="icon-wrapper">
-                                        <img src={iconMail} alt="Correo" className="custom-app-icon" />
-                                    </div>
+                                    <div className="icon-img cv-icon">{'📄'}</div>
                                     <span>Mail.exe</span>
                                 </button>
                             )}

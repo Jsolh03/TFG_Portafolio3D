@@ -144,7 +144,7 @@ function Portfolio() {
                         <div style={{ fontSize: '11px', color: '#a034e7' }}>Habitación: {u.roomType}</div>
                       </div>
                       {u.id !== 'khaled' && u.id !== 'laura' && (
-                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Eliminar</button>
+                        <button onClick={() => deleteUser(u.id)} style={{ background: 'transparent', color: '#f85149', border: '1px solid #f85149', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>🗑️ Eliminar</button>
                       )}
                     </div>
                   ))}
