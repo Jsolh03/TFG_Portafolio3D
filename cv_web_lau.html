@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Laura Jara</title>
+    <style>
+        /* --- ESTILOS GENERALES (Reset & Colores base) --- */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+
+            /* TEMA OSCURO: Fondo índigo muy profundo */
+            background-color: #0a0e17;
+
+            /* Color de texto principal (blanco grisáceo) */
+            color: #e0e0e0;
+
+            /* Evita el scroll horizontal */
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3 {
+            /* TEMA MORADO: Púrpura vibrante para encabezados */
+            color: #7c4dff;
+            margin-top: 0;
+        }
+
+        a {
+            text-decoration: none;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        /* Contenedor principal que centra el contenido */
+        .container {
+            max-width: 900px;
+            /* Ancho máximo para legibilidad */
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        section {
+            padding: 2.5rem 0;
+            border-bottom: 1px solid #30363d;
+            /* Línea divisoria sutil */
+        }
+
+        /* --- CABECERA & HERO (Presentación) --- */
+        header {
+            text-align: center;
+            background: #161b22;
+            /* Fondo de sección ligeramente más claro */
+            padding: 4rem 1rem;
+            border-bottom: 1px solid #30363d;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            /* Tu nombre en blanco */
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #b39ddb;
+            /* TEMA LILA: Subtítulo en lila suave */
+            font-weight: 500;
+        }
+
+        /* Avatar placeholder circle (como en la imagen base) */
+        .avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #21262d;
+            border: 3px solid #7c4dff;
+            /* Borde morado */
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #555;
+        }
+
+        .email-text {
+            display: inline-block;
+            color: #b39ddb;
+            /* Color lila suave */
+            font-weight: bold;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border: 1px dashed #7c4dff;
+            /* Un borde punteado morado queda muy técnico */
+            border-radius: 8px;
+            background: rgba(124, 77, 255, 0.05);
+            /* Fondo muy sutil */
+            cursor: text;
+            /* El ratón indicará que es para seleccionar texto */
+        }
+
+        /* Botón minimalista de retorno (window.close()) */
+        .back-home {
+            display: inline-block;
+            color: #b39ddb;
+            /* Lila */
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .back-home:hover {
+            color: #fff;
+            /* Blanco al pasar el ratón */
+            text-decoration: underline;
+        }
+
+        /* --- SECCIONES DE CONTENIDO (Estudios, Skills, etc.) --- */
+
+        /* Habilidades (Skills) en formato de 'badges' */
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .skill-badge {
+            background: rgba(124, 77, 255, 0.1);
+            /* Fondo morado muy traslúcido */
+            border: 1px solid #7c4dff;
+            /* Borde morado sutil */
+            color: #b39ddb;
+            /* Texto lila */
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        /* Proyectos en cuadrícula (Grid) */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .project-card {
+            background: #161b22;
+            /* Fondo de tarjeta */
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            /* Pequeño salto al hover */
+            border-color: #7c4dff;
+            /* El borde brilla en morado */
+        }
+
+        .project-card h3 {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .project-card p {
+            color: #8b949e;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        /* --- CONTACTO & FOOTER --- */
+        .contact-links {
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            background: #7c4dff;
+            /* Fondo morado vibrante */
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        .contact-btn:hover {
+            background: #6200ea;
+            /* Morado más oscuro al hover */
+        }
+
+        .contact-btn.outlined {
+            background: none;
+            border: 2px solid #7c4dff;
+            color: #7c4dff;
+        }
+
+        .contact-btn.outlined:hover {
+            background: rgba(124, 77, 255, 0.05);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            font-size: 13px;
+            color: #555;
+            background: #161b22;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="avatar-placeholder">MG</div>
+
+            <h1>Laura Jara Loro</h1>
+            <p class="tagline">Desarrolladora Back-End</p>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <a href="#" onclick="window.close();" class="back-home">← VOLVER A LA HABITACIÓN 3D</a>
+
+        <section id="about">
+            <h2>Sobre Mí</h2>
+            <p>Aquí puedes escribir una breve biografía profesional sobre ti y por qué te apasiona el desarrollo 3D o la
+                ingeniería.</p>
+            <p>Este sitio web es parte de mi Trabajo de Fin de Grado y actúa como un portfolio multi-documento que
+                complementa la experiencia inmersiva de la habitación 3D.</p>
+        </section>
+
+        <section id="education">
+            <h2>Formación Académica</h2>
+            <h3>Grado Superior en Desarrollo de Aplicaciones Multiplataforma (DAM)</h3>
+            <p>IES Lope de Vega, España. [2024 - 2026]</p>
+        </section>
+
+        <section id="skills">
+            <h2>Stack Tecnológico</h2>
+            <div class="skills-grid">
+                <span class="skill-badge">Java</span>
+                <span class="skill-badge">SpringBoot</span>
+                <span class="skill-badge">Python</span>
+                <span class="skill-badge">SQL Server</span>
+                <span class="skill-badge">Git</span>
+                <span class="skill-badge">HTML / CSS</span>
+                <span class="skill-badge">JavaScript</span>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2>Mis Proyectos Destacados</h2>
+            <div class="projects-grid">
+
+                <div class="project-card">
+                    <h3>Portfolio 3D Interactivo (TFG)</h3>
+                    <p>Habitación isométrica interactiva creada con Spline, donde el usuario controla a un personaje
+                        que navega por un escritorio virtual interactuando con objetos.</p>
+                </div>
+
+                <div class="project-card">
+                    <h3>Proyecto 2</h3>
+                    <p>...</p>
+                </div>
+
+                <div class="project-card">
+                    <h3>Proyecto 3</h3>
+                    <p>...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2>Contacto</h2>
+            <p>Si estás interesado en mi perfil o en mi proyecto TFG, puedes contactar conmigo a través de estas redes:
+            </p>
+
+            <div class="contact-links">
+                <a href="https://www.linkedin.com/in/laura-jara-loro-6a59aa2a4/" target="_blank"
+                    class="contact-btn outlined">LinkedIn</a>
+                <a href="https://github.com/drakensita" target="_blank" class="contact-btn outlined">GitHub</a>
+                <span class="email-text">laurajaraloro@gmail.com</span>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Laura Jara Loro | TFG | IES Lope de Vega</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
