@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV | Khaled Solh El Hajji</title>
+    <style>
+        @font-face {
+            font-family: 'fuente_retro';
+            src: url('../src/assets/font_pixel.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        html {
+            font-size: 12px;
+        }
+
+        body {
+            font-family: 'fuente_retro', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3 {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #a034e7;
+            text-align: center;
+            margin: 40px 0 20px 0;
+            border-bottom: 1px solid rgba(160, 52, 231, 0.2);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin: 15px 0 5px 0;
+        }
+
+        p {
+            margin: 0 0 15px 0;
+            font-size: 0.95rem;
+        }
+
+        a {
+            text-decoration: none;
+            color: #a034e7;
+            transition: opacity 0.2s;
+        }
+
+        a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a034e7 0%, #58a6ff 100%);
+            border: 2px solid #a034e7;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-size: 3rem;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin: 0 0 5px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #8b949e;
+            margin: 0;
+        }
+
+        .back-home {
+            display: block;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 30px;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .skill {
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            background: #161b22;
+            padding: 6px 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(160, 52, 231, 0.4);
+        }
+
+        .experience-item {
+            margin-bottom: 25px;
+            background: rgba(13, 17, 23, 0.5);
+            padding: 15px;
+            border-left: 3px solid #a034e7;
+            border-radius: 4px;
+        }
+
+        .experience-item strong {
+            color: #a034e7;
+        }
+
+        .experience-item .role {
+            color: #58a6ff;
+            font-weight: 500;
+            margin: 8px 0;
+        }
+
+        .experience-item .period {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin: 5px 0 10px 0;
+        }
+
+        .project-item {
+            margin-bottom: 25px;
+        }
+
+        .project-item p {
+            color: #8b949e;
+            margin-top: 5px;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 0.8rem;
+            color: #484f58;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <a href="#" onclick="window.close();" class="back-home">← Volver a la habitación 3D</a>
+
+        <header>
+            <div class="avatar">👨‍💻</div>
+            <h1>Khaled Solh El Hajji</h1>
+            <p class="tagline">Full-Stack Developer & AI Integration Specialist</p>
+        </header>
+
+        <section>
+            <h2>Sobre Mí</h2>
+            <p style="text-align: center;">
+                Desarrollador Full-Stack apasionado por la integración de inteligencia artificial en aplicaciones. Especialista en sistemas y redes con experiencia en desarrollo multiplataforma. Este portfolio es mi Trabajo de Fin de Grado, combinando una experiencia inmersiva en 3D con tecnología moderna.
+            </p>
+        </section>
+
+        <section>
+            <div class="contact-info">
+                <p><strong>📍 Madrid, España</strong></p>
+                <p><strong>📧</strong> <a href="mailto:khaledsolhelhajji@gmail.com">khaledsolhelhajji@gmail.com</a></p>
+                <p><strong>📞</strong> +34 652 20 44 10</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Formación</h2>
+            <div style="text-align: center;">
+                <h3>CFGS Desarrollo de Aplicaciones Multiplataforma</h3>
+                <p>IES Lope de Vega, España (2024 - 2026)</p>
+                <h3>Grado Medio Sistemas Microinformáticos y Redes</h3>
+                <p>IES Luis Vives, España (2022 - 2024)</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Stack Tecnológico</h2>
+            <h3 style="color: #a034e7; text-align: center; margin-top: 0;">CORE STACK</h3>
+            <div class="skills-container">
+                <span class="skill">Java</span>
+                <span class="skill">Python</span>
+                <span class="skill">React</span>
+                <span class="skill">Node.js</span>
+                <span class="skill">Active Directory</span>
+                <span class="skill">Networks</span>
+            </div>
+            <h3 style="color: #a034e7; text-align: center; margin-top: 20px;">AI MASTERY</h3>
+            <div class="skills-container">
+                <span class="skill">Prompt Engineering</span>
+                <span class="skill">AI-Driven Development</span>
+                <span class="skill">IDE AI Integration</span>
+            </div>
+        </section>
+
+        <section>
+            <h2>Experiencia Profesional</h2>
+
+            <div class="experience-item">
+                <strong>DSA NEXUX</strong>
+                <p class="period">2025 - Actualidad</p>
+                <p class="role">Full-Stack Developer & AI Integrator</p>
+                <p>Desarrollo de soluciones multiplataforma con integración de inteligencia artificial en el flujo de desarrollo. Implementación de sistemas escalables y optimización de procesos mediante herramientas de IA.</p>
+            </div>
+
+            <div class="experience-item">
+                <strong>Hospital Universitario José Germain</strong>
+                <p class="period">2023</p>
+                <p class="role">Prácticas - Técnico en Sistemas IT</p>
+                <p>Prácticas en gestión de sistemas y redes. Soporte técnico, administración de Active Directory y mantenimiento de infraestructura IT hospitalaria.</p>
+            </div>
+
+        </section>
+
+        <section>
+            <h2>Proyectos Destacados</h2>
+
+            <div class="project-item">
+                <h3>Portfolio 3D Interactivo (TFG)</h3>
+                <p>Habitación isométrica desarrollada con React, Three.js y Spline. Integra un sistema operativo simulado con editor de código (Monaco), terminal interactiva con análisis de código mediante Gemini 1.5 Flash, y backend conectado a Supabase.</p>
+            </div>
+
+        </section>
+
+        <section>
+            <h2>Contacto</h2>
+            <div class="contact-links">
+                <a href="mailto:khaledsolhelhajji@gmail.com">Email</a>
+                <a href="https://github.com/Jsolh03" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com" target="_blank">LinkedIn</a>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2026 Khaled Solh El Hajji</p>
+        </footer>
+    </div>
+
+</body>
+
+</html>

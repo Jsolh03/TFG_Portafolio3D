@@ -1,0 +1,15 @@
+/* Reseteo universal */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ocultar barras de desplazamiento y fondo base suave */
+body, html, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #f4f0ff; /* Blanco con un tono mínimo de morado pastel */
+  font-family: var(--sys-font, 'Courier New'), monospace;
+}

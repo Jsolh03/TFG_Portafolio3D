@@ -1,0 +1,236 @@
+@font-face {
+  font-family: 'fuente_retro';
+  src: url('../assets/font_pixel.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #0d1117 !important;
+  height: 100%;
+}
+
+/* ── WRAPPER PÁGINA COMPLETA ── */
+.cv-dynamic-wrapper {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  font-family: var(--sys-font, 'fuente_retro'), monospace;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px 80px;
+}
+
+/* ── COLUMNA CENTRAL ── */
+.cv-container {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── CABECERA ── */
+.cv-header {
+  text-align: center;
+  padding: 48px 0 40px;
+  margin-bottom: 10px;
+  background: transparent;
+  border-bottom: 1px solid rgba(160, 52, 231, 0.2);
+}
+
+.cv-avatar-frame {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid #a034e7;
+  margin: 0 auto 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(160, 52, 231, 0.15);
+  box-shadow: 0 0 32px rgba(160, 52, 231, 0.25);
+}
+
+.cv-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cv-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: #a034e7;
+}
+
+.cv-name {
+  font-size: 2.4rem;
+  color: #ffffff;
+  margin: 0 0 10px;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  text-shadow: 0 0 20px rgba(160, 52, 231, 0.4);
+}
+
+.cv-tagline {
+  color: #a034e7;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  margin: 0;
+  opacity: 0.85;
+}
+
+/* ── SECCIONES ── */
+.cv-section {
+  padding: 36px 0 12px;
+  border-bottom: 1px solid rgba(160, 52, 231, 0.1);
+}
+
+.cv-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cv-section-title {
+  color: #a034e7;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin: 0 0 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cv-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(160, 52, 231, 0.4), transparent);
+}
+
+/* ── SOBRE MÍ ── */
+.cv-about-text {
+  color: #8b949e;
+  font-size: 0.88rem;
+  line-height: 2.2;
+  margin: 0;
+}
+
+/* ── SKILLS ── */
+.cv-skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cv-skill-badge {
+  display: inline-block;
+  background: rgba(160, 52, 231, 0.07);
+  border: 1px solid rgba(160, 52, 231, 0.35);
+  color: #c9d1d9;
+  padding: 6px 14px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.cv-skill-badge:hover {
+  border-color: #a034e7;
+  background: rgba(160, 52, 231, 0.15);
+  color: #fff;
+}
+
+/* ── CARDS (experiencia, formación, proyectos) ── */
+.cv-experience-card {
+  border-left: 2px solid rgba(160, 52, 231, 0.3);
+  padding: 4px 0 4px 20px;
+  margin-bottom: 28px;
+  transition: border-color 0.2s;
+}
+
+.cv-experience-card:last-child {
+  margin-bottom: 0;
+}
+
+.cv-experience-card:hover {
+  border-left-color: #a034e7;
+}
+
+.cv-experience-card strong {
+  display: block;
+  color: #e6edf3;
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+}
+
+.cv-experience-card .cv-meta {
+  color: #484f58;
+  font-size: 0.78rem;
+  margin: 0 0 6px;
+  letter-spacing: 0.5px;
+}
+
+.cv-experience-card p {
+  color: #8b949e;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  margin: 8px 0 0;
+}
+
+/* ── CONTACTO ── */
+.cv-contact-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.cv-contact-grid a {
+  color: #8b949e;
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
+  padding-bottom: 2px;
+}
+
+.cv-contact-grid a:hover {
+  color: #a034e7;
+  border-bottom-color: rgba(160, 52, 231, 0.5);
+}
+
+/* ── DENTRO DEL MODAL PC ── */
+.cv-internal-view .cv-dynamic-wrapper {
+  min-height: unset;
+  padding: 16px 20px 30px;
+}
+
+.cv-internal-view .cv-header {
+  padding: 20px 0 24px;
+}
+
+.cv-internal-view .cv-name {
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.cv-internal-view .cv-section {
+  padding: 22px 0 8px;
+}
+
+.cv-internal-view .cv-avatar-frame {
+  width: 80px;
+  height: 80px;
+}
