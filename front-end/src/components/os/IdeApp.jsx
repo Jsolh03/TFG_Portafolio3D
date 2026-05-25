@@ -339,6 +339,45 @@ $ npm run build # produce artefacto válido
 
 const FILE_ORDER = ['NexusAPI.java', 'PromptEngine.py', 'App.jsx', 'DSAnexus.md', 'HospitalJoseGermain.md', 'VibeCoding.md'];
 
+/* ──────────────── Soporte para ficheros temporales ────────────────
+   El usuario puede crear ficheros nuevos en memoria. Se pierden al
+   cerrar el IDE. No se guardan en localStorage ni en el servidor.
+─────────────────────────────────────────────────────────────────── */
+
+const EXT_TO_LANGUAGE = {
+  js: 'javascript', jsx: 'javascript',
+  ts: 'typescript', tsx: 'typescript',
+  py: 'python', java: 'java',
+  md: 'markdown', txt: 'plaintext',
+  json: 'json', yaml: 'yaml', yml: 'yaml',
+  css: 'css', html: 'html', sh: 'shell', sql: 'sql'
+};
+
+const ICON_FOR_LANGUAGE = {
+  javascript: '⚡', typescript: '🟦', python: '🐍', java: '☕',
+  markdown: '📝', plaintext: '📄', json: '🔧', yaml: '📋',
+  css: '🎨', html: '🌐', shell: '⌨', sql: '🗄'
+};
+
+// Validación de nombre de fichero: letras/números/guiones/punto, con extensión válida.
+const FILENAME_RE = /^[A-Za-z0-9_\-]{1,40}\.[A-Za-z0-9]{1,6}$/;
+const MAX_CUSTOM_FILES = 12;
+
+const detectLanguage = (filename) => {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  return EXT_TO_LANGUAGE[ext] || 'plaintext';
+};
+
+const validateFilename = (name, existingFiles) => {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return 'Nombre vacío';
+  if (!FILENAME_RE.test(trimmed)) return 'Solo letras, números, guiones y una extensión (p.ej. nota.md)';
+  const ext = trimmed.split('.').pop().toLowerCase();
+  if (!EXT_TO_LANGUAGE[ext]) return `Extensión .${ext} no soportada`;
+  if (existingFiles.includes(trimmed)) return 'Ya existe un fichero con ese nombre';
+  return null;
+};
+
 /* ──────────────── Escenarios del agente ──────────────── */
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -371,32 +410,45 @@ const SCENARIOS = {
     { kind: 'message', text: 'Y siempre uso `git status` antes y después. Si algo huele raro, `git diff` te lo dice.' }
   ],
 
-  explain: (file) => [
+  explain: (file) => file.explain ? [
     { kind: 'thinking', text: `Leyendo ${file.name}…`, wait: 500 },
     { kind: 'tool', tool: 'Read', input: file.name, output: `${file.value.split('\n').length} líneas`, wait: 700 },
     { kind: 'message', text: file.explain }
+  ] : [
+    { kind: 'thinking', text: `Leyendo ${file.name}…`, wait: 400 },
+    { kind: 'message', text: `Este fichero (${file.name}) es nuevo y no tiene análisis preparado. K-Bot solo puede explicar los ficheros curados del portfolio.` }
   ],
 
-  refactor: (file) => [
+  refactor: (file) => file.refactor ? [
     { kind: 'thinking', text: `Analizando ${file.name}…`, wait: 600 },
     { kind: 'tool', tool: 'Grep', input: 'TODO|FIXME', output: 'sin matches', wait: 500 },
     { kind: 'tool', tool: 'Analyze', input: file.name, output: 'patrón mejorable encontrado', wait: 800 },
     { kind: 'message', text: 'Te propongo este cambio. Mejora testabilidad y elimina acoplamiento con `DriverManager` (en el caso Java) o con el patrón monolítico (en el resto):' },
     { kind: 'diff', before: file.refactor.before, after: file.refactor.after, lang: file.language },
     { kind: 'message', text: 'En modo real, escribiría el `Edit` y haría `npm test` / `mvn test` para verificar. En este demo solo es preview.' }
+  ] : [
+    { kind: 'thinking', text: `Analizando ${file.name}…`, wait: 400 },
+    { kind: 'message', text: `No tengo una propuesta de refactor preparada para ${file.name}. Solo los ficheros curados del portfolio tienen análisis.` }
   ],
 
-  bug: (file) => [
+  bug: (file) => file.bug ? [
     { kind: 'thinking', text: `Buscando issues en ${file.name}…`, wait: 700 },
     { kind: 'tool', tool: 'Analyze', input: file.name, output: '1 issue encontrado', wait: 900 },
     { kind: 'message', text: `🐛 **Hallazgo:** ${file.bug}` }
+  ] : [
+    { kind: 'thinking', text: `Buscando issues en ${file.name}…`, wait: 400 },
+    { kind: 'tool', tool: 'Analyze', input: file.name, output: 'sin análisis', wait: 500 },
+    { kind: 'message', text: `K-Bot solo busca bugs en los ficheros curados. ${file.name} es un fichero nuevo sin análisis preparado.` }
   ],
 
-  tests: (file) => [
+  tests: (file) => file.tests ? [
     { kind: 'thinking', text: 'Generando suite de tests…', wait: 600 },
     { kind: 'tool', tool: 'Write', input: file.name.replace(/\.\w+$/, '.test' + file.name.match(/\.\w+$/)[0]), wait: 700 },
     { kind: 'message', text: `Borrador de tests para ${file.name}:` },
     { kind: 'code', lang: file.language, text: file.tests }
+  ] : [
+    { kind: 'thinking', text: 'Generando suite de tests…', wait: 400 },
+    { kind: 'message', text: `Para los ficheros nuevos no genero tests automáticos en esta demo. Pásate por los ficheros curados (NexusAPI, PromptEngine, App.jsx).` }
   ],
 
   about: () => [
@@ -522,8 +574,16 @@ export default function IdeApp() {
     { id: 'init-2', role: 'agent', kind: 'message', text: 'Prueba los botones de acción rápida o escríbeme. /help para la lista.', complete: true }
   ]);
   const [busy, setBusy] = useState(false);
+
+  // Ficheros temporales creados por el usuario. Solo en memoria.
+  const [customFiles, setCustomFiles] = useState({});
+  const [creatingNew, setCreatingNew] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+  const [newFileError, setNewFileError] = useState('');
+
   const scrollRef = useRef(null);
   const msgIdRef = useRef(0);
+  const newFileInputRef = useRef(null);
 
   const nextId = () => `m${++msgIdRef.current}`;
 
@@ -531,7 +591,71 @@ export default function IdeApp() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const file = FILES[activeFile];
+  useEffect(() => {
+    if (creatingNew) newFileInputRef.current?.focus();
+  }, [creatingNew]);
+
+  const tabOrder = [...FILE_ORDER, ...Object.keys(customFiles)];
+  const allFiles = { ...FILES, ...customFiles };
+  const file = allFiles[activeFile] || FILES['NexusAPI.java'];
+  const isCustomFile = activeFile in customFiles;
+
+  const handleEditorChange = (value) => {
+    if (!isCustomFile) return;
+    setCustomFiles(prev => ({
+      ...prev,
+      [activeFile]: { ...prev[activeFile], value: value ?? '' }
+    }));
+  };
+
+  const startCreatingFile = () => {
+    if (Object.keys(customFiles).length >= MAX_CUSTOM_FILES) {
+      setNewFileError(`Máximo ${MAX_CUSTOM_FILES} ficheros temporales`);
+      setCreatingNew(true);
+      return;
+    }
+    setNewFileError('');
+    setNewFileName('');
+    setCreatingNew(true);
+  };
+
+  const confirmCreateFile = () => {
+    const name = newFileName.trim();
+    const err = validateFilename(name, tabOrder);
+    if (err) {
+      setNewFileError(err);
+      return;
+    }
+    if (Object.keys(customFiles).length >= MAX_CUSTOM_FILES) {
+      setNewFileError(`Máximo ${MAX_CUSTOM_FILES} ficheros temporales`);
+      return;
+    }
+    const language = detectLanguage(name);
+    setCustomFiles(prev => ({
+      ...prev,
+      [name]: { name, language, icon: ICON_FOR_LANGUAGE[language] || '📄', value: '' }
+    }));
+    setActiveFile(name);
+    setCreatingNew(false);
+    setNewFileName('');
+    setNewFileError('');
+  };
+
+  const cancelCreateFile = () => {
+    setCreatingNew(false);
+    setNewFileName('');
+    setNewFileError('');
+  };
+
+  const closeCustomFile = (name, e) => {
+    e?.stopPropagation();
+    setCustomFiles(prev => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    if (activeFile === name) setActiveFile('NexusAPI.java');
+  };
 
   const playScenario = async (scenarioKey, userText) => {
     if (busy) return;
@@ -596,18 +720,72 @@ export default function IdeApp() {
   return (
     <div className="ide-pro">
 
+      {/* Banner de aviso para ficheros temporales */}
+      <div className="ide-warning-banner" role="status">
+        <span className="ide-warning-icon" aria-hidden="true">⚠️</span>
+        <span>
+          Los ficheros que crees aquí son <strong>temporales</strong>. Se pierden al cerrar el IDE o recargar la página. Nada se guarda en el servidor.
+        </span>
+      </div>
+
       {/* Tabs superior */}
       <div className="ide-tabs">
-        {FILE_ORDER.map(name => (
+        {tabOrder.map(name => {
+          const meta = allFiles[name];
+          const isCustom = name in customFiles;
+          return (
+            <button
+              key={name}
+              className={`ide-tab ${activeFile === name ? 'active' : ''}${isCustom ? ' ide-tab--custom' : ''}`}
+              onClick={() => setActiveFile(name)}
+              title={isCustom ? `${name} (temporal)` : name}
+            >
+              <span className="ide-tab-icon">{meta.icon}</span>
+              {name}
+              {isCustom && (
+                <span
+                  className="ide-tab-close"
+                  onClick={(e) => closeCustomFile(name, e)}
+                  aria-label={`Cerrar ${name}`}
+                  title="Cerrar"
+                >
+                  ×
+                </span>
+              )}
+            </button>
+          );
+        })}
+
+        {creatingNew ? (
+          <span className="ide-tab ide-tab--new-input">
+            <input
+              ref={newFileInputRef}
+              type="text"
+              value={newFileName}
+              placeholder="nombre.md"
+              onChange={e => { setNewFileName(e.target.value); setNewFileError(''); }}
+              onKeyDown={e => {
+                e.stopPropagation();
+                if (e.key === 'Enter') { e.preventDefault(); confirmCreateFile(); }
+                else if (e.key === 'Escape') { e.preventDefault(); cancelCreateFile(); }
+              }}
+              onBlur={() => { if (!newFileName.trim()) cancelCreateFile(); }}
+              maxLength={48}
+              aria-label="Nombre del nuevo fichero"
+            />
+            {newFileError && <span className="ide-tab-error" title={newFileError}>⚠</span>}
+          </span>
+        ) : (
           <button
-            key={name}
-            className={`ide-tab ${activeFile === name ? 'active' : ''}`}
-            onClick={() => setActiveFile(name)}
+            className="ide-tab ide-tab--add"
+            onClick={startCreatingFile}
+            title="Crear fichero temporal"
+            aria-label="Crear fichero temporal"
+            type="button"
           >
-            <span className="ide-tab-icon">{FILES[name].icon}</span>
-            {name}
+            +
           </button>
-        ))}
+        )}
       </div>
 
       <div className="ide-main">
@@ -619,10 +797,11 @@ export default function IdeApp() {
             theme="vs-dark"
             language={file.language}
             value={file.value}
+            onChange={isCustomFile ? handleEditorChange : undefined}
             options={{
               minimap: { enabled: false },
               fontSize: 13,
-              readOnly: true,
+              readOnly: !isCustomFile,
               scrollBeyondLastLine: false,
               fontLigatures: true,
               lineNumbers: 'on'

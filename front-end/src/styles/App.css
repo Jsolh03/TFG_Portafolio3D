@@ -5188,6 +5188,76 @@ canvas { outline: none; }
 }
 .ide-tab-icon { font-size: 13px; }
 
+/* Banner de aviso para ficheros temporales */
+.ide-warning-banner {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.12), rgba(251, 191, 36, 0.05));
+  color: #fcd34d;
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+  padding: 7px 16px;
+  font-size: 11.5px;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+.ide-warning-banner strong { color: #fde68a; font-weight: 600; }
+.ide-warning-icon { font-size: 14px; }
+
+/* Tab personalizado (temporal) */
+.ide-tab--custom {
+  font-style: italic;
+  color: #9ca3af;
+}
+.ide-tab--custom.active { color: #fcd34d; border-bottom-color: #fcd34d; }
+.ide-tab-close {
+  margin-left: 6px;
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  color: #6b7280;
+  transition: all 0.15s;
+}
+.ide-tab-close:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+}
+
+/* Botón "+" para añadir ficheros */
+.ide-tab--add {
+  font-size: 16px;
+  font-weight: 600;
+  color: #58a6ff;
+  padding: 9px 14px;
+  min-width: 36px;
+  justify-content: center;
+}
+.ide-tab--add:hover { background: rgba(88, 166, 255, 0.12); }
+
+/* Input inline para nombrar nuevo fichero */
+.ide-tab--new-input {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-right: 1px solid #21262d;
+  background: #0d1117;
+}
+.ide-tab--new-input input {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  width: 140px;
+  outline: none;
+}
+.ide-tab--new-input input:focus { border-color: #58a6ff; }
+.ide-tab-error {
+  color: #fca5a5;
+  font-size: 13px;
+  cursor: help;
+}
+
 /* Main split */
 .ide-main {
   flex: 1;
