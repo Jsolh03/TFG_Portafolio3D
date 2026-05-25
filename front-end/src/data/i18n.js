@@ -38,6 +38,7 @@ export const TRANSLATIONS = {
       settings: 'Configuración',
       devMode: 'Modo dev',
       footer: 'Khaled Solh & Laura Jara · TFG 2026',
+      copyrightShort: '© 2026 · Todos los derechos reservados',
       loginCta: 'Iniciar sesión',
       loginCtaDesc: 'Cuenta verificada — habitación permanente',
       sessionLogout: 'Cerrar sesión',
@@ -68,6 +69,8 @@ export const TRANSLATIONS = {
       accessibility: 'Accesibilidad',
       about: 'Acerca de',
       privacy: 'Privacidad',
+      licenseText: 'Este portfolio puede visualizarse libremente. NO está permitida la reutilización, copia ni redistribución de su código, diseño o contenido sin autorización expresa de los autores.',
+      allRightsReserved: 'Todos los derechos reservados',
       reducedMotion: 'Reducir animaciones',
       reducedMotionHint: 'Desactiva transiciones y partículas no esenciales.',
       highContrast: 'Alto contraste',
@@ -98,7 +101,8 @@ export const TRANSLATIONS = {
       loadingHint: 'preparando escena 3D',
       temporalBannerWithCount: 'Habitación temporal · te quedan {count} accesos · regístrate para guardarla',
       temporalBannerNoCount: 'Habitación temporal · próxima visita la cerrará · regístrate para guardarla',
-      temporalBannerTooltip: 'Esta habitación es temporal. Se borrará tras 3 días o tras agotarse los accesos.'
+      temporalBannerTooltip: 'Esta habitación es temporal. Se borrará tras 3 días o tras agotarse los accesos.',
+      temporalSaveCta: 'Guardar habitación'
     },
     arcade: {
       title: 'Recreativa',
@@ -433,7 +437,18 @@ export const TRANSLATIONS = {
       registeredEmailFailedPrefix: '⚠️ Cuenta creada, pero no pudimos enviar el email automáticamente',
       registeredManualHint: 'Copia el enlace manualmente y ábrelo en el navegador (caduca en 24h):',
       copyLink: 'Copiar enlace',
-      goToLogin: 'Ir al login'
+      goToLogin: 'Ir al login',
+      prefillNotice: 'Usaremos el mismo nombre de usuario y email que pusiste al crear tu habitación temporal. Al verificar el email, tu habitación pasará a ser permanente sin perder los datos.'
+    },
+    contact: {
+      title: 'Contacto',
+      devsTitle: 'Equipo',
+      directTitle: 'Contacto directo',
+      directText: 'Khaled está disponible para cualquier colaboración, ayuda técnica o consulta profesional. Escríbele directamente al correo de abajo.',
+      emailMe: 'Escribir a Khaled',
+      licenseTitle: 'Licencia y copyright',
+      licenseText: 'Este portfolio puede visualizarse libremente. NO está permitida la reutilización, copia ni redistribución de su código, diseño o contenido sin autorización expresa de sus autores.',
+      allRights: 'Todos los derechos reservados'
     },
     privacy: {
       title: 'Privacidad de tu habitación',
@@ -485,6 +500,7 @@ export const TRANSLATIONS = {
       settings: 'Settings',
       devMode: 'Dev mode',
       footer: 'Khaled Solh & Laura Jara · TFG 2026',
+      copyrightShort: '© 2026 · All rights reserved',
       loginCta: 'Sign in',
       loginCtaDesc: 'Verified account — permanent room',
       sessionLogout: 'Sign out',
@@ -515,6 +531,8 @@ export const TRANSLATIONS = {
       accessibility: 'Accessibility',
       about: 'About',
       privacy: 'Privacy',
+      licenseText: 'This portfolio may be viewed freely. Reuse, copy or redistribution of its code, design or content WITHOUT explicit authorization from the authors is NOT allowed.',
+      allRightsReserved: 'All rights reserved',
       reducedMotion: 'Reduce animations',
       reducedMotionHint: 'Disables non-essential transitions and particles.',
       highContrast: 'High contrast',
@@ -545,7 +563,8 @@ export const TRANSLATIONS = {
       loadingHint: 'preparing 3D scene',
       temporalBannerWithCount: 'Temporary room · {count} accesses left · sign up to keep it',
       temporalBannerNoCount: 'Temporary room · next visit will close it · sign up to keep it',
-      temporalBannerTooltip: 'This room is temporary. It will be deleted after 3 days or when accesses run out.'
+      temporalBannerTooltip: 'This room is temporary. It will be deleted after 3 days or when accesses run out.',
+      temporalSaveCta: 'Save room'
     },
     arcade: {
       title: 'Arcade',
@@ -880,7 +899,18 @@ export const TRANSLATIONS = {
       registeredEmailFailedPrefix: '⚠️ Account created, but we could not send the email automatically',
       registeredManualHint: 'Copy this link manually and open it in your browser (expires in 24h):',
       copyLink: 'Copy link',
-      goToLogin: 'Go to sign in'
+      goToLogin: 'Go to sign in',
+      prefillNotice: 'We will use the same username and email you set when creating your temporary room. Once you verify the email, your room becomes permanent without losing any data.'
+    },
+    contact: {
+      title: 'Contact',
+      devsTitle: 'Team',
+      directTitle: 'Direct contact',
+      directText: 'Khaled is available for any collaboration, technical help or professional inquiry. Reach him directly at the email below.',
+      emailMe: 'Email Khaled',
+      licenseTitle: 'License and copyright',
+      licenseText: 'This portfolio may be viewed freely. Reuse, copy or redistribution of its code, design or content WITHOUT explicit authorization from its authors is NOT allowed.',
+      allRights: 'All rights reserved'
     },
     privacy: {
       title: 'Room privacy',

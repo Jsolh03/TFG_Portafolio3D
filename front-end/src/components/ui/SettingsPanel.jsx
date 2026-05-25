@@ -212,6 +212,10 @@ export default function SettingsPanel({ open, onClose }) {
                     <strong>React · Spline · MongoDB</strong>
                   </div>
                 </div>
+                <div className="settings-license">
+                  <p className="settings-license-text">{t('settings.licenseText')}</p>
+                  <p className="settings-copyright">© 2026 Khaled Solh El Hajji & Laura Jara Loro · {t('settings.allRightsReserved')}</p>
+                </div>
               </div>
             )}
 

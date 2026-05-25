@@ -26,10 +26,24 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
+
+// Permite también previews de Vercel del propio proyecto. Vercel genera URLs
+// del tipo `https://<proyecto>-<hash>-<team>.vercel.app` para cada deploy.
+// Aceptamos sólo los que pertenecen a este proyecto + este team para no abrir
+// CORS a cualquier subdominio vercel.app del mundo.
+const VERCEL_PREVIEW_RE = /^https:\/\/tfg-portafolio3-[a-z0-9]+-jsolh03s-projects\.vercel\.app$/;
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // curl, healthchecks, server-to-server
+  if (allowedOrigins.length === 0) return true; // fallback dev
+  if (allowedOrigins.includes(origin)) return true;
+  if (VERCEL_PREVIEW_RE.test(origin)) return true;
+  return false;
+};
+
 app.use(cors({
   origin(origin, cb) {
-    // Permite tools sin Origin (curl, healthchecks) y orígenes en la whitelist
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) return cb(null, true);
+    if (isOriginAllowed(origin)) return cb(null, true);
     return cb(new Error('Origen no permitido por CORS'));
   }
 }));
@@ -627,15 +641,56 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
     }
 
     const emailLower = email.toLowerCase().trim();
-    const existing = await User.findOne({ $or: [{ id }, { email: emailLower }] });
-    if (existing) {
-      if (existing.id === id) return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
-      return res.status(409).json({ error: 'Ese email ya está registrado' });
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpires = new Date(Date.now() + VERIFICATION_TTL_MS);
+
+    // Caso especial: si ya existe un user con este id Y es TEMPORAL Y su email
+    // de contacto coincide con el de registro → convertimos la habitación
+    // temporal en permanente, conservando su CV. Ese flujo permite que un
+    // usuario cree primero su room temporal y luego la "salve" registrando
+    // cuenta con el mismo email.
+    const existingById = await User.findOne({ id });
+    const existingByEmail = await User.findOne({ email: emailLower });
+
+    if (existingById && existingById.isTemporary) {
+      const temporalContactEmail = (existingById.contact?.email || '').toLowerCase().trim();
+      if (temporalContactEmail && temporalContactEmail === emailLower) {
+        // El email del wizard coincide con el del registro → convertir
+        if (existingByEmail && existingByEmail.id !== existingById.id) {
+          return res.status(409).json({ error: 'Ese email ya está registrado en otra cuenta' });
+        }
+        existingById.email = emailLower;
+        existingById.passwordHash = passwordHash;
+        existingById.emailVerified = false;
+        existingById.verificationToken = verificationToken;
+        existingById.verificationExpires = verificationExpires;
+        existingById.createdViaAuth = true;
+        existingById.isTemporary = false;
+        existingById.expiresAt = null;
+        existingById.temporalAccessesRemaining = null;
+        if (name) existingById.name = name;
+        await existingById.save();
+        return res.status(200).json({
+          ok: true,
+          id: existingById.id,
+          email: emailLower,
+          verificationToken,
+          converted: true
+        });
+      }
+      // Si el email no coincide, el usuario tendría que elegir otro id.
+      return res.status(409).json({
+        error: 'Ese nombre de usuario ya está en uso por una habitación temporal con otro email. Si es tuya, regístrate con el mismo email que usaste al crearla.'
+      });
+    }
+
+    if (existingById) {
+      return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
+    }
+    if (existingByEmail) {
+      return res.status(409).json({ error: 'Ese email ya está registrado' });
+    }
 
     const newUser = new User({
       id,
@@ -647,7 +702,7 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
       verificationExpires,
       createdViaAuth: true,
       isGuest: false,
-      isTemporary: false, // Permanente desde que se crea, sin importar verificación
+      isTemporary: false,
       roomType: 'generic1',
       font: 'Inter',
       apps: ['terminal', 'cv'],

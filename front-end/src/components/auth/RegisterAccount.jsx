@@ -15,9 +15,15 @@ const PASSWORD_MIN = 8;
    Solo id + email + password + name. No crea habitación detallada.
    Tras el registro se manda el email de verificación; la personalización
    de habitación viene DESPUÉS, con el usuario logueado y verificado. */
-export default function RegisterAccount({ onCancel, onSwitchToLogin }) {
+export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, prefillEmail }) {
   const t = useT();
-  const [form, setForm] = useState({ id: '', name: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({
+    id: prefillId || '',
+    name: '',
+    email: prefillEmail || '',
+    password: '',
+    confirmPassword: ''
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState(null);
@@ -143,6 +149,12 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin }) {
 
         <h2 className="auth-title">{t('account.title')}</h2>
         <p className="auth-subtitle">{t('account.subtitle')}</p>
+
+        {(prefillId || prefillEmail) && (
+          <div className="auth-prefill-notice">
+            ℹ️ {t('account.prefillNotice')}
+          </div>
+        )}
 
         <div className="auth-field">
           <label className="auth-label">{t('account.userId')}</label>

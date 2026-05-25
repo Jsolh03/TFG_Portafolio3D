@@ -14,8 +14,11 @@ const ARCADE_OBJECT_NAMES = new Set(['arcade_machine', 'arcade', 'recreativa', '
 
 export default function Room({ userData, onLogout }) {
   const t = useT();
-  const isKhaledRoom = userData?.roomType === 'khaled' || userData?.id === 'khaled';
-  const isLauraRoom = userData?.roomType === 'laura' || userData?.id === 'laura';
+  // Las bienvenidas KhaledWelcome y LauraWelcome son personales — solo aparecen
+  // si el visitante está mirando la habitación de su autor original. Cualquier
+  // otro usuario que copie su roomType verá la bienvenida estándar.
+  const isKhaledRoom = userData?.id === 'khaled';
+  const isLauraRoom = userData?.id === 'laura';
 
   const [showDesktop, setShowDesktop] = useState(false);
   const [showBed, setShowBed] = useState(false);

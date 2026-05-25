@@ -7,6 +7,7 @@ import Register from '../components/auth/Register';
 import RegisterAccount from '../components/auth/RegisterAccount';
 import Login from '../components/auth/Login';
 import SettingsPanel from '../components/ui/SettingsPanel';
+import ContactPanel from '../components/ui/ContactPanel';
 import { USER_PHOTOS } from '../data/userMedia';
 
 const Room = lazy(() => import('./Room'));
@@ -163,8 +164,23 @@ export default function Landing() {
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState(null); // null | 'pending' | 'ok' | 'error'
   const [verifyMessage, setVerifyMessage] = useState('');
+  const [registerPrefill, setRegisterPrefill] = useState(null); // { id, email } al venir desde room temporal
+
+  // Permite que ModalPC (habitación temporal) navegue al RegisterAccount con
+  // prefill del id y email, sin romper la arquitectura de props.
+  useEffect(() => {
+    const onSwitchToRegister = (e) => {
+      const { id, email } = e.detail || {};
+      setRegisterPrefill({ id, email });
+      setUserData(null);
+      setView('register-account');
+    };
+    window.addEventListener('tfg:switch-to-register', onSwitchToRegister);
+    return () => window.removeEventListener('tfg:switch-to-register', onSwitchToRegister);
+  }, []);
 
   const phrases = t('landing.taglineRotator');
 
@@ -275,8 +291,10 @@ export default function Landing() {
       <div className="main-container login-screen lp-root">
         {bgLayer}
         <RegisterAccount
-          onCancel={() => setView('login')}
-          onSwitchToLogin={() => setView('login-form')}
+          onCancel={() => { setRegisterPrefill(null); setView('login'); }}
+          onSwitchToLogin={() => { setRegisterPrefill(null); setView('login-form'); }}
+          prefillId={registerPrefill?.id}
+          prefillEmail={registerPrefill?.email}
         />
       </div>
     );
@@ -319,6 +337,16 @@ export default function Landing() {
               <button type="button" className="lp-session-logout" onClick={logout} title={t('landing.sessionLogout')}>×</button>
             </div>
           )}
+          <button
+            className="lp-icon-btn"
+            onClick={() => setContactOpen(true)}
+            aria-label={t('contact.title')}
+            title={t('contact.title')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </button>
           <button
             className="lp-icon-btn"
             onClick={() => setSettingsOpen(true)}
@@ -388,33 +416,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="lp-quick">
-          <div className="lp-section-label">{t('landing.quickAccess')}</div>
-          <div className="lp-quick-input">
-            <input
-              type="text"
-              placeholder={t('landing.quickAccessPlaceholder')}
-              value={loginId}
-              onChange={e => setLoginId(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && loginId.trim()) handleLogin(loginId.toLowerCase().trim());
-              }}
-              disabled={isLoading}
-            />
-            <button
-              className="lp-quick-btn"
-              onClick={() => handleLogin(loginId.toLowerCase().trim())}
-              disabled={isLoading || !loginId.trim()}
-            >
-              {t('landing.enter')}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </button>
-          </div>
-          {loginError && <div className="lp-error">{loginError}</div>}
-        </section>
+        {loginError && <div className="lp-error" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>{loginError}</div>}
 
         <section className="lp-cta-grid">
           <button className="lp-cta-card" onClick={() => { setLoginError(''); setView('visit'); }} disabled={isLoading}>
@@ -439,9 +441,12 @@ export default function Landing() {
 
       <footer className="lp-footer">
         <span>{t('landing.footer')}</span>
+        <span className="lp-footer-sep">·</span>
+        <span className="lp-footer-copyright">{t('landing.copyrightShort')}</span>
       </footer>
 
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <ContactPanel open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }
