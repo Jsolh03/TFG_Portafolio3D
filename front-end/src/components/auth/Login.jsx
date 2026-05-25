@@ -33,6 +33,7 @@ export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) 
   return (
     <div className="auth-form-wrap">
       <form onSubmit={handleSubmit} className="auth-form">
+        <button type="button" onClick={onCancel} className="auth-back" aria-label={t('common.back')}>← {t('common.back')}</button>
         <h2 className="auth-title">{t('auth.loginTitle')}</h2>
         <p className="auth-subtitle">{t('auth.loginSubtitle')}</p>
 

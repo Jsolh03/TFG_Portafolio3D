@@ -1963,7 +1963,13 @@ canvas { outline: none; }
   flex-direction: column;
   background: var(--bg-color);
   position: relative;
-  overflow: hidden;
+  /* Sobreescribimos el height: 100vh + overflow: hidden de .main-container
+     para que la página entera scrollee de forma natural si el contenido
+     supera el viewport (en lugar de generar un scroll interno feo). */
+  min-height: 100vh;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .lp-bg {
@@ -2205,6 +2211,145 @@ canvas { outline: none; }
   font-size: inherit;
   padding: 0;
   text-decoration: underline;
+}
+
+/* Botón "atrás" claro en la esquina sup. izq. de los forms de auth */
+.auth-back {
+  background: transparent;
+  border: none;
+  color: var(--muted-color, #9ca3af);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 0;
+  margin-bottom: 12px;
+  transition: color 0.15s;
+}
+.auth-back:hover { color: var(--text-color); }
+
+/* Aviso de habitación temporal en el wizard */
+.wizard-temporal-warning {
+  background: rgba(251, 191, 36, 0.10);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #fcd34d;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Flecha "atrás" arriba a la izquierda del wizard */
+.wizard-back-arrow {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 1.4rem;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.wizard-back-arrow:hover { background: var(--glass-bg, rgba(255,255,255,0.06)); }
+.wizard-header { position: relative; }
+
+/* Banner discreto de habitación temporal arriba del OS */
+.os-temporal-banner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 6px 12px;
+  background: rgba(251, 191, 36, 0.12);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fcd34d;
+  font-size: 0.78rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.os-temporal-banner-icon { font-size: 14px; }
+
+/* ─────────────────── Privacy Panel ─────────────────── */
+.privacy-panel { padding: 4px 0; }
+.privacy-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.privacy-header h3 { margin: 0; font-size: 1.05rem; }
+.privacy-close {
+  background: transparent; border: none; color: inherit;
+  cursor: pointer; font-size: 1.4rem; line-height: 1;
+  padding: 0 4px; opacity: 0.6;
+}
+.privacy-close:hover { opacity: 1; }
+.privacy-explain {
+  color: var(--muted-color, #9ca3af);
+  font-size: 0.88rem;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+.privacy-locked {
+  color: #6ee7b7;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.3);
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 0;
+}
+.privacy-status {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--glass-border);
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+.privacy-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.privacy-dot.public { background: #10b981; color: #10b981; }
+.privacy-dot.private { background: #fbbf24; color: #fbbf24; }
+.privacy-actions {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.privacy-token-reveal {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.08);
+  margin-bottom: 12px;
+}
+.privacy-token-warning {
+  color: #fcd34d;
+  font-size: 0.82rem;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+.privacy-token-box {
+  background: #0d1117;
+  color: #79c0ff;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 10px 12px;
+  border-radius: 6px;
+  word-break: break-all;
+  border: 1px solid #30363d;
+  margin-bottom: 10px;
+}
+.privacy-token-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.privacy-confirm-text {
+  font-size: 0.85rem;
+  color: #fca5a5;
+  margin: 0 0 8px 0;
+  width: 100%;
 }
 
 /* ─────────────────── Red social (SocialApp) ─────────────────── */
@@ -2510,10 +2655,9 @@ canvas { outline: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 36px 60px;
-  gap: 36px;
+  padding: 16px 36px 32px;
+  gap: 24px;
   text-align: center;
-  overflow-y: auto;
 }
 
 .lp-hero { max-width: 620px; }

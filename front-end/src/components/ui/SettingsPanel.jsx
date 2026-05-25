@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme, THEMES, FONTS, STYLES } from '../../context/ThemeContext';
 import { useLanguage, useT } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { LANGUAGES } from '../../data/i18n';
+import PrivacyPanel from '../auth/PrivacyPanel';
 
-const TABS = [
+const BASE_TABS = [
   { id: 'theme',  icon: '🎨' },
   { id: 'style',  icon: '✨' },
   { id: 'font',   icon: '🔤' },
@@ -11,12 +13,17 @@ const TABS = [
   { id: 'accessibility', icon: '♿' },
   { id: 'about',  icon: 'ℹ️' }
 ];
+const PRIVACY_TAB = { id: 'privacy', icon: '🔒' };
 
 export default function SettingsPanel({ open, onClose }) {
   const t = useT();
   const [tab, setTab] = useState('theme');
   const { theme, font, style, setTheme, setFont, setStyle, reset } = useTheme();
   const { lang, setLang } = useLanguage();
+  const { isAuthenticated } = useAuth();
+
+  // Mostrar pestaña Privacidad solo si hay sesión activa
+  const TABS = isAuthenticated ? [...BASE_TABS, PRIVACY_TAB] : BASE_TABS;
 
   const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('reducedMotion') === '1');
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem('highContrast') === '1');
@@ -205,6 +212,12 @@ export default function SettingsPanel({ open, onClose }) {
                     <strong>React · Spline · MongoDB</strong>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {tab === 'privacy' && isAuthenticated && (
+              <div className="settings-section">
+                <PrivacyPanel />
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useT } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import DynamicCV from './DynamicCV';
 import Desktop from './Desktop';
 import { APP_ICON_MAP } from './AppIcons';
@@ -43,6 +44,7 @@ const systemNameFor = (user) => {
 
 export default function ModalPC({ onClose, user, userData }) {
   const t = useT();
+  const { isAuthenticated } = useAuth();
   const [activeApp, setActiveApp] = useState(null);
   const [fullData, setFullData] = useState(userData || null);
 
@@ -54,6 +56,12 @@ export default function ModalPC({ onClose, user, userData }) {
         .catch(err => console.error('Error cargando datos API:', err));
     }
   }, [user]);
+
+  // Banner discreto si la habitación es TEMPORAL — solo lo ve el visitante
+  // (NO el propio dueño autenticado, para no contaminar la experiencia del entrevistador).
+  const isTemporaryRoom = fullData?.isTemporary === true;
+  const accessesLeft = fullData?.temporalAccessesRemaining;
+  const showTemporalBanner = isTemporaryRoom && !isAuthenticated;
 
   const userApps = fullData?.apps || userData?.apps || ['terminal', 'cv'];
   const allApps = APP_DEFS(t);
@@ -106,6 +114,17 @@ export default function ModalPC({ onClose, user, userData }) {
             ✕
           </button>
         </header>
+
+        {showTemporalBanner && (
+          <div className="os-temporal-banner" title={t('room.temporalBannerTooltip')}>
+            <span className="os-temporal-banner-icon">⏳</span>
+            <span>
+              {typeof accessesLeft === 'number' && accessesLeft > 0
+                ? t('room.temporalBannerWithCount', { count: accessesLeft })
+                : t('room.temporalBannerNoCount')}
+            </span>
+          </div>
+        )}
 
         <div className="os-workspace">
           {activeApp === null ? (

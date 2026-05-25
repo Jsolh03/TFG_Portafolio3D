@@ -136,7 +136,17 @@ const userSchema = new mongoose.Schema({
   emailVerified: { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
   verificationExpires: { type: Date, default: null },
-  createdViaAuth: { type: Boolean, default: false }
+  createdViaAuth: { type: Boolean, default: false },
+  // Habitación temporal: se borra a los 3 días o tras 3 accesos (lo que ocurra
+  // primero) si el usuario no ha verificado su email. Los users legacy y los
+  // verificados tienen isTemporary: false.
+  isTemporary: { type: Boolean, default: false },
+  expiresAt: { type: Date, default: null },
+  temporalAccessesRemaining: { type: Number, default: null },
+  // Token de acceso (privacidad opcional). Si está presente, la habitación
+  // solo es visible pasando ?token=XXX al GET /api/users/:id. Si es null,
+  // la habitación es pública. Khaled, Laura y temporales: SIEMPRE null.
+  accessToken: { type: String, default: null }
 }, {
   strict: false,
   timestamps: true
@@ -193,16 +203,55 @@ app.get('/api/users', requireAdmin, async (req, res) => {
   }
 });
 
-// Encontrar user por ID
+// Encontrar user por ID. Si ?visit=true se pasa, este endpoint:
+//  - decrementa el contador de accesos si el user es temporal
+//  - borra el user si los accesos llegan a 0 o ha expirado por tiempo
+// Si visit no se pasa, solo lee (sin efectos colaterales, para listados,
+// MailApp lookup, CV view, etc.).
 app.get('/api/users/:userId', async (req, res) => {
   try {
-    const userFound = await User.findOne({ id: req.params.userId });
-    userFound
-      ? res.json(userFound)
-      : res.status(404).json({ error: "No encontrado" });
+    const visit = req.query.visit === 'true';
+    const providedToken = typeof req.query.token === 'string' ? req.query.token : null;
+    const user = await User.findOne({ id: req.params.userId });
+    if (!user) return res.status(404).json({ error: 'No encontrado' });
+
+    // Check de privacidad: si el user tiene accessToken activado, exigir match.
+    // Excepciones permitidas: el propio dueño (JWT con su id), admin, o
+    // admin-impersonation. Khaled/Laura nunca activan accessToken.
+    if (user.accessToken) {
+      const auth = peekAuth(req);
+      const isOwner = auth?.id === user.id;
+      const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
+      const tokenOk = providedToken && safeTokenEqual(providedToken, user.accessToken);
+      if (!isOwner && !isAdmin && !tokenOk) {
+        return res.status(403).json({ error: 'Esta habitación es privada. Necesitas el token de acceso.', requiresToken: true });
+      }
+    }
+
+    if (user.isTemporary) {
+      const expiredByTime = user.expiresAt && user.expiresAt < new Date();
+      const expiredByAccess = typeof user.temporalAccessesRemaining === 'number' && user.temporalAccessesRemaining <= 0;
+
+      // Lazy cleanup: si ya expiró antes de esta visita, borrar y 404
+      if (expiredByTime || expiredByAccess) {
+        await User.deleteOne({ id: user.id });
+        await Encuesta.deleteMany({ targetUserId: user.id });
+        return res.status(404).json({ error: 'Habitación temporal expirada', expired: true });
+      }
+
+      if (visit) {
+        const remaining = Math.max(0, (user.temporalAccessesRemaining ?? 0) - 1);
+        // Si justo se queda en 0 tras esta visita, dejamos que entre esta vez
+        // y la próxima visita la limpiará. Más natural que cerrarla en la cara.
+        user.temporalAccessesRemaining = remaining;
+        await user.save();
+      }
+    }
+
+    res.json(sanitizeUser(user));
   } catch (err) {
-    console.error("Error en GET /api/users/:userId:", err.message);
-    res.status(500).json({ error: "Error interno del servidor" });
+    console.error('Error en GET /api/users/:userId:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -243,14 +292,36 @@ const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const isStringArray = (v, maxLen = 50, maxItem = 100) =>
   Array.isArray(v) && v.length <= maxLen && v.every(s => typeof s === 'string' && s.length <= maxItem);
 
-// Serializa el user sin info sensible
+// Serializa el user sin info sensible. Sustituye accessToken por un boolean
+// para que el frontend pueda mostrar el estado de privacidad sin exponer el token.
 const sanitizeUser = (u) => {
   if (!u) return null;
   const obj = u.toObject ? u.toObject() : { ...u };
   delete obj.passwordHash;
   delete obj.verificationToken;
   delete obj.verificationExpires;
+  obj.hasAccessToken = !!obj.accessToken;
+  delete obj.accessToken;
   return obj;
+};
+
+// Comparación timing-safe de tokens en hex
+const safeTokenEqual = (a, b) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+  } catch { return false; }
+};
+
+// Lee JWT del header sin requerir auth. Útil para endpoints públicos que
+// quieren saber QUIÉN consulta (p.ej. para permitirle ver su propia room
+// sin pedirle token de acceso).
+const peekAuth = (req) => {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return null;
+  try { return jwt.verify(token, process.env.JWT_SECRET); } catch { return null; }
 };
 
 app.post('/api/register', registerLimiter, async (req, res) => {
@@ -308,7 +379,12 @@ app.post('/api/register', registerLimiter, async (req, res) => {
       return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
     }
 
-    // Sólo creamos con campos del whitelist — nada que venga extra en el body se guarda
+    // Este endpoint crea HABITACIONES TEMPORALES (sin auth). Se borran a los
+    // 3 días o tras 3 accesos (lo que ocurra primero). Para hacerlas permanentes,
+    // el usuario debe crear cuenta vía /api/auth/register + verificar email.
+    const TEMPORAL_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+    const TEMPORAL_ACCESSES = 3;
+
     const newUser = new User({
       id,
       name: name || id,
@@ -324,7 +400,10 @@ app.post('/api/register', registerLimiter, async (req, res) => {
       projects: projects || [],
       contact: contact || {},
       zoneFunctions: zoneFunctions || { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' },
-      isGuest: false
+      isGuest: false,
+      isTemporary: true,
+      expiresAt: new Date(Date.now() + TEMPORAL_TTL_MS),
+      temporalAccessesRemaining: TEMPORAL_ACCESSES
     });
 
     await newUser.save();
@@ -526,16 +605,14 @@ function requireAuth(req, res, next) {
 // (khaled, laura, registrados con /api/register sin auth) no tienen email
 // ni passwordHash y siguen accediendo como rooms públicos sin sesión.
 
-// POST /api/auth/register — crea usuario con email + password + perfil opcional
+// POST /api/auth/register — crea CUENTA con email+password.
+// SOLO acepta id, email, password, name. No crea la habitación detallada —
+// eso requiere PATCH /api/users/me con auth válida tras verificar el email.
+// De esta forma evitamos que un atacante cree miles de habitaciones fake.
 app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
   try {
-    const {
-      id, email, password, name,
-      tagline, profileImg, aboutMe, skills, experience, education, projects, contact,
-      roomType, font, apps, zoneFunctions, cvLang
-    } = req.body || {};
+    const { id, email, password, name } = req.body || {};
 
-    // Validación obligatoria
     if (typeof id !== 'string' || !ID_RE.test(id)) {
       return res.status(400).json({ error: 'ID inválido (2-32 caracteres: letras, números, _ o -)' });
     }
@@ -549,15 +626,70 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Nombre inválido' });
     }
 
-    // Validación opcional (mismas reglas que /api/register para consistencia)
-    if (roomType != null && (typeof roomType !== 'string' || roomType.length > 32)) {
-      return res.status(400).json({ error: 'roomType inválido' });
+    const emailLower = email.toLowerCase().trim();
+    const existing = await User.findOne({ $or: [{ id }, { email: emailLower }] });
+    if (existing) {
+      if (existing.id === id) return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
+      return res.status(409).json({ error: 'Ese email ya está registrado' });
     }
-    if (font != null && (typeof font !== 'string' || font.length > 64)) {
-      return res.status(400).json({ error: 'font inválida' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + VERIFICATION_TTL_MS);
+
+    const newUser = new User({
+      id,
+      name: name || id,
+      email: emailLower,
+      passwordHash,
+      emailVerified: false,
+      verificationToken,
+      verificationExpires,
+      createdViaAuth: true,
+      isGuest: false,
+      isTemporary: false, // Permanente desde que se crea, sin importar verificación
+      roomType: 'generic1',
+      font: 'Inter',
+      apps: ['terminal', 'cv'],
+      zoneFunctions: { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' }
+    });
+    await newUser.save();
+
+    res.status(201).json({
+      ok: true,
+      id,
+      email: emailLower,
+      verificationToken
+    });
+  } catch (err) {
+    console.error('Error en POST /api/auth/register:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor al registrar usuario' });
+  }
+});
+
+// PATCH /api/users/me — el usuario autenticado completa/edita SU habitación.
+// Requiere email verificado. Whitelist estricta de campos.
+app.patch('/api/users/me', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    // Bloqueo crítico: solo usuarios verificados pueden personalizar habitación
+    if (user.createdViaAuth && !user.emailVerified) {
+      return res.status(403).json({ error: 'Verifica tu email antes de personalizar tu habitación' });
     }
-    if (apps != null && !isStringArray(apps, 30, 32)) {
-      return res.status(400).json({ error: 'apps inválido' });
+
+    const {
+      name, tagline, profileImg, aboutMe, skills, experience, education,
+      projects, contact, roomType, font, apps, zoneFunctions, cvLang
+    } = req.body || {};
+
+    // Validación de cada campo opcional
+    if (name != null && (typeof name !== 'string' || name.length > 80)) {
+      return res.status(400).json({ error: 'Nombre inválido' });
     }
     if (tagline != null && (typeof tagline !== 'string' || tagline.length > 200)) {
       return res.status(400).json({ error: 'tagline inválido' });
@@ -583,59 +715,40 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
     if (contact != null && (typeof contact !== 'object' || Array.isArray(contact))) {
       return res.status(400).json({ error: 'contact inválido' });
     }
+    if (roomType != null && (typeof roomType !== 'string' || roomType.length > 32)) {
+      return res.status(400).json({ error: 'roomType inválido' });
+    }
+    if (font != null && (typeof font !== 'string' || font.length > 64)) {
+      return res.status(400).json({ error: 'font inválida' });
+    }
+    if (apps != null && !isStringArray(apps, 30, 32)) {
+      return res.status(400).json({ error: 'apps inválido' });
+    }
     if (zoneFunctions != null && (typeof zoneFunctions !== 'object' || Array.isArray(zoneFunctions))) {
       return res.status(400).json({ error: 'zoneFunctions inválido' });
     }
 
-    const emailLower = email.toLowerCase().trim();
-    const existing = await User.findOne({ $or: [{ id }, { email: emailLower }] });
-    if (existing) {
-      if (existing.id === id) return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
-      return res.status(409).json({ error: 'Ese email ya está registrado' });
-    }
+    // Aplica solo los campos que vienen
+    if (name != null) user.name = name;
+    if (tagline != null) user.tagline = tagline;
+    if (profileImg != null) user.profileImg = profileImg;
+    if (aboutMe != null) user.aboutMe = aboutMe;
+    if (skills != null) user.skills = skills;
+    if (experience != null) user.experience = experience;
+    if (education != null) user.education = education;
+    if (projects != null) user.projects = projects;
+    if (contact != null) user.contact = contact;
+    if (roomType != null) user.roomType = roomType;
+    if (font != null) user.font = font;
+    if (apps != null) user.apps = apps;
+    if (zoneFunctions != null) user.zoneFunctions = zoneFunctions;
+    if (cvLang != null) user.set('cvLang', cvLang);
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + VERIFICATION_TTL_MS);
-
-    const newUser = new User({
-      id,
-      name: name || id,
-      email: emailLower,
-      passwordHash,
-      emailVerified: false,
-      verificationToken,
-      verificationExpires,
-      createdViaAuth: true,
-      isGuest: false,
-      // Perfil opcional
-      tagline: tagline || '',
-      profileImg: profileImg || '',
-      aboutMe: aboutMe || '',
-      skills: skills || [],
-      experience: experience || [],
-      education: education || [],
-      projects: projects || [],
-      contact: contact || {},
-      roomType: roomType || 'generic1',
-      font: font || 'Inter',
-      apps: apps || ['terminal', 'cv'],
-      zoneFunctions: zoneFunctions || { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' },
-      ...(cvLang ? { cvLang } : {})
-    });
-    await newUser.save();
-
-    // Devuelve el token al frontend para que mande el email vía EmailJS.
-    // El token solo viaja una vez (al cliente que registra). Se borra al verificar.
-    res.status(201).json({
-      ok: true,
-      id,
-      email: emailLower,
-      verificationToken
-    });
+    await user.save();
+    res.json({ ok: true, user: sanitizeUser(user) });
   } catch (err) {
-    console.error('Error en POST /api/auth/register:', err.message);
-    res.status(500).json({ error: 'Error interno del servidor al registrar usuario' });
+    console.error('Error en PATCH /api/users/me:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -795,6 +908,54 @@ app.post('/api/posts/:id/replies', socialWriteLimiter, requireAuth, async (req, 
     res.status(201).json(post);
   } catch (err) {
     console.error('Error en POST /api/posts/:id/replies:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// PUT /api/users/me/access-token — el usuario logueado activa o desactiva
+// la privacidad de su habitación. Acciones:
+//   { action: 'generate' } → genera un token nuevo (invalida el anterior),
+//     lo devuelve UNA vez en la respuesta. El cliente debe guardarlo.
+//   { action: 'remove' } → elimina el token (habitación pública).
+// Khaled y Laura (perfiles dev) no pueden usar este endpoint para garantizar
+// que sus rooms siempre sean públicas.
+const PROTECTED_PUBLIC_IDS = new Set(['khaled', 'laura']);
+
+app.put('/api/users/me/access-token', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+    if (PROTECTED_PUBLIC_IDS.has(id)) {
+      return res.status(403).json({ error: 'Los perfiles dev son públicos por diseño' });
+    }
+
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (user.createdViaAuth && !user.emailVerified) {
+      return res.status(403).json({ error: 'Verifica tu email antes de activar privacidad' });
+    }
+    if (user.isTemporary) {
+      return res.status(403).json({ error: 'Las habitaciones temporales no admiten privacidad' });
+    }
+
+    const { action } = req.body || {};
+
+    if (action === 'generate') {
+      const token = crypto.randomBytes(20).toString('hex'); // 40 chars hex
+      user.accessToken = token;
+      await user.save();
+      return res.json({ ok: true, accessToken: token, action: 'generated' });
+    }
+
+    if (action === 'remove') {
+      user.accessToken = null;
+      await user.save();
+      return res.json({ ok: true, action: 'removed' });
+    }
+
+    return res.status(400).json({ error: "action debe ser 'generate' o 'remove'" });
+  } catch (err) {
+    console.error('Error en PUT /api/users/me/access-token:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

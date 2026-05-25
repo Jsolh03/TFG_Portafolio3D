@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import ProjectIntro from '../components/os/ProjectIntro';
 import Register from '../components/auth/Register';
+import RegisterAccount from '../components/auth/RegisterAccount';
 import Login from '../components/auth/Login';
 import SettingsPanel from '../components/ui/SettingsPanel';
 import { USER_PHOTOS } from '../data/userMedia';
@@ -97,6 +98,61 @@ function UserCard({ id, name, photo, onClick, tagline, disabled }) {
   );
 }
 
+function VisitRoomForm({ isLoading, loginError, onCancel, onSubmit }) {
+  const t = useT();
+  const [id, setId] = useState('');
+  const [token, setToken] = useState('');
+  const submit = (e) => {
+    e.preventDefault();
+    if (!id.trim()) return;
+    onSubmit(id.toLowerCase().trim(), token.trim());
+  };
+  return (
+    <div className="auth-form-wrap">
+      <form onSubmit={submit} className="auth-form">
+        <button type="button" onClick={onCancel} className="auth-back" aria-label={t('common.back')}>← {t('common.back')}</button>
+        <h2 className="auth-title">{t('landing.visitRoomTitle')}</h2>
+        <p className="auth-subtitle">{t('landing.visitRoomSubtitle')}</p>
+
+        <div className="auth-field">
+          <label className="auth-label">{t('landing.visitRoomUserId')}</label>
+          <input
+            value={id}
+            onChange={e => setId(e.target.value)}
+            required maxLength={32} className="auth-input"
+            placeholder="ej. khaled" disabled={isLoading}
+            autoFocus
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">{t('landing.visitRoomToken')}</label>
+          <input
+            value={token}
+            onChange={e => setToken(e.target.value)}
+            maxLength={64} className="auth-input"
+            placeholder={t('landing.visitRoomTokenPh')} disabled={isLoading}
+          />
+          <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
+            {t('landing.visitRoomTokenHint')}
+          </small>
+        </div>
+
+        {loginError && <div className="auth-error">{loginError}</div>}
+
+        <div className="auth-actions">
+          <button type="button" onClick={onCancel} className="auth-btn auth-btn--ghost" disabled={isLoading}>
+            {t('common.cancel')}
+          </button>
+          <button type="submit" className="auth-btn auth-btn--primary" disabled={isLoading || !id.trim()}>
+            {isLoading ? t('landing.visitRoomLoading') : t('landing.visitRoomEnter')}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function Landing() {
   const t = useT();
   const { user: authUser, isAuthenticated, logout } = useAuth();
@@ -134,29 +190,40 @@ export default function Landing() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleLogin = async (userId) => {
+  // Carga la info de un user y entra a su habitación. Si la habitación
+  // está protegida con token, lo pide; si está expirada (temporal), informa.
+  const handleLogin = async (userId, accessToken = '') => {
     setIsLoading(true);
     setLoginError('');
     try {
-      const response = await fetch(`${API_BASE}/api/users/${userId}`);
+      const url = new URL(`${API_BASE}/api/users/${userId}`);
+      url.searchParams.set('visit', 'true');
+      if (accessToken) url.searchParams.set('token', accessToken);
+
+      // Header con JWT si el usuario está autenticado (le permite ver su
+      // propia room privada sin token, p.ej.)
+      const headers = {};
+      const jwt = localStorage.getItem('tfg_auth_token');
+      if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+
+      const response = await fetch(url.toString(), { headers });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 403 && data?.requiresToken) {
+        throw new Error('requires_token');
+      }
+      if (response.status === 404 && data?.expired) {
+        throw new Error('expired');
+      }
       if (!response.ok) throw new Error('not_found');
-      const data = await response.json();
       setUserData(data);
     } catch (error) {
-      setLoginError(error.message === 'not_found' ? t('landing.userNotFound') : t('landing.connectionError'));
+      if (error.message === 'requires_token') setLoginError(t('landing.requiresToken'));
+      else if (error.message === 'expired') setLoginError(t('landing.roomExpired'));
+      else if (error.message === 'not_found') setLoginError(t('landing.userNotFound'));
+      else setLoginError(t('landing.connectionError'));
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleGuest = () => {
-    setUserData({
-      id: 'guest',
-      name: 'Invitado',
-      isGuest: true,
-      roomType: 'generic1',
-      apps: ['terminal', 'ide', 'cv', 'encuesta', 'info', 'mail', 'notes', 'calc', 'clock', 'gallery', 'snake']
-    });
   };
 
   if (userData) {
@@ -170,14 +237,18 @@ export default function Landing() {
     );
   }
 
+  const bgLayer = (
+    <div className="lp-bg" aria-hidden="true">
+      <div className="lp-blob lp-blob-1"></div>
+      <div className="lp-blob lp-blob-2"></div>
+      <div className="lp-blob lp-blob-3"></div>
+    </div>
+  );
+
   if (view === 'register') {
     return (
       <div className="main-container login-screen lp-root">
-        <div className="lp-bg" aria-hidden="true">
-          <div className="lp-blob lp-blob-1"></div>
-          <div className="lp-blob lp-blob-2"></div>
-          <div className="lp-blob lp-blob-3"></div>
-        </div>
+        {bgLayer}
         <Register
           onRegisterSuccess={(data) => { setUserData(data); }}
           onCancel={() => setView('login')}
@@ -189,15 +260,37 @@ export default function Landing() {
   if (view === 'login-form') {
     return (
       <div className="main-container login-screen lp-root">
-        <div className="lp-bg" aria-hidden="true">
-          <div className="lp-blob lp-blob-1"></div>
-          <div className="lp-blob lp-blob-2"></div>
-          <div className="lp-blob lp-blob-3"></div>
-        </div>
+        {bgLayer}
         <Login
           onLoginSuccess={(user) => { setUserData(user); }}
           onCancel={() => setView('login')}
-          onSwitchToRegister={() => setView('register')}
+          onSwitchToRegister={() => setView('register-account')}
+        />
+      </div>
+    );
+  }
+
+  if (view === 'register-account') {
+    return (
+      <div className="main-container login-screen lp-root">
+        {bgLayer}
+        <RegisterAccount
+          onCancel={() => setView('login')}
+          onSwitchToLogin={() => setView('login-form')}
+        />
+      </div>
+    );
+  }
+
+  if (view === 'visit') {
+    return (
+      <div className="main-container login-screen lp-root">
+        {bgLayer}
+        <VisitRoomForm
+          isLoading={isLoading}
+          loginError={loginError}
+          onCancel={() => { setView('login'); setLoginError(''); }}
+          onSubmit={(id, token) => handleLogin(id, token)}
         />
       </div>
     );
@@ -324,22 +417,22 @@ export default function Landing() {
         </section>
 
         <section className="lp-cta-grid">
-          <button className="lp-cta-card" onClick={handleGuest} disabled={isLoading}>
+          <button className="lp-cta-card" onClick={() => { setLoginError(''); setView('visit'); }} disabled={isLoading}>
             <div className="lp-cta-emoji">👤</div>
-            <div className="lp-cta-title">{t('landing.guest')}</div>
-            <div className="lp-cta-desc">{t('landing.guestDesc')}</div>
+            <div className="lp-cta-title">{t('landing.visitCta')}</div>
+            <div className="lp-cta-desc">{t('landing.visitCtaDesc')}</div>
           </button>
 
-          <button className="lp-cta-card" onClick={() => setView('login-form')} disabled={isLoading}>
+          <button className="lp-cta-card lp-cta-card--accent" onClick={() => setView('login-form')} disabled={isLoading}>
             <div className="lp-cta-emoji">🔐</div>
             <div className="lp-cta-title">{t('landing.loginCta')}</div>
             <div className="lp-cta-desc">{t('landing.loginCtaDesc')}</div>
           </button>
 
-          <button className="lp-cta-card lp-cta-card--accent" onClick={() => setView('register')} disabled={isLoading}>
-            <div className="lp-cta-emoji">✨</div>
-            <div className="lp-cta-title">{t('landing.register')}</div>
-            <div className="lp-cta-desc">{t('landing.registerDesc')}</div>
+          <button className="lp-cta-card" onClick={() => setView('register')} disabled={isLoading}>
+            <div className="lp-cta-emoji">⏳</div>
+            <div className="lp-cta-title">{t('landing.temporalCta')}</div>
+            <div className="lp-cta-desc">{t('landing.temporalCtaDesc')}</div>
           </button>
         </section>
       </main>
