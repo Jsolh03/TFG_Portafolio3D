@@ -1,11 +1,85 @@
 import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
 import { useT } from '../../context/LanguageContext';
 import { API_BASE } from '../../config';
 
-const EMAILJS_SERVICE_ID = 'proyecto_portfolio_email';
-const EMAILJS_VERIFY_TEMPLATE_ID = 'template_verify';
-const EMAILJS_PUBLIC_KEY = 'djVp_993YqoEGhFrs';
+/* Pantalla post-registro con botón de reenvío de email. El backend no expone
+   nunca el verificationToken: si el email no llega, el usuario pulsa "Reenviar"
+   y el servidor regenera + manda otro. */
+function RegisteredScreen({ registered, onCancel, onSwitchToLogin }) {
+  const t = useT();
+  const [resendStatus, setResendStatus] = useState(registered.emailDelivered ? 'sent' : 'failed');
+  const [resending, setResending] = useState(false);
+  const [resendError, setResendError] = useState('');
+
+  const handleResend = async () => {
+    if (resending) return;
+    setResending(true);
+    setResendError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: registered.id, email: registered.email })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || t('account.resendErrorGeneric'));
+      setResendStatus('sent');
+    } catch (e) {
+      setResendError(e.message);
+      setResendStatus('failed');
+    } finally {
+      setResending(false);
+    }
+  };
+
+  return (
+    <div className="auth-form-wrap">
+      <div className="auth-form">
+        <button type="button" onClick={onCancel} className="auth-back" aria-label={t('common.back')}>← {t('common.back')}</button>
+        <h2 className="auth-title">{t('account.registeredTitle', { id: registered.id })}</h2>
+
+        {resendStatus === 'sent' ? (
+          <>
+            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--text-color)' }}>
+              {t('account.registeredEmailSentPrefix')} <strong>{registered.email}</strong>.
+            </p>
+            <p style={{ color: 'var(--muted-color, #999)', fontSize: '0.85rem' }}>
+              {t('account.registeredCheckSpam')}
+            </p>
+            <p style={{ marginTop: 16, fontSize: '0.9rem' }}>
+              {t('account.registeredCanLoginAfter')}
+            </p>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: '0.95rem', color: '#fca5a5' }}>
+              ⚠️ {t('account.emailDeliveryFailed')}
+            </p>
+            <p style={{ color: 'var(--muted-color, #999)', fontSize: '0.85rem' }}>
+              {t('account.resendInstructions')}
+            </p>
+          </>
+        )}
+
+        {resendError && <div className="auth-error" style={{ marginTop: 10 }}>{resendError}</div>}
+
+        <div className="auth-actions" style={{ marginTop: 18 }}>
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            className="auth-btn auth-btn--ghost"
+          >
+            {resending ? t('account.resending') : t('account.resendBtn')}
+          </button>
+          <button type="button" onClick={onSwitchToLogin} className="auth-btn auth-btn--primary">
+            {t('account.goToLogin')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ID_RE = /^[a-zA-Z0-9_-]{2,32}$/;
@@ -61,22 +135,14 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || t('account.errorGeneric'));
 
-      const verificationLink = `${window.location.origin}/?verify=${data.verificationToken}`;
-      let emailSent = false;
-      let emailError = null;
-      try {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_VERIFY_TEMPLATE_ID, {
-          to_email: data.email,
-          user_id: data.id,
-          verification_link: verificationLink
-        }, EMAILJS_PUBLIC_KEY);
-        emailSent = true;
-      } catch (mailErr) {
-        console.error('EmailJS verify error:', mailErr);
-        emailError = mailErr?.text || mailErr?.message || 'Error enviando el email';
-      }
-
-      setRegistered({ id: data.id, email: data.email, verificationLink, emailSent, emailError });
+      // El email lo manda el BACKEND directamente con Resend. Aquí solo
+      // recibimos confirmación de que la cuenta se creó. NUNCA recibimos
+      // el verificationToken (eso anularía la verificación por email).
+      setRegistered({
+        id: data.id,
+        email: data.email,
+        emailDelivered: data.emailDelivered !== false
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -85,61 +151,7 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
   };
 
   if (registered) {
-    return (
-      <div className="auth-form-wrap">
-        <div className="auth-form">
-          <button type="button" onClick={onCancel} className="auth-back" aria-label={t('common.back')}>← {t('common.back')}</button>
-          <h2 className="auth-title">{t('account.registeredTitle', { id: registered.id })}</h2>
-          {registered.emailSent ? (
-            <>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--text-color)' }}>
-                {t('account.registeredEmailSentPrefix')} <strong>{registered.email}</strong>.
-              </p>
-              <p style={{ color: 'var(--muted-color, #999)', fontSize: '0.85rem' }}>
-                {t('account.registeredCheckSpam')}
-              </p>
-              <p style={{ marginTop: 16, fontSize: '0.9rem' }}>
-                {t('account.registeredCanLoginAfter')}
-              </p>
-            </>
-          ) : (
-            <>
-              <p style={{ fontSize: '0.95rem' }}>
-                {t('account.registeredEmailFailedPrefix')} ({registered.emailError || ''}).
-              </p>
-              <p style={{ color: 'var(--muted-color, #999)', fontSize: '0.85rem' }}>
-                {t('account.registeredManualHint')}
-              </p>
-              <div style={{
-                background: 'rgba(0,0,0,0.25)',
-                border: '1px solid var(--glass-border)',
-                padding: '10px 14px',
-                borderRadius: 8,
-                fontFamily: 'monospace',
-                fontSize: '0.8rem',
-                wordBreak: 'break-all',
-                margin: '10px 0'
-              }}>
-                {registered.verificationLink}
-              </div>
-              <button
-                type="button"
-                onClick={() => navigator.clipboard?.writeText(registered.verificationLink)}
-                className="auth-btn auth-btn--ghost"
-                style={{ marginBottom: 10 }}
-              >
-                {t('account.copyLink')}
-              </button>
-            </>
-          )}
-          <div className="auth-actions">
-            <button type="button" onClick={onSwitchToLogin} className="auth-btn auth-btn--primary">
-              {t('account.goToLogin')}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <RegisteredScreen registered={registered} onCancel={onCancel} onSwitchToLogin={onSwitchToLogin} />;
   }
 
   return (

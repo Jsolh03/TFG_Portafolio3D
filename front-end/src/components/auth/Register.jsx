@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useT, useLanguage } from '../../context/LanguageContext';
 import { API_BASE } from '../../config';
 import { AVAILABLE_ROOMS } from '../../data/roomUrls';
-import { FONTS } from '../../context/ThemeContext';
 
 const TOTAL_STEPS = 4;
 
@@ -66,7 +65,13 @@ export default function Register({ onRegisterSuccess, onCancel }) {
 
   const canAdvance = () => {
     if (step === 1) return formData.id.trim() && formData.name.trim();
-    if (step === 3) return imgStatus !== 'error';
+    if (step === 3) {
+      if (imgStatus === 'error') return false;
+      // Email obligatorio en wizard temporal para que después se pueda convertir
+      // la habitación a cuenta permanente (matching id+email).
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
+      return emailOk;
+    }
     return true;
   };
 
@@ -284,14 +289,18 @@ export default function Register({ onRegisterSuccess, onCancel }) {
             </div>
 
             <div className="wizard-field">
-              <label>{t('wizard.email')}</label>
+              <label>{t('wizard.email')} *</label>
               <input
                 type="email"
+                required
                 className="wizard-input"
                 placeholder={t('wizard.emailPh')}
                 value={formData.email}
                 onChange={e => update({ email: e.target.value })}
               />
+              <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
+                {t('wizard.emailRequiredForSave')}
+              </small>
             </div>
 
             <div className="wizard-row">
@@ -409,17 +418,6 @@ export default function Register({ onRegisterSuccess, onCancel }) {
               <button type="button" className="wizard-add-btn" onClick={() => update({ projects: [...formData.projects, { ...EMPTY_PROJECT }] })}>
                 {t('wizard.projectsAdd')}
               </button>
-            </div>
-
-            <div className="wizard-field">
-              <label>{t('wizard.systemFont')}</label>
-              <select
-                className="wizard-select"
-                value={formData.font}
-                onChange={e => update({ font: e.target.value })}
-              >
-                {FONTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-              </select>
             </div>
 
             <div className="wizard-field">

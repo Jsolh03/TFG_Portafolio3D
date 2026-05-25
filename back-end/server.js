@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { setDefaultResultOrder } from 'node:dns';
 import crypto from 'node:crypto';
+import { Resend } from 'resend';
 
 
 setDefaultResultOrder('ipv4first');
@@ -100,6 +101,13 @@ const authLoginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiados intentos de login. Espera unos minutos.' }
+});
+const authResendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Has solicitado demasiados emails. Espera una hora.' }
 });
 const socialWriteLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -305,6 +313,72 @@ const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 const isStringArray = (v, maxLen = 50, maxItem = 100) =>
   Array.isArray(v) && v.length <= maxLen && v.every(s => typeof s === 'string' && s.length <= maxItem);
+
+// ─────────────────────── Email transaccional (Resend) ───────────────────────
+// El verificationToken NUNCA debe viajar al frontend. El backend manda el
+// email directamente. Si Resend falla, devolvemos un error pero el token
+// queda guardado y el usuario puede pedir reenvío con /api/auth/resend-verification.
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const RESEND_FROM = process.env.RESEND_FROM || 'K-ROOM <onboarding@resend.dev>';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tfg-portafolio3-d.vercel.app';
+
+const buildVerificationEmail = (userId, verificationLink) => ({
+  subject: 'Verify your K-ROOM account / Verifica tu cuenta',
+  html: `
+<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;">
+  <div style="text-align:center;padding:16px 0 24px 0;border-bottom:1px solid #e5e7eb;">
+    <h1 style="margin:0;font-size:22px;color:#0f172a;letter-spacing:1px;">K-ROOM</h1>
+    <p style="margin:4px 0 0 0;font-size:13px;color:#64748b;">3D Interactive Portfolio</p>
+  </div>
+  <div style="padding:24px 0;">
+    <p style="font-size:16px;color:#0f172a;margin:0 0 12px 0;">Hi <strong>${userId}</strong> 👋</p>
+    <p style="font-size:15px;color:#334155;line-height:1.5;margin:0 0 20px 0;">
+      Welcome to the 3D portfolio. Click the button below to activate your account:
+    </p>
+    <p style="text-align:center;margin:24px 0;">
+      <a href="${verificationLink}" style="background:#58a6ff;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:15px;">
+        Verify my email
+      </a>
+    </p>
+    <p style="font-size:13px;color:#64748b;line-height:1.5;margin:16px 0 0 0;">
+      Or copy this link into your browser:<br>
+      <code style="word-break:break-all;background:#f1f5f9;padding:4px 6px;border-radius:4px;font-size:12px;color:#0f172a;">${verificationLink}</code>
+    </p>
+    <p style="font-size:12px;color:#94a3b8;margin:12px 0 0 0;">This link expires in 24 hours.</p>
+  </div>
+  <hr style="border:none;border-top:1px solid #e5e7eb;margin:0;">
+  <div style="padding:20px 0 0 0;">
+    <p style="font-size:14px;color:#475569;line-height:1.5;margin:0;">
+      <strong>Hola ${userId},</strong> ¡bienvenido al portfolio 3D! Pulsa el botón de arriba para activar tu cuenta. El enlace caduca en 24 horas.
+    </p>
+  </div>
+  <div style="text-align:center;padding:20px 0 0 0;border-top:1px solid #e5e7eb;margin-top:24px;">
+    <p style="font-size:11px;color:#94a3b8;margin:0;letter-spacing:1px;">— K-ROOM PORTFOLIO —</p>
+  </div>
+</div>`,
+  text: `Hola ${userId},\n\nVerifica tu cuenta K-ROOM aquí:\n${verificationLink}\n\nEl enlace caduca en 24 horas.\n\n— K-ROOM`
+});
+
+const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
+  if (!resendClient) {
+    console.error('Resend no configurado: falta RESEND_API_KEY');
+    throw new Error('Email service not configured');
+  }
+  const verificationLink = `${FRONTEND_URL}/?verify=${verificationToken}`;
+  const { subject, html, text } = buildVerificationEmail(userId, verificationLink);
+  const result = await resendClient.emails.send({
+    from: RESEND_FROM,
+    to: [toEmail],
+    subject,
+    html,
+    text
+  });
+  if (result?.error) {
+    console.error('Resend error:', result.error);
+    throw new Error(result.error?.message || 'Email send failed');
+  }
+  return result?.data?.id || null;
+};
 
 // Serializa el user sin info sensible. Sustituye accessToken por un boolean
 // para que el frontend pueda mostrar el estado de privacidad sin exponer el token.
@@ -653,10 +727,12 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
     const existingById = await User.findOne({ id });
     const existingByEmail = await User.findOne({ email: emailLower });
 
+    let createdUserId = null;
+    let isConversion = false;
+
     if (existingById && existingById.isTemporary) {
       const temporalContactEmail = (existingById.contact?.email || '').toLowerCase().trim();
       if (temporalContactEmail && temporalContactEmail === emailLower) {
-        // El email del wizard coincide con el del registro → convertir
         if (existingByEmail && existingByEmail.id !== existingById.id) {
           return res.status(409).json({ error: 'Ese email ya está registrado en otra cuenta' });
         }
@@ -671,50 +747,62 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
         existingById.temporalAccessesRemaining = null;
         if (name) existingById.name = name;
         await existingById.save();
-        return res.status(200).json({
-          ok: true,
-          id: existingById.id,
-          email: emailLower,
-          verificationToken,
-          converted: true
+        createdUserId = existingById.id;
+        isConversion = true;
+      } else {
+        return res.status(409).json({
+          error: 'Ese nombre de usuario ya está en uso por una habitación temporal con otro email. Si es tuya, regístrate con el mismo email que usaste al crearla.'
         });
       }
-      // Si el email no coincide, el usuario tendría que elegir otro id.
-      return res.status(409).json({
-        error: 'Ese nombre de usuario ya está en uso por una habitación temporal con otro email. Si es tuya, regístrate con el mismo email que usaste al crearla.'
+    } else if (existingById) {
+      return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
+    } else if (existingByEmail) {
+      return res.status(409).json({ error: 'Ese email ya está registrado' });
+    } else {
+      const newUser = new User({
+        id,
+        name: name || id,
+        email: emailLower,
+        passwordHash,
+        emailVerified: false,
+        verificationToken,
+        verificationExpires,
+        createdViaAuth: true,
+        isGuest: false,
+        isTemporary: false,
+        roomType: 'generic1',
+        font: 'Inter',
+        apps: ['terminal', 'cv'],
+        zoneFunctions: { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' }
+      });
+      await newUser.save();
+      createdUserId = newUser.id;
+    }
+
+    // Mandar email desde el backend. El verificationToken NUNCA viaja al frontend.
+    try {
+      await sendVerificationEmail(emailLower, createdUserId, verificationToken);
+    } catch (mailErr) {
+      // Si el email falla, devolvemos un 202 con flag para que el frontend
+      // ofrezca al usuario reenviar. La cuenta queda creada pero el token
+      // sigue en BBDD esperando ser usado tras reenvío.
+      console.error('Error enviando email de verificación:', mailErr.message);
+      return res.status(202).json({
+        ok: true,
+        id: createdUserId,
+        email: emailLower,
+        converted: isConversion,
+        emailDelivered: false,
+        warning: 'Cuenta creada pero el email no se ha enviado. Usa el botón de reenvío.'
       });
     }
 
-    if (existingById) {
-      return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
-    }
-    if (existingByEmail) {
-      return res.status(409).json({ error: 'Ese email ya está registrado' });
-    }
-
-    const newUser = new User({
-      id,
-      name: name || id,
-      email: emailLower,
-      passwordHash,
-      emailVerified: false,
-      verificationToken,
-      verificationExpires,
-      createdViaAuth: true,
-      isGuest: false,
-      isTemporary: false,
-      roomType: 'generic1',
-      font: 'Inter',
-      apps: ['terminal', 'cv'],
-      zoneFunctions: { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' }
-    });
-    await newUser.save();
-
-    res.status(201).json({
+    res.status(isConversion ? 200 : 201).json({
       ok: true,
-      id,
+      id: createdUserId,
       email: emailLower,
-      verificationToken
+      converted: isConversion,
+      emailDelivered: true
     });
   } catch (err) {
     console.error('Error en POST /api/auth/register:', err.message);
@@ -803,6 +891,44 @@ app.patch('/api/users/me', requireAuth, async (req, res) => {
     res.json({ ok: true, user: sanitizeUser(user) });
   } catch (err) {
     console.error('Error en PATCH /api/users/me:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// POST /api/auth/resend-verification — regenera el token y manda otro email.
+// Rate-limited a 3/h por IP. Solo funciona si el user existe, NO está verificado
+// y el body trae el email correcto (evita oracle de existencia de cuenta).
+app.post('/api/auth/resend-verification', authResendLimiter, async (req, res) => {
+  try {
+    const { id, email } = req.body || {};
+    if (typeof id !== 'string' || !ID_RE.test(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+    if (typeof email !== 'string' || !EMAIL_RE.test(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    const user = await User.findOne({ id });
+    // Respuesta genérica para no revelar si la cuenta existe
+    const genericOk = { ok: true, sent: true };
+    if (!user || !user.createdViaAuth) return res.json(genericOk);
+    if (user.emailVerified) return res.json(genericOk);
+    if ((user.email || '').toLowerCase() !== email.toLowerCase().trim()) return res.json(genericOk);
+
+    const newToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = newToken;
+    user.verificationExpires = new Date(Date.now() + VERIFICATION_TTL_MS);
+    await user.save();
+
+    try {
+      await sendVerificationEmail(user.email, user.id, newToken);
+      return res.json(genericOk);
+    } catch (mailErr) {
+      console.error('Error reenviando email:', mailErr.message);
+      return res.status(503).json({ error: 'No se pudo enviar el email ahora. Inténtalo más tarde.' });
+    }
+  } catch (err) {
+    console.error('Error en POST /api/auth/resend-verification:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

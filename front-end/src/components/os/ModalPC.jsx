@@ -123,18 +123,19 @@ export default function ModalPC({ onClose, user, userData }) {
                 ? t('room.temporalBannerWithCount', { count: accessesLeft })
                 : t('room.temporalBannerNoCount')}
             </span>
-            {fullData?.contact?.email && (
-              <button
-                type="button"
-                className="os-temporal-banner-cta"
-                onClick={() => window.dispatchEvent(new CustomEvent('tfg:switch-to-register', {
-                  detail: { id: fullData.id, email: fullData.contact.email }
-                }))}
-                title={t('room.temporalSaveCta')}
-              >
-                {t('room.temporalSaveCta')} →
-              </button>
-            )}
+            <button
+              type="button"
+              className="os-temporal-banner-cta"
+              onClick={() => window.dispatchEvent(new CustomEvent('tfg:switch-to-register', {
+                detail: {
+                  id: fullData.id,
+                  email: fullData.contact?.email || ''
+                }
+              }))}
+              title={t('room.temporalSaveCta')}
+            >
+              {t('room.temporalSaveCta')} →
+            </button>
           </div>
         )}
 

@@ -191,7 +191,8 @@ export const TRANSLATIONS = {
       creating: 'Creando...',
       createAccount: 'Crear cuenta',
       backToLogin: '← Anterior',
-      temporalWarning: 'Habitación temporal: se borrará a los 3 días o tras 3 accesos. Crea una cuenta para guardarla permanentemente.'
+      temporalWarning: 'Habitación temporal: se borrará a los 3 días o tras 3 accesos. Crea una cuenta para guardarla permanentemente.',
+      emailRequiredForSave: 'Obligatorio: lo usaremos para que después puedas guardar tu habitación como cuenta permanente.'
     },
     devPortal: {
       brand: 'KyL Portal',
@@ -438,7 +439,12 @@ export const TRANSLATIONS = {
       registeredManualHint: 'Copia el enlace manualmente y ábrelo en el navegador (caduca en 24h):',
       copyLink: 'Copiar enlace',
       goToLogin: 'Ir al login',
-      prefillNotice: 'Usaremos el mismo nombre de usuario y email que pusiste al crear tu habitación temporal. Al verificar el email, tu habitación pasará a ser permanente sin perder los datos.'
+      prefillNotice: 'Usaremos el mismo nombre de usuario y email que pusiste al crear tu habitación temporal. Al verificar el email, tu habitación pasará a ser permanente sin perder los datos.',
+      emailDeliveryFailed: 'No pudimos enviar el email automáticamente. Por seguridad, no podemos mostrarte el enlace de verificación aquí.',
+      resendInstructions: 'Pulsa el botón de abajo para que volvamos a intentarlo. Si el problema persiste, contacta con el administrador.',
+      resendBtn: 'Reenviar email',
+      resending: 'Reenviando…',
+      resendErrorGeneric: 'No se pudo reenviar. Inténtalo más tarde.'
     },
     contact: {
       title: 'Contacto',
@@ -653,7 +659,8 @@ export const TRANSLATIONS = {
       creating: 'Creating...',
       createAccount: 'Create account',
       backToLogin: '← Previous',
-      temporalWarning: 'Temporary room: it will be deleted after 3 days or 3 accesses. Sign up to keep it.'
+      temporalWarning: 'Temporary room: it will be deleted after 3 days or 3 accesses. Sign up to keep it.',
+      emailRequiredForSave: 'Required: we will use it later to save your room as a permanent account.'
     },
     devPortal: {
       brand: 'KyL Portal',
@@ -900,7 +907,12 @@ export const TRANSLATIONS = {
       registeredManualHint: 'Copy this link manually and open it in your browser (expires in 24h):',
       copyLink: 'Copy link',
       goToLogin: 'Go to sign in',
-      prefillNotice: 'We will use the same username and email you set when creating your temporary room. Once you verify the email, your room becomes permanent without losing any data.'
+      prefillNotice: 'We will use the same username and email you set when creating your temporary room. Once you verify the email, your room becomes permanent without losing any data.',
+      emailDeliveryFailed: 'We could not send the email automatically. For security reasons we cannot display the verification link here.',
+      resendInstructions: 'Click the button below to try again. If the problem persists, contact the administrator.',
+      resendBtn: 'Resend email',
+      resending: 'Resending…',
+      resendErrorGeneric: 'Could not resend. Try later.'
     },
     contact: {
       title: 'Contact',

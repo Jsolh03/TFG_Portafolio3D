@@ -425,7 +425,7 @@ export default function Landing() {
             <div className="lp-cta-desc">{t('landing.visitCtaDesc')}</div>
           </button>
 
-          <button className="lp-cta-card lp-cta-card--accent" onClick={() => setView('login-form')} disabled={isLoading}>
+          <button className="lp-cta-card" onClick={() => setView('login-form')} disabled={isLoading}>
             <div className="lp-cta-emoji">🔐</div>
             <div className="lp-cta-title">{t('landing.loginCta')}</div>
             <div className="lp-cta-desc">{t('landing.loginCtaDesc')}</div>

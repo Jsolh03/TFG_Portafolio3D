@@ -3036,24 +3036,27 @@ canvas { outline: none; }
   gap: 6px;
   padding: 18px 20px;
   border-radius: 14px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb-light), 0.08));
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
   color: var(--text-color);
   cursor: pointer;
   text-align: left;
   backdrop-filter: blur(10px);
-  transition: all 0.25s;
+  transition: all 0.25s ease;
 }
 .lp-cta-card:hover:not(:disabled) {
   transform: translateY(-3px);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.34), rgba(var(--accent-rgb-light), 0.20));
   border-color: var(--accent-color);
-  box-shadow: 0 14px 30px rgba(var(--accent-rgb), 0.18);
+  box-shadow: 0 14px 36px rgba(var(--accent-rgb), 0.32);
+}
+.lp-cta-card:active:not(:disabled) {
+  transform: translateY(-1px);
+  transition-duration: 0.1s;
 }
 .lp-cta-card:disabled { opacity: 0.5; cursor: not-allowed; }
-.lp-cta-card--accent {
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb-light), 0.08));
-  border-color: rgba(var(--accent-rgb), 0.4);
-}
+/* Alias por compatibilidad: la clase modifier antigua queda como no-op */
+.lp-cta-card--accent { /* heredan estilo base */ }
 .lp-cta-emoji { font-size: 1.6rem; }
 .lp-cta-title { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.5px; }
 .lp-cta-desc { color: var(--muted-color); font-size: 0.75rem; }
