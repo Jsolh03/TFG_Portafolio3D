@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useT } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import FloatingSettingsButton from '../components/ui/FloatingSettingsButton';
 import { API_BASE } from '../config';
 
@@ -60,8 +61,11 @@ function Spinner() {
 
 export default function DevPortal() {
   const t = useT();
+  const navigate = useNavigate();
+  const { adoptToken } = useAuth();
   const [devPass, setDevPass] = useState('');
   const [token, setToken] = useState('');
+  const [impersonatingId, setImpersonatingId] = useState(null);
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
@@ -132,6 +136,30 @@ export default function DevPortal() {
       setError("Error de conexión con el servidor");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const impersonateAs = async (targetUserId) => {
+    if (impersonatingId) return;
+    setImpersonatingId(targetUserId);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/impersonate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ targetUserId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      // Adopta el token en AuthContext y navega a la landing como ese usuario
+      adoptToken(data.token, data.user, 'admin-impersonation');
+      navigate('/');
+    } catch (e) {
+      alert(`No se pudo impersonar: ${e.message}`);
+    } finally {
+      setImpersonatingId(null);
     }
   };
 
@@ -309,15 +337,26 @@ export default function DevPortal() {
                     </div>
                   </div>
 
-                  {PROTECTED_IDS.has(u.id) ? (
-                    <div className="dev-user-protected">{t('devPortal.protectedTag')}</div>
-                  ) : (
-                    <button className="dev-user-del" type="button" onClick={() => deleteUser(u.id)}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <TrashIcon /> {t('devPortal.delete')}
-                      </span>
+                  <div className="dev-user-actions">
+                    <button
+                      className="dev-user-impersonate"
+                      type="button"
+                      onClick={() => impersonateAs(u.id)}
+                      disabled={impersonatingId === u.id}
+                      title={`Acceder como ${u.id}`}
+                    >
+                      {impersonatingId === u.id ? '…' : 'Acceder como'}
                     </button>
-                  )}
+                    {PROTECTED_IDS.has(u.id) ? (
+                      <div className="dev-user-protected">{t('devPortal.protectedTag')}</div>
+                    ) : (
+                      <button className="dev-user-del" type="button" onClick={() => deleteUser(u.id)}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <TrashIcon /> {t('devPortal.delete')}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

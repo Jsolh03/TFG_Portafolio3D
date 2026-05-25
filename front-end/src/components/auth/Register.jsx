@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 import { useT, useLanguage } from '../../context/LanguageContext';
 import { API_BASE } from '../../config';
 import { AVAILABLE_ROOMS } from '../../data/roomUrls';
 import { FONTS } from '../../context/ThemeContext';
+
+// Configuración EmailJS para el correo de verificación.
+// El template "template_verify" debe existir en EmailJS con variables:
+// {{to_email}}, {{user_id}}, {{verification_link}}.
+const EMAILJS_SERVICE_ID = 'proyecto_portfolio_email';
+const EMAILJS_VERIFY_TEMPLATE_ID = 'template_verify';
+const EMAILJS_PUBLIC_KEY = 'djVp_993YqoEGhFrs';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_MIN = 8;
 
 const TOTAL_STEPS = 4;
 
@@ -40,7 +51,10 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     tagline: '',
     roomType: AVAILABLE_ROOMS[0]?.id || '',
     profileImg: '',
-    email: '',
+    email: '',         // email de LOGIN (paso 1)
+    contactEmail: '',  // email PÚBLICO de contacto en el CV (paso 3, opcional)
+    password: '',
+    confirmPassword: '',
     linkedin: '',
     github: '',
     aboutMe: '',
@@ -52,6 +66,9 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     apps: ['terminal', 'cv'],
     cvLang: lang
   });
+
+  // Estado tras un registro exitoso (mostrar pantalla de "verifica tu email")
+  const [registered, setRegistered] = useState(null);
 
   const update = (patch) => setFormData(prev => ({ ...prev, ...patch }));
 
@@ -65,7 +82,14 @@ export default function Register({ onRegisterSuccess, onCancel }) {
   };
 
   const canAdvance = () => {
-    if (step === 1) return formData.id.trim() && formData.name.trim();
+    if (step === 1) {
+      const idOk = !!formData.id.trim();
+      const nameOk = !!formData.name.trim();
+      const emailOk = EMAIL_RE.test(formData.email.trim());
+      const passwordOk = formData.password.length >= PASSWORD_MIN;
+      const matchOk = formData.password === formData.confirmPassword;
+      return idOk && nameOk && emailOk && passwordOk && matchOk;
+    }
     if (step === 3) return imgStatus !== 'error';
     return true;
   };
@@ -112,7 +136,9 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     setLoading(true);
 
     const payload = {
-      id: formData.id,
+      id: formData.id.toLowerCase().trim(),
+      email: formData.email.trim(),
+      password: formData.password,
       name: formData.name,
       tagline: formData.tagline,
       roomType: formData.roomType,
@@ -126,21 +152,46 @@ export default function Register({ onRegisterSuccess, onCancel }) {
       apps: formData.apps,
       cvLang: formData.cvLang,
       contact: {
-        email: formData.email,
+        email: (formData.contactEmail || formData.email).trim(),
         linkedin: formData.linkedin,
         github: formData.github
       }
     };
 
     try {
-      const res = await fetch(`${API_BASE}/api/register`, {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t('common.error'));
-      onRegisterSuccess(data);
+
+      // Construir el link de verificación que llega al email
+      const verificationLink = `${window.location.origin}/?verify=${data.verificationToken}`;
+      let emailSent = false;
+      let emailError = null;
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_VERIFY_TEMPLATE_ID, {
+          to_email: data.email,
+          user_id: data.id,
+          verification_link: verificationLink
+        }, EMAILJS_PUBLIC_KEY);
+        emailSent = true;
+      } catch (mailErr) {
+        // Si EmailJS falla (template no creado, cuota agotada, etc.), guardamos
+        // el link para mostrarlo en pantalla. El usuario puede copiarlo manualmente.
+        console.error('EmailJS verify error:', mailErr);
+        emailError = mailErr?.text || mailErr?.message || 'Error enviando el email';
+      }
+
+      setRegistered({
+        id: data.id,
+        email: data.email,
+        verificationLink,
+        emailSent,
+        emailError
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -154,6 +205,66 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     t('wizard.profileLabel'),
     t('wizard.cvLabel')
   ][step - 1];
+
+  // Pantalla post-registro: verifica tu email
+  if (registered) {
+    return (
+      <div className="wizard-root">
+        <div className="wizard-header">
+          <h1 className="wizard-title">¡Casi listo, {registered.id}!</h1>
+        </div>
+        <div className="wizard-body">
+          {registered.emailSent ? (
+            <div className="wizard-step">
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>
+                ✅ Te hemos enviado un email de verificación a <strong>{registered.email}</strong>.
+              </p>
+              <p style={{ color: 'var(--muted-color, #999)' }}>
+                Revisa tu bandeja de entrada (y la carpeta de spam). El enlace caduca en 24 horas.
+              </p>
+              <p style={{ marginTop: 24 }}>
+                Una vez verificado, podrás iniciar sesión desde la pantalla principal.
+              </p>
+            </div>
+          ) : (
+            <div className="wizard-step">
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>
+                ⚠️ Tu cuenta se creó correctamente, pero no pudimos enviar el email automáticamente
+                ({registered.emailError || 'servicio no disponible'}).
+              </p>
+              <p style={{ color: 'var(--muted-color, #999)' }}>
+                Copia este enlace de verificación manualmente y ábrelo en el navegador (caduca en 24h):
+              </p>
+              <div style={{
+                background: 'var(--glass-bg, rgba(0,0,0,0.3))',
+                border: '1px solid var(--glass-border, rgba(255,255,255,0.1))',
+                padding: '10px 14px',
+                borderRadius: 8,
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                wordBreak: 'break-all',
+                margin: '12px 0'
+              }}>
+                {registered.verificationLink}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(registered.verificationLink)}
+                className="wizard-btn"
+              >
+                Copiar enlace
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="wizard-footer">
+          <button type="button" className="wizard-btn wizard-btn--primary" onClick={onCancel}>
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="wizard-root" onKeyDown={e => e.stopPropagation()} onKeyUp={e => e.stopPropagation()}>
@@ -211,6 +322,50 @@ export default function Register({ onRegisterSuccess, onCancel }) {
                 value={formData.tagline}
                 onChange={e => update({ tagline: e.target.value })}
               />
+            </div>
+
+            <div className="wizard-field">
+              <label>Email *</label>
+              <input
+                type="email"
+                className="wizard-input"
+                placeholder="tu@email.com"
+                value={formData.email}
+                onChange={e => update({ email: e.target.value })}
+                autoComplete="email"
+              />
+              <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
+                Recibirás un email de verificación. Sin verificar no podrás iniciar sesión.
+              </small>
+            </div>
+
+            <div className="wizard-row">
+              <div className="wizard-field">
+                <label>Contraseña *</label>
+                <input
+                  type="password"
+                  className="wizard-input"
+                  placeholder="mínimo 8 caracteres"
+                  value={formData.password}
+                  onChange={e => update({ password: e.target.value })}
+                  autoComplete="new-password"
+                  minLength={PASSWORD_MIN}
+                />
+              </div>
+              <div className="wizard-field">
+                <label>Repite la contraseña *</label>
+                <input
+                  type="password"
+                  className="wizard-input"
+                  placeholder="********"
+                  value={formData.confirmPassword}
+                  onChange={e => update({ confirmPassword: e.target.value })}
+                  autoComplete="new-password"
+                />
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <small style={{ color: '#fca5a5', fontSize: '0.78rem' }}>Las contraseñas no coinciden</small>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -277,14 +432,17 @@ export default function Register({ onRegisterSuccess, onCancel }) {
             </div>
 
             <div className="wizard-field">
-              <label>{t('wizard.email')}</label>
+              <label>{t('wizard.email')} (mostrado en el CV)</label>
               <input
                 type="email"
                 className="wizard-input"
-                placeholder={t('wizard.emailPh')}
-                value={formData.email}
-                onChange={e => update({ email: e.target.value })}
+                placeholder={formData.email || t('wizard.emailPh')}
+                value={formData.contactEmail}
+                onChange={e => update({ contactEmail: e.target.value })}
               />
+              <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
+                Si lo dejas vacío usaremos el del registro.
+              </small>
             </div>
 
             <div className="wizard-row">

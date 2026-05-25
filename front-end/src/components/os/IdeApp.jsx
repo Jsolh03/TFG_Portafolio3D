@@ -551,7 +551,7 @@ const matchScenario = (input) => {
   if (/(refactor|mejora)/.test(low)) return 'refactor';
   if (/(bug|error|fallo|problema|issue)/.test(low)) return 'bug';
   if (/(test|pruebas)/.test(low)) return 'tests';
-  if (/(sobre ti|sobre khaled|about khaled|khaled)/.test(low)) return 'about';
+  if (/^\/sobre\b|^\/about\b|\b(sobre|about|cu[eé]ntame (de|sobre)|h[aá]blame (de|sobre)|presenta) (ti|t[uú]|m[ií]|khaled|el (creador|developer|autor))\b|\b(qui[eé]n es khaled|who is khaled|presenta a khaled)\b/.test(low)) return 'about';
 
   return 'default';
 };

@@ -15,10 +15,12 @@ import CalculatorApp from './CalculatorApp';
 import ClockApp from './ClockApp';
 import GalleryApp from './GalleryApp';
 import SnakeApp from './SnakeApp';
+import SocialApp from './SocialApp';
 
 const APP_DEFS = (t) => [
   { id: 'terminal', label: t('apps.terminal'), iconClass: 'terminal-icon', Icon: APP_ICON_MAP.terminal },
   { id: 'ide',      label: t('apps.ide'),      iconClass: 'ide-icon',      Icon: APP_ICON_MAP.ide },
+  { id: 'social',   label: 'K-Social',         iconClass: 'social-icon',   Icon: APP_ICON_MAP.social || APP_ICON_MAP.encuesta },
   { id: 'info',     label: t('apps.info'),     iconClass: 'info-tile',     Icon: APP_ICON_MAP.info },
   { id: 'encuesta', label: t('apps.encuesta'), iconClass: 'encuesta-icon', Icon: APP_ICON_MAP.encuesta },
   { id: 'cv',       label: t('apps.cv'),       iconClass: 'cv-icon',       Icon: APP_ICON_MAP.cv },
@@ -29,6 +31,9 @@ const APP_DEFS = (t) => [
   { id: 'gallery',  label: t('apps.gallery'),  iconClass: 'gallery-icon',  Icon: APP_ICON_MAP.gallery },
   { id: 'snake',    label: t('apps.snake'),    iconClass: 'snake-icon',    Icon: APP_ICON_MAP.snake }
 ];
+
+// Apps exclusivas para Khaled (IDE_DEV + red social interna)
+const KHALED_ONLY_APPS = new Set(['ide', 'social']);
 
 const systemNameFor = (user) => {
   if (user === 'khaled') return 'K-OS';
@@ -52,7 +57,12 @@ export default function ModalPC({ onClose, user, userData }) {
 
   const userApps = fullData?.apps || userData?.apps || ['terminal', 'cv'];
   const allApps = APP_DEFS(t);
-  const apps = allApps.filter(a => userApps.includes(a.id));
+  // Filtra apps disponibles para este user + fuerza exclusividad de las apps Khaled-only
+  const apps = allApps.filter(a => {
+    if (KHALED_ONLY_APPS.has(a.id) && user !== 'khaled') return false;
+    if (KHALED_ONLY_APPS.has(a.id)) return true; // Khaled siempre las ve
+    return userApps.includes(a.id);
+  });
   const githubUrl = fullData?.contact?.github || fullData?.githubUrl;
 
   const renderAppContent = () => {
@@ -75,6 +85,7 @@ export default function ModalPC({ onClose, user, userData }) {
       case 'clock':   return <ClockApp />;
       case 'gallery': return <GalleryApp fullData={fullData} />;
       case 'snake':   return <SnakeApp onExit={() => setActiveApp(null)} />;
+      case 'social':  return <SocialApp />;
       default: return null;
     }
   };

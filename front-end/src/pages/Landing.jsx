@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { useT } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import ProjectIntro from '../components/os/ProjectIntro';
 import Register from '../components/auth/Register';
+import Login from '../components/auth/Login';
 import SettingsPanel from '../components/ui/SettingsPanel';
 import { USER_PHOTOS } from '../data/userMedia';
 
@@ -97,6 +99,7 @@ function UserCard({ id, name, photo, onClick, tagline, disabled }) {
 
 export default function Landing() {
   const t = useT();
+  const { user: authUser, isAuthenticated, logout } = useAuth();
 
   const [userData, setUserData] = useState(null);
   const [view, setView] = useState('login');
@@ -104,8 +107,31 @@ export default function Landing() {
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState(null); // null | 'pending' | 'ok' | 'error'
+  const [verifyMessage, setVerifyMessage] = useState('');
 
   const phrases = t('landing.taglineRotator');
+
+  // Detecta ?verify=TOKEN en la URL y confirma email
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('verify');
+    if (!token) return;
+    setVerifyStatus('pending');
+    fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`)
+      .then(async r => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data?.error || 'No se pudo verificar el email');
+        setVerifyStatus('ok');
+        setVerifyMessage(`✅ Email verificado. Ya puedes iniciar sesión como "${data.id}".`);
+        // Limpia el parámetro de la URL para que no se quede pegado
+        window.history.replaceState({}, '', window.location.pathname);
+      })
+      .catch(err => {
+        setVerifyStatus('error');
+        setVerifyMessage(`❌ ${err.message || 'Verificación fallida'}`);
+      });
+  }, []);
 
   const handleLogin = async (userId) => {
     setIsLoading(true);
@@ -159,6 +185,23 @@ export default function Landing() {
     );
   }
 
+  if (view === 'login-form') {
+    return (
+      <div className="main-container login-screen lp-root">
+        <div className="lp-bg" aria-hidden="true">
+          <div className="lp-blob lp-blob-1"></div>
+          <div className="lp-blob lp-blob-2"></div>
+          <div className="lp-blob lp-blob-3"></div>
+        </div>
+        <Login
+          onLoginSuccess={(user) => { setUserData(user); }}
+          onCancel={() => setView('login')}
+          onSwitchToRegister={() => setView('register')}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="main-container login-screen lp-root">
       <div className="lp-bg" aria-hidden="true">
@@ -175,6 +218,13 @@ export default function Landing() {
         </div>
 
         <div className="lp-topbar-actions">
+          {isAuthenticated && authUser && (
+            <div className="lp-session-chip" title={`Sesión: ${authUser.id}`}>
+              <span className="lp-session-dot" />
+              <span className="lp-session-id">@{authUser.id}</span>
+              <button type="button" className="lp-session-logout" onClick={logout} title="Cerrar sesión">×</button>
+            </div>
+          )}
           <button
             className="lp-icon-btn"
             onClick={() => setSettingsOpen(true)}
@@ -202,6 +252,18 @@ export default function Landing() {
       </header>
 
       <main className="lp-main">
+        {verifyStatus && (
+          <div className={`lp-verify-banner lp-verify-banner--${verifyStatus}`}>
+            {verifyStatus === 'pending' && '⌛ Verificando email…'}
+            {verifyStatus !== 'pending' && (
+              <>
+                {verifyMessage}
+                <button type="button" onClick={() => setVerifyStatus(null)} className="lp-verify-close">×</button>
+              </>
+            )}
+          </div>
+        )}
+
         <section className="lp-hero">
           <HeroTitle text={t('landing.title')} />
           <div className="lp-subtitle">
@@ -265,6 +327,12 @@ export default function Landing() {
             <div className="lp-cta-emoji">👤</div>
             <div className="lp-cta-title">{t('landing.guest')}</div>
             <div className="lp-cta-desc">{t('landing.guestDesc')}</div>
+          </button>
+
+          <button className="lp-cta-card" onClick={() => setView('login-form')} disabled={isLoading}>
+            <div className="lp-cta-emoji">🔐</div>
+            <div className="lp-cta-title">Iniciar sesión</div>
+            <div className="lp-cta-desc">Con tu cuenta verificada por email</div>
           </button>
 
           <button className="lp-cta-card lp-cta-card--accent" onClick={() => setView('register')} disabled={isLoading}>

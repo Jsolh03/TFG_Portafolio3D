@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import { useT } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 const SERVICE_ID  = 'proyecto_portfolio_email';
 const TEMPLATE_ID = 'template_proyect';
@@ -9,12 +10,23 @@ const MAX_CHARS = 500;
 
 export default function MailApp({ fullData }) {
   const t = useT();
+  const { isAuthenticated, user: authUser } = useAuth();
   const [form, setForm]     = useState({ nombre: '', email: '', mensaje: '', asunto: '' });
   const [status, setStatus] = useState('idle');
   const [chars, setChars]   = useState(0);
   const [rateLimitError, setRateLimitError] = useState('');
 
   const destEmail = fullData?.contact?.email || fullData?.email || '';
+
+  // Si el usuario está autenticado, prerelleno su nombre y email al montar
+  useEffect(() => {
+    if (!isAuthenticated || !authUser) return;
+    setForm(prev => ({
+      ...prev,
+      nombre: prev.nombre || authUser.name || authUser.id || '',
+      email: prev.email || authUser.email || ''
+    }));
+  }, [isAuthenticated, authUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
