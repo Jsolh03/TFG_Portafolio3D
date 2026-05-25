@@ -1,0 +1,1 @@
+export const API_BASE = "https://tfg-portafolio3d.onrender.com";
