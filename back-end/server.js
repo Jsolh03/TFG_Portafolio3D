@@ -58,6 +58,13 @@ const encuestasLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Demasiadas valoraciones desde tu IP. Inténtalo más tarde.' }
 });
+const agentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas consultas al agente IA. Espera unos minutos.' }
+});
 
 const uri = process.env.MONGODB_URI;
 if (!uri) {
@@ -279,6 +286,88 @@ app.post('/api/encuestas', encuestasLimiter, async (req, res) => {
     res.status(201).json(nueva);
   } catch (err) {
     console.error("Error en POST /api/encuestas:", err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Proxy seguro al agente IA (Hugging Face Inference Providers).
+// El token vive solo en el servidor (HF_TOKEN). El frontend nunca lo ve.
+const HF_API_URL = 'https://router.huggingface.co/v1/chat/completions';
+const HF_MODEL = process.env.HF_MODEL || 'Qwen/Qwen2.5-7B-Instruct';
+const AGENT_SYSTEM_PROMPT = `Eres K-Bot, asistente integrado en el IDE del portfolio 3D de Khaled Solh El Hajji (estudiante DAM, defendiendo TFG en junio 2026).
+
+Khaled trabaja con agentes IA (vibe coding) usando Claude Code, GitHub Copilot, Cursor y MCP servers custom. Su stack: Java, Spring Boot, Python, Node.js, React, Three.js, MongoDB.
+
+Reglas:
+- Responde en español por defecto, salvo que el usuario pregunte en inglés.
+- Máximo 4 frases concisas. Sin listas largas.
+- No inventes datos personales de Khaled fuera de lo dicho arriba.
+- Si te piden hacer algo fuera de tu rol (ejecutar código, abrir URLs, recordar la conversación), explica que solo eres un asistente conversacional en este portfolio.
+- Sé amable, profesional y técnicamente preciso.`;
+
+app.post('/api/agent', agentLimiter, async (req, res) => {
+  try {
+    const HF_TOKEN = process.env.HF_TOKEN;
+    if (!HF_TOKEN) {
+      return res.status(503).json({ error: 'Agente IA no configurado en el servidor' });
+    }
+
+    const { prompt, context } = req.body || {};
+
+    if (typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return res.status(400).json({ error: 'Prompt requerido' });
+    }
+    if (prompt.length > 500) {
+      return res.status(400).json({ error: 'Prompt demasiado largo (máx 500 caracteres)' });
+    }
+    if (context != null && (typeof context !== 'string' || context.length > 300)) {
+      return res.status(400).json({ error: 'Contexto inválido (máx 300 caracteres)' });
+    }
+
+    const systemContent = context
+      ? `${AGENT_SYSTEM_PROMPT}\n\nContexto del IDE: ${context}`
+      : AGENT_SYSTEM_PROMPT;
+
+    const hfResp = await fetch(HF_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HF_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: HF_MODEL,
+        messages: [
+          { role: 'system', content: systemContent },
+          { role: 'user', content: prompt.trim() }
+        ],
+        max_tokens: 220,
+        temperature: 0.7,
+        stream: false
+      })
+    });
+
+    if (!hfResp.ok) {
+      const errorText = await hfResp.text().catch(() => '');
+      console.error(`HF API error ${hfResp.status}:`, errorText.slice(0, 300));
+      if (hfResp.status === 401 || hfResp.status === 403) {
+        return res.status(503).json({ error: 'Agente IA no autorizado en el servidor' });
+      }
+      if (hfResp.status === 429) {
+        return res.status(429).json({ error: 'Agente IA saturado. Inténtalo en un minuto.' });
+      }
+      return res.status(503).json({ error: 'Agente IA no disponible ahora mismo' });
+    }
+
+    const data = await hfResp.json();
+    const text = data?.choices?.[0]?.message?.content;
+
+    if (typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(503).json({ error: 'Respuesta inválida del agente IA' });
+    }
+
+    res.json({ text: text.trim() });
+  } catch (err) {
+    console.error('Error en POST /api/agent:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

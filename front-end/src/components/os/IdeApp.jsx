@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
+import { API_BASE } from '../../config';
 
 /* ────────────────────────────────────────────────────────────
    IDE_DEV.app — Editor + Agente IA simulado
@@ -716,7 +717,70 @@ export default function IdeApp() {
       return;
     }
     const key = matchScenario(text);
-    playScenario(key, text);
+    if (key === 'default') {
+      askRemoteAgent(text);
+    } else {
+      playScenario(key, text);
+    }
+  };
+
+  const askRemoteAgent = async (userText) => {
+    if (busy) return;
+    setBusy(true);
+
+    // Pinta el mensaje del usuario y un toast "Agent" como tool en curso.
+    setMessages(prev => [...prev, { id: nextId(), role: 'user', kind: 'message', text: userText, complete: true }]);
+    const toolId = nextId();
+    setMessages(prev => [...prev, { id: toolId, role: 'agent', kind: 'tool', tool: 'Analyze', input: 'remote-agent', output: '…', complete: false }]);
+
+    let remoteText = null;
+    try {
+      const resp = await fetch(`${API_BASE}/api/agent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: userText.slice(0, 500),
+          context: `Fichero abierto: ${file.name} (${file.language})`
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (typeof data?.text === 'string' && data.text.trim().length > 0) {
+          remoteText = data.text.trim();
+        }
+      }
+    } catch {
+      // Error de red: cae al fallback scripted abajo.
+    }
+
+    if (remoteText) {
+      setMessages(prev => prev.map(m => m.id === toolId ? { ...m, output: 'OK', complete: true } : m));
+      const id = nextId();
+      setMessages(prev => [...prev, { id, role: 'agent', kind: 'message', text: '', complete: false }]);
+      await streamText(id, remoteText, 12);
+      setBusy(false);
+      return;
+    }
+
+    // Fallback: si la API no respondió, mostrar el mensaje canned de "no he reconocido".
+    setMessages(prev => prev.map(m => m.id === toolId ? { ...m, output: 'offline', complete: true } : m));
+    const steps = SCENARIOS.default();
+    for (const step of steps) {
+      const id = nextId();
+      if (step.kind === 'thinking') {
+        setMessages(prev => [...prev, { id, role: 'agent', kind: 'thinking', text: step.text, complete: true }]);
+        await sleep(step.wait || 500);
+        setMessages(prev => prev.filter(m => m.id !== id));
+      } else if (step.kind === 'tool') {
+        setMessages(prev => [...prev, { id, role: 'agent', kind: 'tool', tool: step.tool, input: step.input, output: '…', complete: false }]);
+        await sleep(step.wait || 600);
+        setMessages(prev => prev.map(m => m.id === id ? { ...m, output: step.output || 'OK', complete: true } : m));
+      } else if (step.kind === 'message') {
+        setMessages(prev => [...prev, { id, role: 'agent', kind: 'message', text: '', complete: false }]);
+        await streamText(id, step.text, 12);
+      }
+    }
+    setBusy(false);
   };
 
   const simulateBash = (cmd) => {
