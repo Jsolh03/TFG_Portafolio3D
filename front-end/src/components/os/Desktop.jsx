@@ -7,24 +7,24 @@ import { APP_ICON_MAP } from './AppIcons';
 const BOOT_KEY_PREFIX = 'kos_booted_';
 const BOOT_DURATION_MS = 2400;
 
-// Posiciones predefinidas para que los iconos se vean "tirados" por el escritorio
-// (left/top en % del área visible de iconos, tilt = ligera rotación en grados)
+// Posiciones predefinidas tipo escritorio real: 4 columnas alineadas, 4 filas,
+// con micro-variaciones de tilt para que no parezca rígido pero sí ordenado.
 const ICON_POSITIONS = [
-  { left: 3,  top: 4,  tilt: -3 },
-  { left: 22, top: 9,  tilt:  2 },
-  { left: 41, top: 3,  tilt: -1 },
-  { left: 60, top: 11, tilt:  3 },
-  { left: 9,  top: 28, tilt:  1 },
-  { left: 30, top: 32, tilt: -2 },
-  { left: 52, top: 26, tilt:  2 },
-  { left: 72, top: 34, tilt: -3 },
-  { left: 4,  top: 52, tilt: -1 },
-  { left: 24, top: 58, tilt:  3 },
-  { left: 46, top: 50, tilt: -2 },
-  { left: 64, top: 60, tilt:  1 },
-  { left: 14, top: 76, tilt:  2 },
-  { left: 36, top: 78, tilt: -3 },
-  { left: 56, top: 74, tilt:  1 }
+  { left: 5,  top: 6,  tilt: -1 },
+  { left: 22, top: 6,  tilt:  1 },
+  { left: 39, top: 6,  tilt: -1 },
+  { left: 56, top: 6,  tilt:  1 },
+  { left: 5,  top: 28, tilt:  1 },
+  { left: 22, top: 28, tilt: -1 },
+  { left: 39, top: 28, tilt:  1 },
+  { left: 56, top: 28, tilt: -1 },
+  { left: 5,  top: 50, tilt: -1 },
+  { left: 22, top: 50, tilt:  1 },
+  { left: 39, top: 50, tilt: -1 },
+  { left: 56, top: 50, tilt:  1 },
+  { left: 5,  top: 72, tilt:  1 },
+  { left: 22, top: 72, tilt: -1 },
+  { left: 39, top: 72, tilt:  1 }
 ];
 
 const BOOT_LINES = [

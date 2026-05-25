@@ -22,7 +22,7 @@ const randomFood = (snake) => {
 
 const initialSnake = () => [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
 
-export default function SnakeApp() {
+export default function SnakeApp({ onExit }) {
   const t = useT();
   const canvasRef = useRef(null);
   const [snake, setSnake] = useState(initialSnake);
@@ -36,6 +36,11 @@ export default function SnakeApp() {
 
   useEffect(() => {
     const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onExit?.();
+        return;
+      }
       const next = DIRECTIONS[e.key];
       if (!next) return;
       e.preventDefault();
@@ -44,7 +49,7 @@ export default function SnakeApp() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dir]);
+  }, [dir, onExit]);
 
   useEffect(() => {
     if (!running || gameOver) return;

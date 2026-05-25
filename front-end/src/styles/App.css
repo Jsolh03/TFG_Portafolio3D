@@ -1999,8 +1999,9 @@ canvas { outline: none; }
 
 .lp-topbar {
   position: relative; z-index: 5;
-  padding: 20px 36px;
+  padding: 20px 48px;
   display: flex; align-items: center; justify-content: space-between;
+  gap: 48px;
 }
 .lp-brand {
   display: flex; align-items: center; gap: 10px;
@@ -2008,6 +2009,7 @@ canvas { outline: none; }
   font-weight: 700;
   letter-spacing: 2px;
   font-size: 0.95rem;
+  margin-right: auto;
 }
 .lp-brand-dot {
   width: 10px; height: 10px;

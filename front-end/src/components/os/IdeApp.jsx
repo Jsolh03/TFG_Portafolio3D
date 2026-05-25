@@ -149,7 +149,195 @@ test('app monta Landing en /', () => {
   }
 };
 
-const FILE_ORDER = ['NexusAPI.java', 'PromptEngine.py', 'App.jsx'];
+FILES['DSAnexus.md'] = {
+  name: 'DSAnexus.md',
+  language: 'markdown',
+  icon: '🏢',
+  value: `# DSAnexus — Aceleración tecnológica corporativa
+
+[DSAnexus](https://www.dsanexus.com/) es una empresa corporativa
+especializada en la **actualización tecnológica de organizaciones**.
+Acompañan a empresas y administraciones en transiciones de
+plataformas, modernización de infraestructura y adopción de
+nuevas herramientas.
+
+## Mi colaboración
+
+Como técnico colaboro en proyectos de migración, soporte y
+modernización trabajando con clientes finales en entornos
+de producción reales — el tipo de escenarios donde no hay
+margen para improvisar.
+
+## Lo que aporta a mi perfil
+
+- Diagnóstico rápido en entornos heterogéneos (Windows
+  Server, redes corporativas, Active Directory, intranets).
+- Disciplina operativa: pruebas previas, ventanas de cambio
+  acordadas, plan de rollback documentado.
+- Comunicación con stakeholders no-técnicos: explicar el
+  riesgo y el plan sin jerga.
+- Documentación clara para handover entre técnicos.
+
+## Por qué importa para este portfolio
+
+DSAnexus es donde aprendo a pensar como un **proveedor de
+servicios profesional**, no solo como un desarrollador.
+Las migraciones y los SLA enseñan cosas que un curso no:
+qué hacer cuando el sistema cae a las 3 AM, cómo priorizar
+incidentes y cómo escribir un postmortem que no sea ficción.
+
+Más info: https://www.dsanexus.com/`,
+  explain: 'DSAnexus es una empresa corporativa que ayuda a otras organizaciones a modernizar su stack tecnológico. Khaled colabora con ellos como técnico en proyectos reales de migración, soporte y actualización de infraestructura. La experiencia aporta al perfil disciplina operativa, gestión de incidentes y comunicación con clientes no-técnicos.',
+  bug: 'No hay bug aquí — es información biográfica. Si acaso, el riesgo es que el portfolio mencione una empresa real sin pedir permiso; este texto es deliberadamente descriptivo y no comparte detalles internos protegidos.',
+  refactor: {
+    before: '## Mi colaboración\\nComo técnico colaboro en proyectos…',
+    after:  '## Mi colaboración\\n> Técnico de sistemas — proyectos reales de migración, soporte y modernización.'
+  },
+  tests: `# No aplica: documento informativo
+# Pero validamos que el enlace funciona:
+$ curl -I https://www.dsanexus.com/
+HTTP/2 200`
+};
+
+FILES['HospitalJoseGermain.md'] = {
+  name: 'HospitalJoseGermain.md',
+  language: 'markdown',
+  icon: '🏥',
+  value: `# Hospital Universitario José Germain — Técnico en Sistemas
+
+Estancia profesional como **Técnico en Sistemas** en el
+Hospital Universitario José Germain, institución pública
+de referencia en salud mental en la Comunidad de Madrid.
+
+## Responsabilidades reales
+
+### Migración Windows 10 → Windows 11
+Planificación e implementación del proceso de actualización
+de los equipos clínicos y administrativos del hospital,
+garantizando compatibilidad con el software hospitalario
+crítico (historia clínica electrónica, sistemas de cita,
+periféricos médicos).
+
+### Mantenimiento de la intranet hospitalaria
+Gestión del contenido y la disponibilidad del portal interno
+que usa el personal sanitario para acceder a protocolos,
+documentación y herramientas internas.
+
+### Web pública del hospital
+Soporte y actualizaciones menores de la web oficial:
+publicación de avisos, ajustes de contenido, depuración
+de fallos puntuales.
+
+### Soporte HW/SW
+Diagnóstico y reparación de incidencias en los ordenadores
+de las distintas unidades:
+- Perfiles de Windows corruptos.
+- Conectividad de red y Wi-Fi.
+- Drivers de periféricos hospitalarios.
+- Reemplazo de hardware (memoria, almacenamiento, fuentes).
+- Limpieza de software no autorizado.
+
+## Lo que me llevo de aquí
+
+Trabajar en un hospital me enseñó algo que no aparece
+en ningún curso: **el sistema no puede caer porque detrás
+hay pacientes esperando**.
+
+- Cada cambio se valida antes de tocarlo.
+- Cada migración tiene plan B documentado.
+- La comunicación con usuarios no-técnicos importa tanto
+  como la solución técnica.
+- Las prisas son tu enemigo. La calma resuelve más casos
+  que la urgencia.
+
+Es un entorno que enseña a tomarse en serio la palabra
+"producción". Y eso se nota en cómo trabajo después.`,
+  explain: 'Este fichero describe el rol técnico de Khaled en el Hospital José Germain: migraciones masivas W10→W11, mantenimiento de intranet y web pública, y soporte de incidencias HW/SW. Es un proyecto profesional real, no un proyecto académico, que aporta perspectiva de "producción de verdad" al perfil.',
+  bug: 'Información sensible a evitar: nombres de pacientes, rutas de servidores internos, contraseñas, IPs internas. Este texto está deliberadamente redactado a alto nivel para no exponer nada de eso.',
+  refactor: {
+    before: '## Responsabilidades reales\\n### Migración Windows 10 → Windows 11\\n…',
+    after:  '## Responsabilidades\\n- Migración W10→W11 de la flota clínica\\n- Mantenimiento intranet + web pública\\n- Soporte HW/SW de incidencias diarias'
+  },
+  tests: `# No aplica: documento informativo
+# Validación: el hospital sigue funcionando ✓`
+};
+
+FILES['VibeCoding.md'] = {
+  name: 'VibeCoding.md',
+  language: 'markdown',
+  icon: '🤖',
+  value: `# Vibe Coding — Trabajo mano a mano con IA
+
+Este portfolio no es solo un proyecto de fin de grado.
+Es la demostración práctica de mi forma de trabajar:
+**vibe coding** — colaboración constante con agentes
+de IA para construir más rápido sin perder rigor.
+
+## Herramientas que uso a diario
+
+- **Claude Code** — agente principal en CLI / VS Code,
+  para refactor, debug, arquitectura, navegación de repos
+  grandes y operaciones git complejas.
+- **GitHub Copilot** — autocompletado contextual línea
+  a línea.
+- **Cursor** — sesiones de pair programming visual cuando
+  necesito un canvas más libre.
+- **MCP servers** custom — extensiones propias que conectan
+  el agente con Mongo, Spline u otras herramientas
+  específicas del proyecto.
+- **Prompts custom** por contexto — un system prompt
+  distinto por proyecto, no uno universal.
+
+## Mi flujo de trabajo con agentes
+
+1. **Yo defino** el objetivo y los límites (qué tocar,
+   qué no, qué riesgo asumimos).
+2. **El agente propone** el plan ANTES de tocar código.
+   Yo apruebo.
+3. **Implementamos** en cambios pequeños y atómicos,
+   un fichero a la vez.
+4. **Validación automática** — tests + build antes de
+   devolver control.
+5. **Yo reviso**, yo decido qué entra en la rama.
+   El \`git diff\` no miente.
+
+## Reglas de oro
+
+- Si el agente propone borrar algo, primero clasificarlo:
+  ¿es código muerto al 100%? ¿requiere validación manual?
+- Ningún cambio masivo sin plan documentado.
+- Hooks pre-commit son sagrados — el agente NUNCA los
+  salta.
+- Backups antes de operaciones destructivas.
+- Si algo huele raro: \`git status\` y \`git diff\` siempre
+  cuentan la verdad.
+
+## Por qué importa
+
+La IA no me reemplaza, **me amplifica**. Sé qué quiero,
+sé qué no debería hacer, y sé revisar lo que produce
+el agente.
+
+Eso es lo que aporto: **criterio**.
+
+Una IA sin criterio del humano que la dirige produce
+código rápido y roto. Con criterio, produce ingeniería
+de verdad — más rápido y con menos errores que
+trabajando solo.`,
+  explain: 'VibeCoding.md describe el flujo de trabajo de Khaled con agentes IA. La tesis: la IA amplifica al desarrollador con criterio; no lo reemplaza. Detalla herramientas (Claude Code, Copilot, MCP servers, prompts custom), el flujo en 5 pasos (objetivo → plan → implementación atómica → validación → review humana) y las reglas de oro que evitan los fallos típicos de los LLMs.',
+  bug: 'Riesgo del enfoque: depender demasiado del agente y perder criterio propio. Mitigación: nunca aceptar cambios sin entenderlos. Si no podrías escribirlo a mano, no deberías mergearlo.',
+  refactor: {
+    before: '## Mi flujo de trabajo con agentes\\n1. Yo defino el objetivo…\\n2. El agente propone…',
+    after:  '## Flujo\\nObjetivo → Plan → Implementación atómica → Validación → Review humana'
+  },
+  tests: `# Cómo "testeo" un workflow con agentes:
+$ git diff   # qué cambió de verdad
+$ npm test   # nada se rompió
+$ npm run build # produce artefacto válido
+# Si los 3 pasan, el cambio entra.`
+};
+
+const FILE_ORDER = ['NexusAPI.java', 'PromptEngine.py', 'App.jsx', 'DSAnexus.md', 'HospitalJoseGermain.md', 'VibeCoding.md'];
 
 /* ──────────────── Escenarios del agente ──────────────── */
 

@@ -74,7 +74,7 @@ export default function ModalPC({ onClose, user, userData }) {
       case 'calc':    return <CalculatorApp />;
       case 'clock':   return <ClockApp />;
       case 'gallery': return <GalleryApp fullData={fullData} />;
-      case 'snake':   return <SnakeApp />;
+      case 'snake':   return <SnakeApp onExit={() => setActiveApp(null)} />;
       default: return null;
     }
   };
