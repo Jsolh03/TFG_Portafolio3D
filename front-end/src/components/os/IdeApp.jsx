@@ -575,6 +575,9 @@ export default function IdeApp() {
   ]);
   const [busy, setBusy] = useState(false);
 
+  // Tool que espera argumento del usuario en el input del chat (Grep / Bash).
+  const [pendingTool, setPendingTool] = useState(null);
+
   // Ficheros temporales creados por el usuario. Solo en memoria.
   const [customFiles, setCustomFiles] = useState({});
   const [creatingNew, setCreatingNew] = useState(false);
@@ -706,8 +709,106 @@ export default function IdeApp() {
     const text = input.trim();
     if (!text || busy) return;
     setInput('');
+    if (pendingTool) {
+      const tool = pendingTool;
+      setPendingTool(null);
+      runPendingTool(tool, text);
+      return;
+    }
     const key = matchScenario(text);
     playScenario(key, text);
+  };
+
+  const simulateBash = (cmd) => {
+    const c = cmd.trim();
+    if (c === 'ls' || c === 'ls -la') return { summary: 'OK', body: tabOrder.join('\n') };
+    if (c.startsWith('cat ')) {
+      const target = c.slice(4).trim();
+      if (allFiles[target]) return { summary: 'OK', body: allFiles[target].value };
+      return { summary: `cat: ${target}: No such file`, body: null };
+    }
+    if (c === 'pwd') return { summary: '/home/khaled/portfolio', body: null };
+    if (c === 'whoami') return { summary: 'khaled', body: null };
+    if (c === 'date') return { summary: new Date().toString(), body: null };
+    if (c === 'clear') return { summary: 'usa el botón ↻ para reiniciar la conversación', body: null };
+    if (c === 'help') return {
+      summary: 'OK',
+      body: 'Comandos disponibles:\n  ls            lista de ficheros del IDE\n  cat <file>    muestra el contenido\n  pwd           directorio actual\n  whoami        usuario\n  date          fecha actual\n  help          esta lista'
+    };
+    return { summary: `bash: ${c.split(' ')[0]}: command not found`, body: null };
+  };
+
+  const runPendingTool = async (tool, arg) => {
+    setBusy(true);
+    setMessages(prev => [...prev, { id: nextId(), role: 'user', kind: 'message', text: `${tool} "${arg}"`, complete: true }]);
+
+    if (tool === 'grep') {
+      let matches = [];
+      try {
+        const re = new RegExp(arg, 'i');
+        matches = file.value.split('\n')
+          .map((line, i) => ({ line, num: i + 1 }))
+          .filter(({ line }) => re.test(line));
+      } catch {
+        const needle = arg.toLowerCase();
+        matches = file.value.split('\n')
+          .map((line, i) => ({ line, num: i + 1 }))
+          .filter(({ line }) => line.toLowerCase().includes(needle));
+      }
+      const id = nextId();
+      setMessages(prev => [...prev, { id, role: 'agent', kind: 'tool', tool: 'Grep', input: arg, output: '…', complete: false }]);
+      await sleep(400);
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, output: `${matches.length} match${matches.length === 1 ? '' : 'es'} en ${file.name}`, complete: true } : m));
+      if (matches.length > 0) {
+        const text = matches.slice(0, 30).map(m => `${String(m.num).padStart(4)}  ${m.line}`).join('\n');
+        setMessages(prev => [...prev, { id: nextId(), role: 'agent', kind: 'code', lang: 'text', text, complete: true }]);
+      }
+    } else if (tool === 'bash') {
+      const out = simulateBash(arg);
+      const id = nextId();
+      setMessages(prev => [...prev, { id, role: 'agent', kind: 'tool', tool: 'Bash', input: arg, output: '…', complete: false }]);
+      await sleep(450);
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, output: out.summary, complete: true } : m));
+      if (out.body) {
+        setMessages(prev => [...prev, { id: nextId(), role: 'agent', kind: 'code', lang: 'text', text: out.body, complete: true }]);
+      }
+    }
+
+    setBusy(false);
+  };
+
+  const runReadTool = async () => {
+    if (busy) return;
+    setBusy(true);
+    const id = nextId();
+    setMessages(prev => [...prev, { id, role: 'agent', kind: 'tool', tool: 'Read', input: file.name, output: '…', complete: false }]);
+    await sleep(400);
+    const lines = file.value.split('\n').length;
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, output: `${lines} líneas`, complete: true } : m));
+    setMessages(prev => [...prev, { id: nextId(), role: 'agent', kind: 'code', lang: file.language, text: file.value, complete: true }]);
+    setBusy(false);
+  };
+
+  const runTool = (toolName) => {
+    if (busy) return;
+    setPendingTool(null);
+    if (toolName === 'Read') {
+      runReadTool();
+    } else if (toolName === 'Write') {
+      startCreatingFile();
+      setMessages(prev => [...prev, { id: nextId(), role: 'agent', kind: 'message', text: 'Crea el fichero arriba en la barra de tabs. Dale nombre con extensión válida (p.ej. `notas.md`) y pulsa Enter.', complete: true }]);
+    } else if (toolName === 'Edit') {
+      const msg = isCustomFile
+        ? `${activeFile} está en modo escritura. Edítalo directamente en el editor.`
+        : `${activeFile} es read-only (fichero curado del portfolio). Pulsa **+** arriba para crear un fichero editable.`;
+      setMessages(prev => [...prev, { id: nextId(), role: 'agent', kind: 'message', text: msg, complete: true }]);
+    } else if (toolName === 'Grep') {
+      setPendingTool('grep');
+    } else if (toolName === 'Bash') {
+      setPendingTool('bash');
+    } else if (toolName === 'Analyze') {
+      playScenario('bug', '/analyze');
+    }
   };
 
   const quick = (key, label) => () => playScenario(key, label);
@@ -821,10 +922,17 @@ export default function IdeApp() {
           <div className="ide-agent-tools">
             <span className="ide-agent-tools-label">TOOLS</span>
             {Object.keys(TOOL_ICONS).map(t => (
-              <span key={t} className="ide-tool-chip" title={t}>
+              <button
+                key={t}
+                type="button"
+                className="ide-tool-chip"
+                title={`Ejecutar ${t}`}
+                onClick={() => runTool(t)}
+                disabled={busy}
+              >
                 <span className="ide-tool-chip-icon">{TOOL_ICONS[t]}</span>
                 {t.toLowerCase()}
-              </span>
+              </button>
             ))}
           </div>
 
@@ -844,14 +952,29 @@ export default function IdeApp() {
             <button disabled={busy} onClick={clear} className="ide-clear-btn" title="Reiniciar">↻</button>
           </div>
 
-          <form className="ide-agent-input" onSubmit={onSubmit}>
+          <form className={`ide-agent-input${pendingTool ? ' ide-agent-input--pending' : ''}`} onSubmit={onSubmit}>
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder={busy ? 'K-Bot está respondiendo…' : 'Pregunta a K-Bot…  (/help)'}
+              placeholder={
+                busy
+                  ? 'K-Bot está respondiendo…'
+                  : pendingTool === 'grep'
+                    ? `Patrón a buscar en ${file.name}…  (Esc para cancelar)`
+                    : pendingTool === 'bash'
+                      ? 'Comando bash…  (help · Esc para cancelar)'
+                      : 'Pregunta a K-Bot…  (/help)'
+              }
               disabled={busy}
-              onKeyDown={e => e.stopPropagation()}
+              onKeyDown={e => {
+                e.stopPropagation();
+                if (e.key === 'Escape' && pendingTool) {
+                  e.preventDefault();
+                  setPendingTool(null);
+                  setInput('');
+                }
+              }}
               onKeyUp={e => e.stopPropagation()}
             />
             <button type="submit" disabled={busy || !input.trim()}>

@@ -5339,8 +5339,25 @@ canvas { outline: none; }
   border-radius: 3px;
   font-size: 9.5px;
   letter-spacing: 0.3px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
 }
+.ide-tool-chip:hover:not(:disabled) {
+  background: rgba(88,166,255,0.22);
+  border-color: rgba(88,166,255,0.55);
+  color: #c9e6ff;
+  transform: translateY(-1px);
+}
+.ide-tool-chip:disabled { opacity: 0.4; cursor: not-allowed; }
 .ide-tool-chip-icon { font-size: 10px; }
+
+/* Input del chat en modo "esperando argumento de tool" */
+.ide-agent-input--pending input {
+  border-color: #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.06);
+}
+.ide-agent-input--pending input::placeholder { color: #fcd34d; }
 
 /* Conversación */
 .ide-agent-chat {
