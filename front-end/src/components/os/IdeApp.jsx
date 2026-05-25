@@ -579,6 +579,9 @@ export default function IdeApp() {
   // Tool que espera argumento del usuario en el input del chat (Grep / Bash).
   const [pendingTool, setPendingTool] = useState(null);
 
+  // Aviso de cuota mostrado solo una vez por sesión cuando supere el 15%.
+  const [quotaWarned, setQuotaWarned] = useState(false);
+
   // Ficheros temporales creados por el usuario. Solo en memoria.
   const [customFiles, setCustomFiles] = useState({});
   const [creatingNew, setCreatingNew] = useState(false);
@@ -734,6 +737,7 @@ export default function IdeApp() {
     setMessages(prev => [...prev, { id: toolId, role: 'agent', kind: 'tool', tool: 'Analyze', input: 'remote-agent', output: '…', complete: false }]);
 
     let remoteText = null;
+    let remoteQuota = null;
     try {
       const resp = await fetch(`${API_BASE}/api/agent`, {
         method: 'POST',
@@ -747,6 +751,9 @@ export default function IdeApp() {
         const data = await resp.json();
         if (typeof data?.text === 'string' && data.text.trim().length > 0) {
           remoteText = data.text.trim();
+          if (data.quota && typeof data.quota.limit === 'number') {
+            remoteQuota = data.quota;
+          }
         }
       }
     } catch {
@@ -758,6 +765,22 @@ export default function IdeApp() {
       const id = nextId();
       setMessages(prev => [...prev, { id, role: 'agent', kind: 'message', text: '', complete: false }]);
       await streamText(id, remoteText, 12);
+
+      // Aviso de cuota una sola vez por sesión cuando se haya consumido ≥ 15%.
+      if (remoteQuota && !quotaWarned) {
+        const usedPct = (remoteQuota.used / remoteQuota.limit) * 100;
+        if (usedPct >= 15) {
+          setMessages(prev => [...prev, {
+            id: nextId(),
+            role: 'agent',
+            kind: 'message',
+            text: `ℹ️ **Aviso de cuota:** has usado **${remoteQuota.used} de ${remoteQuota.limit}** consultas al agente IA disponibles esta hora. El servicio es gratuito y tiene un límite por IP. Cuando se agote, K-Bot volverá al modo *scripted* hasta que la ventana se reinicie.`,
+            complete: true
+          }]);
+          setQuotaWarned(true);
+        }
+      }
+
       setBusy(false);
       return;
     }

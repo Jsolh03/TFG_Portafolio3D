@@ -365,7 +365,16 @@ app.post('/api/agent', agentLimiter, async (req, res) => {
       return res.status(503).json({ error: 'Respuesta inválida del agente IA' });
     }
 
-    res.json({ text: text.trim() });
+    // Info de cuota para que el frontend pueda avisar al usuario cuando se
+    // consume parte significativa del rate limit por hora.
+    const quotaLimit = req.rateLimit?.limit ?? 20;
+    const quotaUsed = req.rateLimit?.used ?? 0;
+    const quotaRemaining = req.rateLimit?.remaining ?? quotaLimit;
+
+    res.json({
+      text: text.trim(),
+      quota: { limit: quotaLimit, used: quotaUsed, remaining: quotaRemaining }
+    });
   } catch (err) {
     console.error('Error en POST /api/agent:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
