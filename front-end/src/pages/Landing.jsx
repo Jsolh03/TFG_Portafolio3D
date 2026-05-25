@@ -121,16 +121,17 @@ export default function Landing() {
     fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`)
       .then(async r => {
         const data = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(data?.error || 'No se pudo verificar el email');
+        if (!r.ok) throw new Error(data?.error || t('landing.verifyError'));
         setVerifyStatus('ok');
-        setVerifyMessage(`✅ Email verificado. Ya puedes iniciar sesión como "${data.id}".`);
+        setVerifyMessage(`${t('landing.verifyOkPrefix')} "${data.id}".`);
         // Limpia el parámetro de la URL para que no se quede pegado
         window.history.replaceState({}, '', window.location.pathname);
       })
       .catch(err => {
         setVerifyStatus('error');
-        setVerifyMessage(`❌ ${err.message || 'Verificación fallida'}`);
+        setVerifyMessage(`${t('landing.verifyError')}: ${err.message || ''}`.trim());
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogin = async (userId) => {
@@ -222,7 +223,7 @@ export default function Landing() {
             <div className="lp-session-chip" title={`Sesión: ${authUser.id}`}>
               <span className="lp-session-dot" />
               <span className="lp-session-id">@{authUser.id}</span>
-              <button type="button" className="lp-session-logout" onClick={logout} title="Cerrar sesión">×</button>
+              <button type="button" className="lp-session-logout" onClick={logout} title={t('landing.sessionLogout')}>×</button>
             </div>
           )}
           <button
@@ -254,7 +255,7 @@ export default function Landing() {
       <main className="lp-main">
         {verifyStatus && (
           <div className={`lp-verify-banner lp-verify-banner--${verifyStatus}`}>
-            {verifyStatus === 'pending' && '⌛ Verificando email…'}
+            {verifyStatus === 'pending' && t('landing.verifyPending')}
             {verifyStatus !== 'pending' && (
               <>
                 {verifyMessage}
@@ -331,8 +332,8 @@ export default function Landing() {
 
           <button className="lp-cta-card" onClick={() => setView('login-form')} disabled={isLoading}>
             <div className="lp-cta-emoji">🔐</div>
-            <div className="lp-cta-title">Iniciar sesión</div>
-            <div className="lp-cta-desc">Con tu cuenta verificada por email</div>
+            <div className="lp-cta-title">{t('landing.loginCta')}</div>
+            <div className="lp-cta-desc">{t('landing.loginCtaDesc')}</div>
           </button>
 
           <button className="lp-cta-card lp-cta-card--accent" onClick={() => setView('register')} disabled={isLoading}>

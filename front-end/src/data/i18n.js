@@ -37,7 +37,13 @@ export const TRANSLATIONS = {
       ],
       settings: 'Configuración',
       devMode: 'Modo dev',
-      footer: 'Khaled Solh & Laura Jara · TFG 2026'
+      footer: 'Khaled Solh & Laura Jara · TFG 2026',
+      loginCta: 'Iniciar sesión',
+      loginCtaDesc: 'Con tu cuenta verificada por email',
+      sessionLogout: 'Cerrar sesión',
+      verifyPending: '⌛ Verificando email…',
+      verifyOkPrefix: '✅ Email verificado. Ya puedes iniciar sesión como',
+      verifyError: '❌ Verificación fallida'
     },
     settings: {
       title: 'Preferencias',
@@ -162,7 +168,24 @@ export const TRANSLATIONS = {
       pcApps: 'Aplicaciones del PC',
       creating: 'Creando...',
       createAccount: 'Crear cuenta',
-      backToLogin: '← Anterior'
+      backToLogin: '← Anterior',
+      emailLabelRequired: 'Email *',
+      emailHintAuth: 'Recibirás un email de verificación. Sin verificar no podrás iniciar sesión.',
+      passwordLabel: 'Contraseña *',
+      passwordPh: 'mínimo 8 caracteres',
+      confirmPasswordLabel: 'Repite la contraseña *',
+      confirmPasswordPh: '********',
+      passwordMismatch: 'Las contraseñas no coinciden',
+      contactEmailLabel: 'Email (mostrado en el CV)',
+      contactEmailHint: 'Si lo dejas vacío usaremos el del registro.',
+      registeredTitleAlmostDone: '¡Casi listo, {id}!',
+      registeredEmailSentPrefix: '✅ Te hemos enviado un email de verificación a',
+      registeredCheckSpam: 'Revisa tu bandeja de entrada (y la carpeta de spam). El enlace caduca en 24 horas.',
+      registeredCanLogin: 'Una vez verificado, podrás iniciar sesión desde la pantalla principal.',
+      registeredEmailFailedPrefix: '⚠️ Tu cuenta se creó correctamente, pero no pudimos enviar el email automáticamente',
+      registeredManualHint: 'Copia este enlace de verificación manualmente y ábrelo en el navegador (caduca en 24h):',
+      registeredCopyBtn: 'Copiar enlace',
+      registeredBackBtn: 'Volver al inicio'
     },
     devPortal: {
       brand: 'KyL Portal',
@@ -193,7 +216,9 @@ export const TRANSLATIONS = {
       loadingUsers: 'Conectando con el servidor...',
       serverSleeping: 'El servidor puede tardar hasta 60 segundos si estaba inactivo.',
       loadError: 'No se pudo conectar con el servidor.',
-      roomLabel: 'Habitación'
+      roomLabel: 'Habitación',
+      impersonate: 'Acceder como',
+      impersonateError: 'No se pudo impersonar'
     },
     cv: {
       aboutMe: 'Sobre mí',
@@ -344,6 +369,39 @@ export const TRANSLATIONS = {
       system: 'Sistema',
       battery: 'Batería',
       wifi: 'Conectado'
+    },
+    auth: {
+      loginTitle: 'Iniciar sesión',
+      loginSubtitle: 'Accede con tu usuario verificado por email.',
+      usernameLabel: 'Nombre de usuario',
+      usernamePh: 'tu_usuario',
+      passwordLabel: 'Contraseña',
+      passwordPh: '********',
+      cancel: 'Cancelar',
+      loginBtn: 'Iniciar sesión',
+      loggingIn: 'Entrando…',
+      noAccount: '¿No tienes cuenta?',
+      registerLink: 'Regístrate',
+      genericError: 'No se pudo iniciar sesión'
+    },
+    social: {
+      title: 'Feed del K-OS',
+      sub: 'Red social interna · solo usuarios autenticados',
+      lockedTitle: 'Esta función es únicamente para usuarios logeados',
+      lockedText: 'Para postear y responder en la red social del PC necesitas haber iniciado sesión.',
+      lockedHint: 'Vuelve al inicio, regístrate con email + contraseña y verifica tu cuenta para acceder.',
+      composerPh: '¿Qué pasa por aquí?',
+      publishBtn: 'Publicar',
+      publishing: 'Publicando…',
+      feedLoading: 'Cargando…',
+      feedEmpty: 'Aún no hay posts. ¡Estrena el feed!',
+      replyTrigger: '💬 Responder',
+      replyPh: 'Tu respuesta…',
+      replyCancel: 'Cancelar',
+      replyBtn: 'Responder',
+      replying: 'Enviando…',
+      logoutShort: 'salir',
+      errorLoad: 'No se pudo cargar el feed'
     }
   },
 
@@ -378,7 +436,13 @@ export const TRANSLATIONS = {
       ],
       settings: 'Settings',
       devMode: 'Dev mode',
-      footer: 'Khaled Solh & Laura Jara · TFG 2026'
+      footer: 'Khaled Solh & Laura Jara · TFG 2026',
+      loginCta: 'Sign in',
+      loginCtaDesc: 'With your email-verified account',
+      sessionLogout: 'Sign out',
+      verifyPending: '⌛ Verifying email…',
+      verifyOkPrefix: '✅ Email verified. You can now sign in as',
+      verifyError: '❌ Verification failed'
     },
     settings: {
       title: 'Preferences',
@@ -503,7 +567,24 @@ export const TRANSLATIONS = {
       pcApps: 'PC applications',
       creating: 'Creating...',
       createAccount: 'Create account',
-      backToLogin: '← Previous'
+      backToLogin: '← Previous',
+      emailLabelRequired: 'Email *',
+      emailHintAuth: 'You will receive a verification email. You cannot sign in until you verify.',
+      passwordLabel: 'Password *',
+      passwordPh: 'at least 8 characters',
+      confirmPasswordLabel: 'Repeat password *',
+      confirmPasswordPh: '********',
+      passwordMismatch: 'Passwords do not match',
+      contactEmailLabel: 'Email (shown on the CV)',
+      contactEmailHint: 'If empty, we will use the registration email.',
+      registeredTitleAlmostDone: 'Almost there, {id}!',
+      registeredEmailSentPrefix: '✅ We sent a verification email to',
+      registeredCheckSpam: 'Check your inbox (and the spam folder). The link expires in 24 hours.',
+      registeredCanLogin: 'Once verified, you can sign in from the home screen.',
+      registeredEmailFailedPrefix: '⚠️ Your account was created, but we could not send the email automatically',
+      registeredManualHint: 'Copy this verification link manually and open it in your browser (expires in 24h):',
+      registeredCopyBtn: 'Copy link',
+      registeredBackBtn: 'Back to home'
     },
     devPortal: {
       brand: 'KyL Portal',
@@ -534,7 +615,9 @@ export const TRANSLATIONS = {
       loadingUsers: 'Connecting to server...',
       serverSleeping: 'The server may take up to 60 seconds if it was idle.',
       loadError: 'Could not connect to the server.',
-      roomLabel: 'Room'
+      roomLabel: 'Room',
+      impersonate: 'Sign in as',
+      impersonateError: 'Could not impersonate'
     },
     cv: {
       aboutMe: 'About me',
@@ -685,6 +768,39 @@ export const TRANSLATIONS = {
       system: 'System',
       battery: 'Battery',
       wifi: 'Connected'
+    },
+    auth: {
+      loginTitle: 'Sign in',
+      loginSubtitle: 'Access with your email-verified account.',
+      usernameLabel: 'Username',
+      usernamePh: 'your_username',
+      passwordLabel: 'Password',
+      passwordPh: '********',
+      cancel: 'Cancel',
+      loginBtn: 'Sign in',
+      loggingIn: 'Signing in…',
+      noAccount: 'Don’t have an account?',
+      registerLink: 'Register',
+      genericError: 'Could not sign in'
+    },
+    social: {
+      title: 'K-OS Feed',
+      sub: 'Internal social feed · authenticated users only',
+      lockedTitle: 'This feature is only available to signed-in users',
+      lockedText: 'You need to sign in to post or reply on the PC social feed.',
+      lockedHint: 'Go back to home, register with email and password, and verify your account.',
+      composerPh: 'What’s up?',
+      publishBtn: 'Publish',
+      publishing: 'Publishing…',
+      feedLoading: 'Loading…',
+      feedEmpty: 'No posts yet. Be the first!',
+      replyTrigger: '💬 Reply',
+      replyPh: 'Your reply…',
+      replyCancel: 'Cancel',
+      replyBtn: 'Reply',
+      replying: 'Sending…',
+      logoutShort: 'exit',
+      errorLoad: 'Could not load the feed'
     }
   },
 

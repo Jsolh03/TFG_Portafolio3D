@@ -157,7 +157,7 @@ export default function DevPortal() {
       adoptToken(data.token, data.user, 'admin-impersonation');
       navigate('/');
     } catch (e) {
-      alert(`No se pudo impersonar: ${e.message}`);
+      alert(`${t('devPortal.impersonateError')}: ${e.message}`);
     } finally {
       setImpersonatingId(null);
     }
@@ -343,9 +343,9 @@ export default function DevPortal() {
                       type="button"
                       onClick={() => impersonateAs(u.id)}
                       disabled={impersonatingId === u.id}
-                      title={`Acceder como ${u.id}`}
+                      title={`${t('devPortal.impersonate')} ${u.id}`}
                     >
-                      {impersonatingId === u.id ? '…' : 'Acceder como'}
+                      {impersonatingId === u.id ? '…' : t('devPortal.impersonate')}
                     </button>
                     {PROTECTED_IDS.has(u.id) ? (
                       <div className="dev-user-protected">{t('devPortal.protectedTag')}</div>

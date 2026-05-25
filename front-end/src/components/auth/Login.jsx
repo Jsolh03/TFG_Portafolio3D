@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useT } from '../../context/LanguageContext';
 
 export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) {
+  const t = useT();
   const { login } = useAuth();
   const [form, setForm] = useState({ id: '', password: '' });
   const [error, setError] = useState('');
@@ -22,7 +24,7 @@ export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) 
       const user = await login(form.id.toLowerCase().trim(), form.password);
       onLoginSuccess?.(user);
     } catch (err) {
-      setError(err?.message || 'No se pudo iniciar sesión');
+      setError(err?.message || t('auth.genericError'));
     } finally {
       setSubmitting(false);
     }
@@ -31,25 +33,25 @@ export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) 
   return (
     <div className="auth-form-wrap">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h2 className="auth-title">Iniciar sesión</h2>
-        <p className="auth-subtitle">Accede con tu usuario verificado por email.</p>
+        <h2 className="auth-title">{t('auth.loginTitle')}</h2>
+        <p className="auth-subtitle">{t('auth.loginSubtitle')}</p>
 
         <div className="auth-field">
-          <label className="auth-label">Nombre de usuario</label>
+          <label className="auth-label">{t('auth.usernameLabel')}</label>
           <input
             name="id"
             value={form.id}
             onChange={handleChange}
             required
             autoComplete="username"
-            placeholder="tu_usuario"
+            placeholder={t('auth.usernamePh')}
             className="auth-input"
             disabled={submitting}
           />
         </div>
 
         <div className="auth-field">
-          <label className="auth-label">Contraseña</label>
+          <label className="auth-label">{t('auth.passwordLabel')}</label>
           <input
             name="password"
             type="password"
@@ -57,7 +59,7 @@ export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) 
             onChange={handleChange}
             required
             autoComplete="current-password"
-            placeholder="********"
+            placeholder={t('auth.passwordPh')}
             className="auth-input"
             disabled={submitting}
             minLength={8}
@@ -68,17 +70,17 @@ export default function Login({ onLoginSuccess, onCancel, onSwitchToRegister }) 
 
         <div className="auth-actions">
           <button type="button" onClick={onCancel} className="auth-btn auth-btn--ghost" disabled={submitting}>
-            Cancelar
+            {t('auth.cancel')}
           </button>
           <button type="submit" className="auth-btn auth-btn--primary" disabled={submitting}>
-            {submitting ? 'Entrando…' : 'Iniciar sesión'}
+            {submitting ? t('auth.loggingIn') : t('auth.loginBtn')}
           </button>
         </div>
 
         <div className="auth-switch">
-          ¿No tienes cuenta?{' '}
+          {t('auth.noAccount')}{' '}
           <button type="button" onClick={onSwitchToRegister} className="auth-link" disabled={submitting}>
-            Regístrate
+            {t('auth.registerLink')}
           </button>
         </div>
       </form>

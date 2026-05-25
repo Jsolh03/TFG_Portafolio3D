@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { API_BASE } from '../../config';
 import { useAuth } from '../../context/AuthContext';
+import { useT } from '../../context/LanguageContext';
 
 const POST_MAX = 500;
 const REPLY_MAX = 300;
@@ -19,6 +20,7 @@ function timeAgo(date) {
 }
 
 export default function SocialApp() {
+  const t = useT();
   const { isAuthenticated, user, token, logout } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,11 +40,11 @@ export default function SocialApp() {
       const data = await res.json();
       setPosts(Array.isArray(data) ? data : []);
     } catch (e) {
-      setError('No se pudo cargar el feed');
+      setError(t('social.errorLoad'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
@@ -101,13 +103,9 @@ export default function SocialApp() {
     return (
       <div className="social-app social-app--locked">
         <div className="social-locked-icon">🔒</div>
-        <h2 className="social-locked-title">Esta función es únicamente para usuarios logeados</h2>
-        <p className="social-locked-text">
-          Para postear y responder en la red social del PC necesitas haber iniciado sesión.
-        </p>
-        <p className="social-locked-hint">
-          Vuelve al inicio, regístrate con email + contraseña y verifica tu cuenta para acceder.
-        </p>
+        <h2 className="social-locked-title">{t('social.lockedTitle')}</h2>
+        <p className="social-locked-text">{t('social.lockedText')}</p>
+        <p className="social-locked-hint">{t('social.lockedHint')}</p>
       </div>
     );
   }
@@ -116,19 +114,19 @@ export default function SocialApp() {
     <div className="social-app">
       <header className="social-header">
         <div>
-          <h2 className="social-title">Feed del K-OS</h2>
-          <span className="social-sub">Red social interna · solo usuarios autenticados</span>
+          <h2 className="social-title">{t('social.title')}</h2>
+          <span className="social-sub">{t('social.sub')}</span>
         </div>
         <div className="social-user-info">
           <span className="social-user-id">@{user?.id}</span>
-          <button type="button" className="social-logout-btn" onClick={logout} title="Cerrar sesión">salir</button>
+          <button type="button" className="social-logout-btn" onClick={logout} title={t('landing.sessionLogout')}>{t('social.logoutShort')}</button>
         </div>
       </header>
 
       <form className="social-composer" onSubmit={submitPost}>
         <textarea
           className="social-composer-input"
-          placeholder="¿Qué pasa por aquí?"
+          placeholder={t('social.composerPh')}
           maxLength={POST_MAX}
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -140,7 +138,7 @@ export default function SocialApp() {
             {draft.length}/{POST_MAX}
           </span>
           <button type="submit" disabled={submitting || !draft.trim()} className="social-publish-btn">
-            {submitting ? 'Publicando…' : 'Publicar'}
+            {submitting ? t('social.publishing') : t('social.publishBtn')}
           </button>
         </div>
       </form>
@@ -148,10 +146,10 @@ export default function SocialApp() {
       {error && <div className="social-error">{error}</div>}
 
       <div className="social-feed">
-        {loading && <div className="social-feed-loading">Cargando…</div>}
+        {loading && <div className="social-feed-loading">{t('social.feedLoading')}</div>}
 
         {!loading && posts.length === 0 && (
-          <div className="social-feed-empty">Aún no hay posts. ¡Estrena el feed!</div>
+          <div className="social-feed-empty">{t('social.feedEmpty')}</div>
         )}
 
         {!loading && posts.map(post => (
@@ -184,7 +182,7 @@ export default function SocialApp() {
                 <div className="social-reply-form">
                   <textarea
                     className="social-reply-input"
-                    placeholder="Tu respuesta…"
+                    placeholder={t('social.replyPh')}
                     value={replyDraft}
                     onChange={e => setReplyDraft(e.target.value)}
                     maxLength={REPLY_MAX}
@@ -196,15 +194,15 @@ export default function SocialApp() {
                     <span className={`social-counter ${replyDraft.length >= REPLY_MAX ? 'limit' : ''}`}>
                       {replyDraft.length}/{REPLY_MAX}
                     </span>
-                    <button type="button" onClick={() => { setReplyOpen(null); setReplyDraft(''); }} className="social-reply-cancel">Cancelar</button>
+                    <button type="button" onClick={() => { setReplyOpen(null); setReplyDraft(''); }} className="social-reply-cancel">{t('social.replyCancel')}</button>
                     <button type="button" onClick={() => submitReply(post._id)} disabled={submittingReply || !replyDraft.trim()} className="social-reply-submit">
-                      {submittingReply ? 'Enviando…' : 'Responder'}
+                      {submittingReply ? t('social.replying') : t('social.replyBtn')}
                     </button>
                   </div>
                 </div>
               ) : (
                 <button type="button" onClick={() => { setReplyOpen(post._id); setReplyDraft(''); }} className="social-reply-trigger">
-                  💬 Responder
+                  {t('social.replyTrigger')}
                 </button>
               )}
             </footer>

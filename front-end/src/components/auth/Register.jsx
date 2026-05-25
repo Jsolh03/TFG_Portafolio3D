@@ -211,29 +211,28 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     return (
       <div className="wizard-root">
         <div className="wizard-header">
-          <h1 className="wizard-title">¡Casi listo, {registered.id}!</h1>
+          <h1 className="wizard-title">{t('wizard.registeredTitleAlmostDone', { id: registered.id })}</h1>
         </div>
         <div className="wizard-body">
           {registered.emailSent ? (
             <div className="wizard-step">
               <p style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>
-                ✅ Te hemos enviado un email de verificación a <strong>{registered.email}</strong>.
+                {t('wizard.registeredEmailSentPrefix')} <strong>{registered.email}</strong>.
               </p>
               <p style={{ color: 'var(--muted-color, #999)' }}>
-                Revisa tu bandeja de entrada (y la carpeta de spam). El enlace caduca en 24 horas.
+                {t('wizard.registeredCheckSpam')}
               </p>
               <p style={{ marginTop: 24 }}>
-                Una vez verificado, podrás iniciar sesión desde la pantalla principal.
+                {t('wizard.registeredCanLogin')}
               </p>
             </div>
           ) : (
             <div className="wizard-step">
               <p style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>
-                ⚠️ Tu cuenta se creó correctamente, pero no pudimos enviar el email automáticamente
-                ({registered.emailError || 'servicio no disponible'}).
+                {t('wizard.registeredEmailFailedPrefix')} ({registered.emailError || ''}).
               </p>
               <p style={{ color: 'var(--muted-color, #999)' }}>
-                Copia este enlace de verificación manualmente y ábrelo en el navegador (caduca en 24h):
+                {t('wizard.registeredManualHint')}
               </p>
               <div style={{
                 background: 'var(--glass-bg, rgba(0,0,0,0.3))',
@@ -252,14 +251,14 @@ export default function Register({ onRegisterSuccess, onCancel }) {
                 onClick={() => navigator.clipboard?.writeText(registered.verificationLink)}
                 className="wizard-btn"
               >
-                Copiar enlace
+                {t('wizard.registeredCopyBtn')}
               </button>
             </div>
           )}
         </div>
         <div className="wizard-footer">
           <button type="button" className="wizard-btn wizard-btn--primary" onClick={onCancel}>
-            Volver al inicio
+            {t('wizard.registeredBackBtn')}
           </button>
         </div>
       </div>
@@ -325,27 +324,27 @@ export default function Register({ onRegisterSuccess, onCancel }) {
             </div>
 
             <div className="wizard-field">
-              <label>Email *</label>
+              <label>{t('wizard.emailLabelRequired')}</label>
               <input
                 type="email"
                 className="wizard-input"
-                placeholder="tu@email.com"
+                placeholder={t('wizard.emailPh')}
                 value={formData.email}
                 onChange={e => update({ email: e.target.value })}
                 autoComplete="email"
               />
               <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
-                Recibirás un email de verificación. Sin verificar no podrás iniciar sesión.
+                {t('wizard.emailHintAuth')}
               </small>
             </div>
 
             <div className="wizard-row">
               <div className="wizard-field">
-                <label>Contraseña *</label>
+                <label>{t('wizard.passwordLabel')}</label>
                 <input
                   type="password"
                   className="wizard-input"
-                  placeholder="mínimo 8 caracteres"
+                  placeholder={t('wizard.passwordPh')}
                   value={formData.password}
                   onChange={e => update({ password: e.target.value })}
                   autoComplete="new-password"
@@ -353,17 +352,17 @@ export default function Register({ onRegisterSuccess, onCancel }) {
                 />
               </div>
               <div className="wizard-field">
-                <label>Repite la contraseña *</label>
+                <label>{t('wizard.confirmPasswordLabel')}</label>
                 <input
                   type="password"
                   className="wizard-input"
-                  placeholder="********"
+                  placeholder={t('wizard.confirmPasswordPh')}
                   value={formData.confirmPassword}
                   onChange={e => update({ confirmPassword: e.target.value })}
                   autoComplete="new-password"
                 />
                 {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                  <small style={{ color: '#fca5a5', fontSize: '0.78rem' }}>Las contraseñas no coinciden</small>
+                  <small style={{ color: '#fca5a5', fontSize: '0.78rem' }}>{t('wizard.passwordMismatch')}</small>
                 )}
               </div>
             </div>
@@ -432,7 +431,7 @@ export default function Register({ onRegisterSuccess, onCancel }) {
             </div>
 
             <div className="wizard-field">
-              <label>{t('wizard.email')} (mostrado en el CV)</label>
+              <label>{t('wizard.contactEmailLabel')}</label>
               <input
                 type="email"
                 className="wizard-input"
@@ -441,7 +440,7 @@ export default function Register({ onRegisterSuccess, onCancel }) {
                 onChange={e => update({ contactEmail: e.target.value })}
               />
               <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
-                Si lo dejas vacío usaremos el del registro.
+                {t('wizard.contactEmailHint')}
               </small>
             </div>
 
