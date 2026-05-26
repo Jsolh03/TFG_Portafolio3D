@@ -906,7 +906,12 @@ export default function IdeApp() {
   };
 
   return (
-    <div className="ide-pro">
+    <div
+      className="ide-pro"
+      onKeyDown={e => e.stopPropagation()}
+      onKeyUp={e => e.stopPropagation()}
+      onKeyPress={e => e.stopPropagation()}
+    >
 
       {/* Banner de aviso para ficheros temporales */}
       <div className="ide-warning-banner" role="status">
