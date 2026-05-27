@@ -4959,6 +4959,40 @@ canvas { outline: none; }
 [data-theme="light"] .wizard-app-card { color: #0b1220 !important; }
 [data-theme="light"] .wizard-chip { color: #0b1220 !important; }
 
+/* ─────────────────────────────────────────────
+   FIX CONTRASTE EN LIGHT THEME
+   ─────────────────────────────────────────────
+   Warnings/errors/info hardcoded con colores claros (#fcd34d, #fca5a5,
+   #58a6ff) sobre fondos transparentes quedan invisibles en light. Forzamos
+   colores oscuros legibles manteniendo el código semántico (warning=ámbar,
+   error=rojo, info=azul). Aplica a wizard temporal, banners, panels y
+   estados de cuenta. */
+
+[data-theme="light"] .wizard-temporal-warning,
+[data-theme="light"] .os-temporal-banner,
+[data-theme="light"] .privacy-token-warning,
+[data-theme="light"] .social-locked-title {
+  color: #92400e !important;                        /* ámbar oscuro */
+  background: rgba(251, 191, 36, 0.18) !important;  /* ámbar más opaco */
+  border-color: rgba(180, 83, 9, 0.45) !important;
+}
+
+[data-theme="light"] .auth-error,
+[data-theme="light"] .lp-verify-banner--error,
+[data-theme="light"] .privacy-confirm-text,
+[data-theme="light"] .lp-session-logout:hover {
+  color: #991b1b !important;                        /* rojo oscuro */
+  background: rgba(220, 38, 38, 0.10) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+}
+/* La regla hover no debe forzar background si no se queria, lo dejamos
+   solo con color sobre el background inherit existente. */
+[data-theme="light"] .lp-session-logout:hover { background: rgba(220, 38, 38, 0.15) !important; }
+
+[data-theme="light"] .social-title {
+  color: #1e3a8a !important;                        /* azul oscuro */
+}
+
 /* Dev portal textos */
 [data-theme="light"] .dev-portal-title-main,
 [data-theme="light"] .dev-portal-title--sm { color: #0b1220 !important; }
