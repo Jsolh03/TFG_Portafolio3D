@@ -46,7 +46,16 @@ function SocialAvatar({ src, name, size = 36, className = '' }) {
 
 export default function SocialApp() {
   const t = useT();
-  const { isAuthenticated, user, token, logout } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
+
+  const goToMyRoom = () => {
+    // Aviso a Landing: cierra el room actual y carga el del usuario logueado.
+    // Si Landing aún no escucha, hacemos fallback con location.href.
+    window.dispatchEvent(new CustomEvent('tfg:goto-my-room'));
+  };
+  const editMyRoom = () => {
+    window.dispatchEvent(new CustomEvent('tfg:edit-my-room'));
+  };
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -180,15 +189,35 @@ export default function SocialApp() {
           <h2 className="social-title">{t('social.title')}</h2>
           <span className="social-sub">{t('social.sub')}</span>
         </div>
-        <div className="social-user-info" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="social-user-info" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <SocialAvatar
             src={user?.profileImg}
             name={user?.name || user?.id}
             size={34}
             className="social-post-avatar"
           />
-          <span className="social-user-id">@{user?.id}</span>
-          <button type="button" className="social-logout-btn" onClick={logout} title={t('landing.sessionLogout')}>{t('social.logoutShort')}</button>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+            <span style={{ fontWeight: 700, fontSize: 13 }}>{user?.name || user?.id}</span>
+            <span className="social-user-id">@{user?.id}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+            <button
+              type="button"
+              className="social-action-btn"
+              onClick={goToMyRoom}
+              title={t('social.goToMyRoom')}
+            >
+              🏠 {t('social.goToMyRoom')}
+            </button>
+            <button
+              type="button"
+              className="social-action-btn"
+              onClick={editMyRoom}
+              title={t('social.editMyRoom')}
+            >
+              ✏️ {t('social.editMyRoom')}
+            </button>
+          </div>
         </div>
       </header>
 

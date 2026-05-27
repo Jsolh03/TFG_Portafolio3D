@@ -206,9 +206,8 @@ export default function Landing() {
     return () => window.removeEventListener('tfg:switch-to-register', onSwitchToRegister);
   }, []);
 
-  // Escucha el evento "editar mi habitación" disparado desde SettingsPanel.
-  // Necesita que el usuario tenga sesión activa; usa authUser (del contexto)
-  // como base de datos del wizard.
+  // Escucha el evento "editar mi habitación" disparado desde SettingsPanel,
+  // sidebar de Room o K-Social.
   useEffect(() => {
     const onEditMyRoom = () => {
       if (!authUser) return;
@@ -218,6 +217,22 @@ export default function Landing() {
     };
     window.addEventListener('tfg:edit-my-room', onEditMyRoom);
     return () => window.removeEventListener('tfg:edit-my-room', onEditMyRoom);
+  }, [authUser]);
+
+  // Escucha "ir a mi habitación" — disparado desde K-Social. Cierra la room
+  // actual (si la hubiera) y carga la del usuario logueado.
+  useEffect(() => {
+    const onGotoMyRoom = () => {
+      if (!authUser) return;
+      setUserData(null);
+      setView('login');
+      // pequeño defer para que el cambio de view se propague antes de
+      // disparar handleLogin (evita race con Suspense del Room actual)
+      setTimeout(() => handleLogin(authUser.id), 30);
+    };
+    window.addEventListener('tfg:goto-my-room', onGotoMyRoom);
+    return () => window.removeEventListener('tfg:goto-my-room', onGotoMyRoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
 
   const phrases = t('landing.taglineRotator');
@@ -398,10 +413,30 @@ export default function Landing() {
 
         <div className="lp-topbar-actions">
           {isAuthenticated && authUser && (
-            <div className="lp-session-chip" title={`Sesión: ${authUser.id}`}>
-              <span className="lp-session-dot" />
-              <span className="lp-session-id">@{authUser.id}</span>
-              <button type="button" className="lp-session-logout" onClick={logout} title={t('landing.sessionLogout')}>×</button>
+            <div className="lp-session-chip" title={`${t('landing.sessionLogged')}: @${authUser.id}`}>
+              {authUser.profileImg ? (
+                <img
+                  src={authUser.profileImg}
+                  alt={authUser.name || authUser.id}
+                  className="lp-session-avatar"
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              ) : (
+                <span className="lp-session-avatar lp-session-avatar--placeholder">
+                  {(authUser.name || authUser.id).slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <div className="lp-session-meta">
+                <span className="lp-session-name">{authUser.name || authUser.id}</span>
+                <span className="lp-session-id">@{authUser.id}</span>
+              </div>
+              <button
+                type="button"
+                className="lp-session-logout"
+                onClick={logout}
+                title={t('landing.sessionLogout')}
+                aria-label={t('landing.sessionLogout')}
+              >×</button>
             </div>
           )}
           <button
