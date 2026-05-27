@@ -219,6 +219,18 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
             placeholder="tu@email.com" disabled={submitting}
             autoComplete="email"
           />
+          <div style={{
+            background: 'rgba(88, 166, 255, 0.10)',
+            borderLeft: '3px solid #58a6ff',
+            borderRadius: 6,
+            padding: '10px 12px',
+            marginTop: 8,
+            fontSize: '0.78rem',
+            lineHeight: 1.55,
+            color: 'var(--text-color)'
+          }}>
+            🔒 {t('account.emailUsageNote')}
+          </div>
         </div>
 
         <div className="auth-field">

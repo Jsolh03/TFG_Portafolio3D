@@ -1,20 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useT } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../config';
 
 /* AccountPanel — gestión de la cuenta del usuario autenticado.
-   Por ahora solo incluye el derecho de supresión (RGPD art. 17).
-   El flujo es de doble confirmación + escribir el ID literal para evitar
-   borrados accidentales. */
+   - Muestra ID y email
+   - Toggle "Permitir mensajes Mail.exe" (mailEnabled, RGPD opt-in/opt-out)
+   - Derecho de supresión (RGPD art. 17) con doble confirmación + ID literal */
 export default function AccountPanel() {
   const t = useT();
   const { user, token, logout } = useAuth();
   const [stage, setStage] = useState('idle'); // idle | confirm | typing | deleting
   const [typed, setTyped] = useState('');
   const [error, setError] = useState('');
+  const [mailEnabled, setMailEnabled] = useState(user?.mailEnabled !== false);
+  const [mailToggleBusy, setMailToggleBusy] = useState(false);
+  const [mailToggleMsg, setMailToggleMsg] = useState('');
+
+  // Sincroniza el toggle con el estado del backend cada vez que `user` cambia
+  // (p. ej. al refrescar /me tras un PATCH).
+  useEffect(() => {
+    setMailEnabled(user?.mailEnabled !== false);
+  }, [user?.mailEnabled]);
 
   if (!user) return null;
+
+  const toggleMailEnabled = async (next) => {
+    setMailToggleBusy(true);
+    setMailToggleMsg('');
+    setMailEnabled(next); // optimistic
+    try {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ mailEnabled: next })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || `HTTP ${res.status}`);
+      }
+      setMailToggleMsg(next ? t('account.mailEnabledOn') : t('account.mailEnabledOff'));
+      setTimeout(() => setMailToggleMsg(''), 2000);
+    } catch (e) {
+      setMailEnabled(!next); // rollback
+      setMailToggleMsg(e.message);
+    } finally {
+      setMailToggleBusy(false);
+    }
+  };
 
   const handleDelete = async () => {
     setError('');
@@ -57,6 +93,46 @@ export default function AccountPanel() {
         </div>
         <div style={{ fontSize: '0.9rem' }}>{user.email || '—'}</div>
       </div>
+
+      <h4 style={{ fontSize: '0.95rem', margin: '0 0 8px 0' }}>
+        ✉️ {t('account.mailTitle')}
+      </h4>
+      <p style={{ fontSize: '0.82rem', color: 'var(--muted-color, #999)', lineHeight: 1.5, marginBottom: 10 }}>
+        {t('account.mailDesc')}
+      </p>
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 14px',
+        background: 'var(--bg-secondary, rgba(255,255,255,0.04))',
+        border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+        borderRadius: 8,
+        marginBottom: 8,
+        cursor: mailToggleBusy ? 'progress' : 'pointer'
+      }}>
+        <input
+          type="checkbox"
+          checked={mailEnabled}
+          disabled={mailToggleBusy}
+          onChange={e => toggleMailEnabled(e.target.checked)}
+          style={{ width: 18, height: 18, cursor: 'inherit' }}
+        />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+            {mailEnabled ? t('account.mailToggleOn') : t('account.mailToggleOff')}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted-color, #888)' }}>
+            {t('account.mailToggleHint')}
+          </div>
+        </div>
+      </label>
+      {mailToggleMsg && (
+        <div style={{ fontSize: '0.78rem', color: 'var(--muted-color, #888)', marginBottom: 20 }}>
+          {mailToggleMsg}
+        </div>
+      )}
+      {!mailToggleMsg && <div style={{ marginBottom: 24 }} />}
 
       <h4 style={{ fontSize: '0.95rem', margin: '0 0 8px 0', color: '#f87171' }}>
         ⚠️ {t('account.deleteTitle')}

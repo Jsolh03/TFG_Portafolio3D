@@ -71,9 +71,21 @@ export default function CvKeyPanel() {
   return (
     <div className="cv-key-panel">
       <h3 className="settings-section-title">{t('cvKey.title')}</h3>
-      <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--muted-color, #999)', marginBottom: 18 }}>
+      <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--muted-color, #999)', marginBottom: 10 }}>
         {t('cvKey.desc')}
       </p>
+      <div style={{
+        background: 'rgba(88, 166, 255, 0.10)',
+        borderLeft: '3px solid #58a6ff',
+        borderRadius: 6,
+        padding: '10px 12px',
+        marginBottom: 18,
+        fontSize: '0.82rem',
+        lineHeight: 1.55,
+        color: 'var(--text-color)'
+      }}>
+        🔗 {t('cvKey.unifiedNote')}
+      </div>
 
       <div style={{
         background: 'var(--bg-secondary, rgba(255,255,255,0.04))',

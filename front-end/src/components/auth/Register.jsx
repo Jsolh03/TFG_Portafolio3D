@@ -398,6 +398,18 @@ export default function Register({ onRegisterSuccess, onCancel }) {
               <small style={{ color: 'var(--muted-color, #888)', fontSize: '0.78rem' }}>
                 {t('wizard.emailRequiredForSave')}
               </small>
+              <div style={{
+                background: 'rgba(88, 166, 255, 0.10)',
+                borderLeft: '3px solid #58a6ff',
+                borderRadius: 6,
+                padding: '10px 12px',
+                marginTop: 10,
+                fontSize: '0.78rem',
+                lineHeight: 1.55,
+                color: 'var(--text-color)'
+              }}>
+                🔒 {t('account.emailUsageNote')}
+              </div>
             </div>
 
             <div className="wizard-row">
@@ -519,17 +531,25 @@ export default function Register({ onRegisterSuccess, onCancel }) {
 
             <div className="wizard-field">
               <label>{t('wizard.pcApps')}</label>
+              <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: 'var(--muted-color, #888)' }}>
+                {t('wizard.pcAppsHint')}
+              </p>
               <div className="wizard-apps-grid">
-                {APP_CATALOG.map(app => (
-                  <div
-                    key={app.id}
-                    className={`wizard-app-card ${formData.apps.includes(app.id) ? 'active' : ''}`}
-                    onClick={() => toggleApp(app.id)}
-                  >
-                    <span className="wizard-app-card-emoji">{app.emoji}</span>
-                    <span className="wizard-app-card-name">{t(`apps.${app.id}`)}</span>
-                  </div>
-                ))}
+                {APP_CATALOG.map(app => {
+                  const active = formData.apps.includes(app.id);
+                  return (
+                    <div
+                      key={app.id}
+                      className={`wizard-app-card ${active ? 'active' : ''}`}
+                      onClick={() => toggleApp(app.id)}
+                      title={t(`appsDesc.${app.id}`)}
+                    >
+                      <span className="wizard-app-card-emoji">{app.emoji}</span>
+                      <span className="wizard-app-card-name">{t(`apps.${app.id}`)}</span>
+                      <span className="wizard-app-card-desc">{t(`appsDesc.${app.id}`)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

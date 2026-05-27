@@ -9,6 +9,7 @@ import AuthRoomSetup from '../components/auth/AuthRoomSetup';
 import Login from '../components/auth/Login';
 import SettingsPanel from '../components/ui/SettingsPanel';
 import ContactPanel from '../components/ui/ContactPanel';
+import FloatingHelpButton from '../components/ui/FloatingHelpButton';
 import { USER_PHOTOS } from '../data/userMedia';
 
 const Room = lazy(() => import('./Room'));
@@ -155,15 +156,24 @@ function VisitRoomForm({ isLoading, loginError, onCancel, onSubmit }) {
   );
 }
 
-// Detecta si la habitación del usuario está "vacía" (cuenta nueva auth recién
-// verificada sin pasar por el wizard). Solo aplica a cuentas createdViaAuth —
-// los legacy (khaled, laura, temporales) nunca disparan este flujo.
+// Detecta si la habitación del usuario está "vacía" — solo entonces ofrecemos
+// el wizard automático tras el login. Antes era demasiado estricto (pedía
+// aboutMe/skills/experience/projects) y un usuario que ya había elegido
+// roomType, subido foto o escrito tagline acababa otra vez en el wizard al
+// loguearse. Ahora cualquiera de esos rastros cuenta como "ya configurada":
+// el wizard sigue accesible bajo demanda desde "Modificar habitación".
 const isRoomEmpty = (u) => {
   if (!u || !u.createdViaAuth) return false;
+  if (u.setupCompleted === true) return false;
   if (u.aboutMe && u.aboutMe.trim().length > 0) return false;
+  if (u.tagline && u.tagline.trim().length > 0) return false;
+  if (u.profileImg && u.profileImg.trim().length > 0) return false;
+  if (u.roomType && u.roomType !== 'generic1') return false;
   if (Array.isArray(u.skills) && u.skills.length > 0) return false;
   if (Array.isArray(u.experience) && u.experience.length > 0) return false;
+  if (Array.isArray(u.education) && u.education.length > 0) return false;
   if (Array.isArray(u.projects) && u.projects.length > 0) return false;
+  if (Array.isArray(u.apps) && u.apps.length > 2) return false; // default = ['terminal','cv']
   return true;
 };
 
@@ -510,6 +520,7 @@ export default function Landing() {
 
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <ContactPanel open={contactOpen} onClose={() => setContactOpen(false)} />
+      <FloatingHelpButton />
     </div>
   );
 }

@@ -124,6 +124,15 @@ const cvViewLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Demasiados intentos de acceso a CVs. Espera una hora.' }
 });
+// Mail.exe — el frontend NO conoce el email del dueño; el backend reenvía.
+// Limitamos agresivamente para evitar spam masivo desde la app.
+const contactOwnerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Has enviado demasiados mensajes. Espera una hora.' }
+});
 
 const uri = process.env.MONGODB_URI;
 if (!uri) {
@@ -173,15 +182,25 @@ const userSchema = new mongoose.Schema({
   isTemporary: { type: Boolean, default: false },
   expiresAt: { type: Date, default: null },
   temporalAccessesRemaining: { type: Number, default: null },
-  // Token de acceso (privacidad opcional). Si está presente, la habitación
-  // solo es visible pasando ?token=XXX al GET /api/users/:id. Si es null,
-  // la habitación es pública. Khaled, Laura y temporales: SIEMPRE null.
+  // DEPRECATED: campo legacy que guardaba un segundo token distinto al del CV.
+  // Se mantiene solo para no romper documentos antiguos; ya no se lee ni escribe.
+  // La privacidad ahora se controla con `roomPrivate` y la clave compartida es
+  // `cvAccessToken` (una sola clave para CV + habitación privada).
   accessToken: { type: String, default: null },
-  // Clave de acceso al CV (GDPR). SIEMPRE presente y SIEMPRE obligatoria para
-  // visitantes (excepto el dueño con su JWT o admin). Se genera automáticamente
-  // al crear cuenta (auth o temporal). El dueño puede verla y regenerarla.
-  // El visitante debe introducirla + dejar su email + aceptar términos para
-  // ver el CV. Cada acceso queda registrado en la colección cvviews.
+  // Flag de privacidad de la habitación. Si es true, la habitación exige la
+  // misma cvAccessToken del dueño para entrar (excepto dueño/admin). Si es
+  // false, la habitación es pública. Khaled/Laura y temporales: siempre false.
+  roomPrivate: { type: Boolean, default: false },
+  // Permitir que visitantes te escriban a través de Mail.exe. Si es true, el
+  // backend reenvía el mensaje al email del dueño SIN exponerlo al visitante.
+  // Si es false, Mail.exe muestra "el dueño no acepta mensajes" y no permite
+  // enviar. Default true para no romper compatibilidad con users existentes
+  // (siempre han recibido mensajes vía EmailJS desde el frontend).
+  mailEnabled: { type: Boolean, default: true },
+  // Clave de acceso al CV (GDPR). SIEMPRE presente. Para visitantes del CV es
+  // OBLIGATORIA + email + consent. Si además `roomPrivate=true`, la misma
+  // clave desbloquea la habitación 3D. El dueño puede verla y regenerarla.
+  // Cada acceso al CV queda registrado en la colección cvviews.
   cvAccessToken: { type: String, default: null }
 }, {
   strict: false,
@@ -304,16 +323,18 @@ app.get('/api/users/:userId', async (req, res) => {
       }
     }
 
-    // Check de privacidad: si el user tiene accessToken activado, exigir match.
-    // Excepciones permitidas: el propio dueño (JWT con su id), admin, o
-    // admin-impersonation. Khaled/Laura nunca activan accessToken.
-    if (user.accessToken) {
+    // Check de privacidad: si el user tiene roomPrivate=true, exigir que el
+    // visitante aporte la cvAccessToken (la misma que protege el CV). Así el
+    // dueño solo gestiona UNA clave para ambos accesos. Excepciones: el propio
+    // dueño (JWT con su id), admin o admin-impersonation. Khaled/Laura nunca
+    // tienen roomPrivate=true (bloqueado en el endpoint de toggle).
+    if (user.roomPrivate) {
       const auth = peekAuth(req);
       const isOwner = auth?.id === user.id;
       const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
-      const tokenOk = providedToken && safeTokenEqual(providedToken, user.accessToken);
+      const tokenOk = providedToken && user.cvAccessToken && safeTokenEqual(providedToken, user.cvAccessToken);
       if (!isOwner && !isAdmin && !tokenOk) {
-        return res.status(403).json({ error: 'Esta habitación es privada. Necesitas el token de acceso.', requiresToken: true });
+        return res.status(403).json({ error: 'Esta habitación es privada. Necesitas la clave de acceso.', requiresToken: true });
       }
     }
 
@@ -480,12 +501,20 @@ const buildVerificationEmail = (userId, verificationLink) => ({
   text: `Hola ${userId},\n\nVerifica tu cuenta K-ROOM aquí:\n${verificationLink}\n\nEl enlace caduca en 24 horas.\n\n⚠️ Si no ves este correo en tu bandeja principal, revisa la carpeta de SPAM / Correo no deseado.\n\n— K-ROOM`
 });
 
-const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
-  const verificationLink = `${FRONTEND_URL}/?verify=${verificationToken}`;
-  const { subject, html, text } = buildVerificationEmail(userId, verificationLink);
-
+// Envío transaccional genérico — recipiente + asunto + html/text. Intenta
+// Brevo (HTTPS, funciona en Render) → SMTP (solo si Render no bloquea) →
+// Resend (fallback). Si ninguno está configurado, lanza error.
+const sendTransactionalEmail = async ({ toEmail, toName, subject, html, text, replyTo }) => {
   // 1) Brevo API (preferido — HTTPS, funciona en Render)
   if (BREVO_API_KEY && BREVO_FROM_EMAIL) {
+    const body = {
+      sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
+      to: [{ email: toEmail, name: toName || toEmail }],
+      subject,
+      htmlContent: html,
+      textContent: text
+    };
+    if (replyTo) body.replyTo = { email: replyTo };
     const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -493,13 +522,7 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
         'api-key': BREVO_API_KEY,
         'content-type': 'application/json'
       },
-      body: JSON.stringify({
-        sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
-        to: [{ email: toEmail, name: userId }],
-        subject,
-        htmlContent: html,
-        textContent: text
-      })
+      body: JSON.stringify(body)
     });
     if (!resp.ok) {
       const errBody = await resp.text().catch(() => '');
@@ -515,6 +538,7 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
     const info = await smtpTransporter.sendMail({
       from: SMTP_FROM,
       to: toEmail,
+      replyTo: replyTo || undefined,
       subject,
       html,
       text
@@ -527,6 +551,7 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
     const result = await resendClient.emails.send({
       from: RESEND_FROM,
       to: [toEmail],
+      reply_to: replyTo || undefined,
       subject,
       html,
       text
@@ -542,6 +567,47 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
   throw new Error('Email service not configured');
 };
 
+const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
+  const verificationLink = `${FRONTEND_URL}/?verify=${verificationToken}`;
+  const { subject, html, text } = buildVerificationEmail(userId, verificationLink);
+  return sendTransactionalEmail({ toEmail, toName: userId, subject, html, text });
+};
+
+// HTML del email Mail.exe: visualmente similar al de verificación para que
+// el dueño reconozca que viene del portfolio. Incluye nombre/email del
+// visitante, asunto y mensaje. El replyTo se setea al email del visitante
+// para que el dueño pueda responder con un click.
+const escapeHtml = (s) => String(s || '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const buildContactOwnerEmail = ({ ownerId, fromName, fromEmail, subject, message }) => {
+  const safeBody = escapeHtml(message).replace(/\n/g, '<br>');
+  return {
+    subject: `[K-ROOM] ${subject || 'Nuevo mensaje de un visitante'}`.slice(0, 180),
+    html: `
+<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;">
+  <div style="text-align:center;padding:14px 0 22px 0;border-bottom:1px solid #e5e7eb;">
+    <h1 style="margin:0;font-size:20px;color:#0f172a;letter-spacing:1px;">K-ROOM · Mail.exe</h1>
+    <p style="margin:4px 0 0 0;font-size:13px;color:#64748b;">Nuevo mensaje para <strong>@${escapeHtml(ownerId)}</strong></p>
+  </div>
+  <div style="padding:20px 0;">
+    <table style="width:100%;border-collapse:collapse;font-size:14px;color:#0f172a;">
+      <tr><td style="padding:6px 0;color:#64748b;width:90px;">De:</td><td style="padding:6px 0;"><strong>${escapeHtml(fromName)}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">Email:</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(fromEmail)}" style="color:#4338ca;">${escapeHtml(fromEmail)}</a></td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">Asunto:</td><td style="padding:6px 0;">${escapeHtml(subject || '(sin asunto)')}</td></tr>
+    </table>
+    <div style="margin-top:18px;padding:14px 16px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;line-height:1.55;white-space:pre-wrap;">${safeBody}</div>
+    <p style="margin:18px 0 0 0;font-size:12px;color:#94a3b8;">Para responder, simplemente contesta a este correo — irá directo a ${escapeHtml(fromEmail)}.</p>
+  </div>
+  <div style="text-align:center;padding:14px 0 0 0;border-top:1px solid #e5e7eb;">
+    <p style="font-size:11px;color:#94a3b8;margin:0;letter-spacing:1px;">— K-ROOM PORTFOLIO —</p>
+  </div>
+</div>`,
+    text: `Nuevo mensaje para @${ownerId} desde K-ROOM Mail.exe\n\nDe: ${fromName} <${fromEmail}>\nAsunto: ${subject || '(sin asunto)'}\n\n${message}\n\n— K-ROOM`
+  };
+};
+
 // Serializa el user sin info sensible. Sustituye accessToken/cvAccessToken
 // por booleans para que el frontend pueda mostrar el estado sin exponer las
 // claves. Esta versión INCLUYE los datos del CV (aboutMe, skills, experience,
@@ -552,16 +618,40 @@ const sanitizeUser = (u) => {
   delete obj.passwordHash;
   delete obj.verificationToken;
   delete obj.verificationExpires;
-  obj.hasAccessToken = !!obj.accessToken;
+  // hasAccessToken: indicador de privacidad de la habitación. Se mantiene este
+  // nombre por compatibilidad con el frontend (PrivacyPanel, Room.jsx), pero
+  // internamente refleja `roomPrivate`, no el legacy `accessToken`.
+  obj.hasAccessToken = !!obj.roomPrivate;
   obj.hasCvAccessToken = !!obj.cvAccessToken;
   delete obj.accessToken;
   delete obj.cvAccessToken;
   return obj;
 };
 
+// Resuelve el email "de contacto" interno del dueño para envío server-side.
+// Prioriza `contact.email` (declarado explícitamente como contacto) sobre
+// `email` (email de la cuenta auth). Devuelve string o null si no hay nada.
+// NUNCA debe enviarse al frontend — solo se usa dentro del backend para
+// reenviar mensajes desde POST /api/contact/:userId.
+const resolveOwnerEmail = (user) => {
+  if (!user) return null;
+  const contactEmail = user.contact && typeof user.contact === 'object' ? user.contact.email : null;
+  return (contactEmail && typeof contactEmail === 'string' && EMAIL_RE.test(contactEmail))
+    ? contactEmail.toLowerCase().trim()
+    : (user.email && typeof user.email === 'string' && EMAIL_RE.test(user.email))
+      ? user.email.toLowerCase().trim()
+      : null;
+};
+
 // Versión PÚBLICA: para visitantes que no son el dueño. Esconde los datos
 // personales del CV (datos GDPR). El visitante deberá pasar el cv-gate
 // (clave + email + consent) en GET /api/users/:id/cv para verlos.
+//
+// IMPORTANTE: NUNCA exponemos `email` ni `contact.email` aquí. Si el
+// visitante quiere escribir al dueño, debe usar POST /api/contact/:userId
+// (Mail.exe lo hace por él) — el backend resuelve el destinatario sin
+// dárselo al cliente. Esto cumple RGPD: el visitante no ve nunca la
+// dirección personal del dueño.
 const sanitizeUserPublic = (u) => {
   const obj = sanitizeUser(u);
   if (!obj) return null;
@@ -570,15 +660,18 @@ const sanitizeUserPublic = (u) => {
   delete obj.experience;
   delete obj.education;
   delete obj.projects;
-  // contact se conserva parcialmente: linkedin/github son públicos por
-  // naturaleza (son perfiles ya públicos en sus respectivas redes), pero
-  // el email del dueño se considera dato personal y se oculta.
   if (obj.contact && typeof obj.contact === 'object') {
     obj.contact = {
       linkedin: obj.contact.linkedin || '',
       github: obj.contact.github || ''
+      // email deliberadamente excluido — usar POST /api/contact/:userId
     };
   }
+  // Flags para que MailApp pueda renderizar el estado correcto sin conocer
+  // el email real: hasContactEmail dice si HAY destinatario; mailEnabled
+  // dice si el dueño acepta mensajes.
+  obj.hasContactEmail = !!resolveOwnerEmail(u);
+  obj.mailEnabled = obj.mailEnabled !== false; // default true si no está seteado
   return obj;
 };
 
@@ -699,6 +792,78 @@ app.post('/api/register', registerLimiter, async (req, res) => {
   } catch (err) {
     console.error('Error en POST /api/register:', err.message);
     res.status(500).json({ error: 'Error interno del servidor al registrar usuario' });
+  }
+});
+
+// POST /api/contact/:userId — Mail.exe envía un mensaje al dueño de la
+// habitación SIN exponer su email al visitante. El backend resuelve el
+// destinatario internamente y reenvía vía el sistema transaccional
+// existente. Devuelve 404 si no existe, 403 si mailEnabled=false, 503 si
+// no hay destinatario configurado, 429 si hay flood.
+app.post('/api/contact/:userId', contactOwnerLimiter, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (typeof userId !== 'string' || !ID_RE.test(userId)) {
+      return res.status(400).json({ error: 'userId inválido' });
+    }
+    const owner = await User.findOne({ id: userId });
+    if (!owner) return res.status(404).json({ error: 'Usuario no encontrado', notFound: true });
+
+    if (owner.mailEnabled === false) {
+      return res.status(403).json({
+        error: 'El dueño de esta habitación ha desactivado los mensajes.',
+        mailDisabled: true
+      });
+    }
+
+    const targetEmail = resolveOwnerEmail(owner);
+    if (!targetEmail) {
+      return res.status(503).json({
+        error: 'Este usuario no tiene email configurado.',
+        noContactEmail: true
+      });
+    }
+
+    const { fromName, fromEmail, subject, message } = req.body || {};
+    if (typeof fromName !== 'string' || fromName.trim().length < 1 || fromName.length > 80) {
+      return res.status(400).json({ error: 'Nombre inválido (1-80 chars)' });
+    }
+    if (typeof fromEmail !== 'string' || !EMAIL_RE.test(fromEmail) || fromEmail.length > 200) {
+      return res.status(400).json({ error: 'Email del remitente inválido' });
+    }
+    if (typeof subject !== 'string' || subject.length > 160) {
+      return res.status(400).json({ error: 'Asunto inválido (máx 160 chars)' });
+    }
+    if (typeof message !== 'string' || message.trim().length < 1 || message.length > 2000) {
+      return res.status(400).json({ error: 'Mensaje inválido (1-2000 chars)' });
+    }
+
+    const { subject: builtSubject, html, text } = buildContactOwnerEmail({
+      ownerId: owner.id,
+      fromName: fromName.trim(),
+      fromEmail: fromEmail.trim().toLowerCase(),
+      subject: subject.trim(),
+      message: message.trim()
+    });
+
+    try {
+      await sendTransactionalEmail({
+        toEmail: targetEmail,
+        toName: owner.name || owner.id,
+        subject: builtSubject,
+        html,
+        text,
+        replyTo: fromEmail.trim().toLowerCase()
+      });
+    } catch (mailErr) {
+      console.error('Error enviando contact owner:', mailErr.message);
+      return res.status(502).json({ error: 'No se pudo entregar el mensaje. Inténtalo más tarde.' });
+    }
+
+    res.status(200).json({ ok: true, delivered: true });
+  } catch (err) {
+    console.error('Error en POST /api/contact/:userId:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -1035,7 +1200,8 @@ app.patch('/api/users/me', requireAuth, async (req, res) => {
 
     const {
       name, tagline, profileImg, aboutMe, skills, experience, education,
-      projects, contact, roomType, font, apps, zoneFunctions, cvLang
+      projects, contact, roomType, font, apps, zoneFunctions, cvLang,
+      mailEnabled
     } = req.body || {};
 
     // Validación de cada campo opcional
@@ -1078,6 +1244,9 @@ app.patch('/api/users/me', requireAuth, async (req, res) => {
     if (zoneFunctions != null && (typeof zoneFunctions !== 'object' || Array.isArray(zoneFunctions))) {
       return res.status(400).json({ error: 'zoneFunctions inválido' });
     }
+    if (mailEnabled != null && typeof mailEnabled !== 'boolean') {
+      return res.status(400).json({ error: 'mailEnabled inválido (boolean)' });
+    }
 
     // Aplica solo los campos que vienen
     if (name != null) user.name = name;
@@ -1094,6 +1263,7 @@ app.patch('/api/users/me', requireAuth, async (req, res) => {
     if (apps != null) user.apps = apps;
     if (zoneFunctions != null) user.zoneFunctions = zoneFunctions;
     if (cvLang != null) user.set('cvLang', cvLang);
+    if (mailEnabled != null) user.mailEnabled = mailEnabled;
 
     await user.save();
     res.json({ ok: true, user: sanitizeUser(user) });
@@ -1230,13 +1400,38 @@ const POST_MAX_LEN = 500;
 const REPLY_MAX_LEN = 300;
 const POSTS_PAGE_SIZE = 50;
 
-// GET /api/posts — lista pública de posts ordenados por fecha desc
+// GET /api/posts — lista pública de posts ordenados por fecha desc.
+// Enriquece cada post y reply con `authorProfileImg` (resuelto en tiempo de
+// lectura para que las fotos siempre reflejen la actual del autor, en vez de
+// quedar congelada en el momento de publicar).
 app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find({})
       .sort({ createdAt: -1 })
-      .limit(POSTS_PAGE_SIZE);
-    res.json(posts);
+      .limit(POSTS_PAGE_SIZE)
+      .lean();
+
+    const authorIds = new Set();
+    posts.forEach(p => {
+      if (p.authorId) authorIds.add(p.authorId);
+      (p.replies || []).forEach(r => { if (r.authorId) authorIds.add(r.authorId); });
+    });
+
+    const authors = authorIds.size > 0
+      ? await User.find({ id: { $in: [...authorIds] } }, 'id profileImg').lean()
+      : [];
+    const photoById = new Map(authors.map(a => [a.id, a.profileImg || '']));
+
+    const enriched = posts.map(p => ({
+      ...p,
+      authorProfileImg: photoById.get(p.authorId) || '',
+      replies: (p.replies || []).map(r => ({
+        ...r,
+        authorProfileImg: photoById.get(r.authorId) || ''
+      }))
+    }));
+
+    res.json(enriched);
   } catch (err) {
     console.error('Error en GET /api/posts:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -1257,14 +1452,17 @@ app.post('/api/posts', socialWriteLimiter, requireAuth, async (req, res) => {
     if (!authorId) return res.status(401).json({ error: 'Token sin id' });
 
     // Resolver el nombre público del autor (para mostrarlo en el feed)
-    const author = await User.findOne({ id: authorId }, 'id name');
+    const author = await User.findOne({ id: authorId }, 'id name profileImg');
     const post = new Post({
       authorId,
       authorName: author?.name || authorId,
       text: text.trim()
     });
     await post.save();
-    res.status(201).json(post);
+    // Enriquecemos la respuesta con profileImg para que el frontend pueda
+    // pintar el avatar sin pedir un GET completo.
+    const responsePost = { ...post.toObject(), authorProfileImg: author?.profileImg || '' };
+    res.status(201).json(responsePost);
   } catch (err) {
     console.error('Error en POST /api/posts:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -1287,14 +1485,22 @@ app.post('/api/posts/:id/replies', socialWriteLimiter, requireAuth, async (req, 
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
 
-    const author = await User.findOne({ id: authorId }, 'id name');
+    const author = await User.findOne({ id: authorId }, 'id name profileImg');
     post.replies.push({
       authorId,
       authorName: author?.name || authorId,
       text: text.trim()
     });
     await post.save();
-    res.status(201).json(post);
+    // Enriquecemos respuesta: mapeamos profileImg para cada reply (las antiguas
+    // se resolverían en el siguiente GET, esta es la del propio request).
+    const obj = post.toObject();
+    obj.replies = obj.replies.map(r =>
+      r.authorId === authorId
+        ? { ...r, authorProfileImg: author?.profileImg || '' }
+        : r
+    );
+    res.status(201).json(obj);
   } catch (err) {
     console.error('Error en POST /api/posts/:id/replies:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -1302,10 +1508,11 @@ app.post('/api/posts/:id/replies', socialWriteLimiter, requireAuth, async (req, 
 });
 
 // PUT /api/users/me/access-token — el usuario logueado activa o desactiva
-// la privacidad de su habitación. Acciones:
-//   { action: 'generate' } → genera un token nuevo (invalida el anterior),
-//     lo devuelve UNA vez en la respuesta. El cliente debe guardarlo.
-//   { action: 'remove' } → elimina el token (habitación pública).
+// la privacidad de su habitación. Ya NO genera un token aparte: la clave que
+// protege la habitación privada es la misma `cvAccessToken` que el dueño
+// gestiona desde Ajustes → Clave del CV. Acciones aceptadas:
+//   { action: 'generate' } | { action: 'enable' }  → roomPrivate = true
+//   { action: 'remove' }   | { action: 'disable' } → roomPrivate = false
 // Khaled y Laura (perfiles dev) no pueden usar este endpoint para garantizar
 // que sus rooms siempre sean públicas.
 const PROTECTED_PUBLIC_IDS = new Set(['khaled', 'laura']);
@@ -1328,21 +1535,34 @@ app.put('/api/users/me/access-token', requireAuth, async (req, res) => {
     }
 
     const { action } = req.body || {};
+    const enable = action === 'generate' || action === 'enable';
+    const disable = action === 'remove' || action === 'disable';
 
-    if (action === 'generate') {
-      const token = crypto.randomBytes(20).toString('hex'); // 40 chars hex
-      user.accessToken = token;
-      await user.save();
-      return res.json({ ok: true, accessToken: token, action: 'generated' });
+    if (!enable && !disable) {
+      return res.status(400).json({ error: "action debe ser 'enable' o 'disable'" });
     }
 
-    if (action === 'remove') {
-      user.accessToken = null;
-      await user.save();
-      return res.json({ ok: true, action: 'removed' });
+    // Garantiza que existe la clave del CV (lazy generation) antes de activar
+    // privacidad — si no, dejaríamos la habitación bloqueada sin clave válida.
+    if (enable && !user.cvAccessToken) {
+      user.cvAccessToken = crypto.randomBytes(20).toString('hex');
     }
 
-    return res.status(400).json({ error: "action debe ser 'generate' o 'remove'" });
+    user.roomPrivate = enable;
+    // Limpieza del campo legacy: si quedara un valor antiguo, lo descartamos.
+    user.accessToken = null;
+    await user.save();
+
+    return res.json({
+      ok: true,
+      action: enable ? 'enabled' : 'disabled',
+      roomPrivate: user.roomPrivate,
+      // Devolvemos la clave del CV (única para ambos accesos) para que el
+      // frontend pueda mostrarla al usuario sin pedir un segundo endpoint.
+      cvAccessToken: user.cvAccessToken,
+      // Alias por compatibilidad — antes el frontend leía `accessToken`.
+      accessToken: enable ? user.cvAccessToken : null
+    });
   } catch (err) {
     console.error('Error en PUT /api/users/me/access-token:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });

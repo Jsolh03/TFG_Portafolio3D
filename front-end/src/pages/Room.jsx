@@ -7,6 +7,7 @@ import ProjectIntro from '../components/os/ProjectIntro';
 import KhaledWelcome from '../components/os/KhaledWelcome';
 import LauraWelcome from '../components/os/LauraWelcome';
 import FloatingSettingsButton from '../components/ui/FloatingSettingsButton';
+import FloatingHelpButton from '../components/ui/FloatingHelpButton';
 import PrivacyPanel from '../components/auth/PrivacyPanel';
 import { AVAILABLE_ROOMS } from '../data/roomUrls';
 
@@ -71,6 +72,39 @@ export default function Room({ userData, onLogout }) {
       console.warn('No se pudo registrar listener de Spline para arcade:', err);
     }
   };
+
+  // Cuando un modal está abierto (arcade/desktop/bed), Spline sigue capturando
+  // WASD a su propio nivel del runtime, así que el personaje se mueve por
+  // detrás. Interceptamos esas teclas en fase de captura y abortamos antes
+  // de que Spline las reciba. También liberamos el pointer lock por si la
+  // cámara estaba en first-person.
+  useEffect(() => {
+    const modalActive = showDesktop || showBed || showArcade;
+    if (!modalActive) return;
+    try { document.exitPointerLock?.(); } catch { /* noop */ }
+    const BLOCK_KEYS = new Set(['w', 'a', 's', 'd', ' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
+    // Selector de elementos "interactivos del modal": si el evento se originó
+    // dentro de ellos (arcade builtin, inputs del desktop, etc.) lo dejamos
+    // pasar para que el juego/input lo reciba. Si no, lo bloqueamos (es Spline
+    // capturando desde el window).
+    const INTERACTIVE_SELECTOR = '.arcade-overlay, .modal-glass, .os-container, input, textarea, select, button, [contenteditable="true"]';
+    const swallow = (e) => {
+      const k = (e.key || '').toLowerCase();
+      if (!BLOCK_KEYS.has(k)) return;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      const insideInteractive = path.some(el =>
+        el && el.nodeType === 1 && typeof el.matches === 'function' && el.matches(INTERACTIVE_SELECTOR)
+      );
+      if (insideInteractive) return; // dejamos pasar
+      e.stopImmediatePropagation();
+    };
+    window.addEventListener('keydown', swallow, true);
+    window.addEventListener('keyup', swallow, true);
+    return () => {
+      window.removeEventListener('keydown', swallow, true);
+      window.removeEventListener('keyup', swallow, true);
+    };
+  }, [showDesktop, showBed, showArcade]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -163,6 +197,15 @@ export default function Room({ userData, onLogout }) {
             <button className="sidebar-link" onClick={() => setShowProjectInfo(true)}>
               {t('room.projectInfo')}
             </button>
+            {isOwnerHere && (
+              <button
+                className="sidebar-link"
+                onClick={() => window.dispatchEvent(new CustomEvent('tfg:edit-my-room'))}
+                title={t('room.editMyRoom')}
+              >
+                {t('room.editMyRoom')}
+              </button>
+            )}
             <button className="sidebar-link" onClick={onLogout}>
               {t('room.changeRoom')}
             </button>
@@ -229,6 +272,7 @@ export default function Room({ userData, onLogout }) {
       )}
 
       <FloatingSettingsButton />
+      <FloatingHelpButton />
 
       {showBed && (
         <div className="modal-glass" onClick={() => setShowBed(false)}>

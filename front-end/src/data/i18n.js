@@ -104,6 +104,7 @@ export const TRANSLATIONS = {
     room: {
       sidebarLogo: 'SYSTEM',
       projectInfo: 'Info proyecto',
+      editMyRoom: 'Modificar habitación',
       changeRoom: 'Cambiar habitación',
       arcade: '🕹 Arcade',
       moveControls: 'WASD - Moverse',
@@ -203,6 +204,7 @@ export const TRANSLATIONS = {
       projectImg: 'URL imagen / preview',
       systemFont: 'Fuente del sistema',
       pcApps: 'Aplicaciones del PC',
+      pcAppsHint: 'Elige las apps que aparecerán en el escritorio del PC de tu habitación. Pasa el cursor por encima para ver la descripción.',
       creating: 'Creando...',
       createAccount: 'Crear cuenta',
       backToLogin: '← Anterior',
@@ -285,6 +287,20 @@ export const TRANSLATIONS = {
       snake: 'Snake',
       github: 'GitHub'
     },
+    appsDesc: {
+      terminal: 'Terminal interactiva con comandos del portfolio.',
+      ide: 'Editor de código con K-Bot, el asistente IA.',
+      info: 'Información del proyecto y autores.',
+      encuesta: 'Permite a tus visitantes dejarte una valoración.',
+      cv: 'Tu CV digital — los visitantes piden tu clave para verlo.',
+      mail: 'Formulario de contacto: los visitantes pueden escribirte sin ver tu email.',
+      notes: 'Bloc de notas guardado en el navegador del visitante.',
+      calc: 'Calculadora estándar.',
+      clock: 'Reloj y temporizador Pomodoro.',
+      gallery: 'Galería de imágenes para mostrar trabajos.',
+      snake: 'Mini-juego de la serpiente para entretener.',
+      github: 'Enlace directo a tu repo de GitHub.'
+    },
     projectIntro: {
       title: 'PORTFOLIO 3D',
       subtitle: 'TRABAJO DE FIN DE GRADO',
@@ -325,6 +341,12 @@ export const TRANSLATIONS = {
       sentRecipientFallback: 'El destinatario',
       error: '✗ Error al enviar — comprueba tu conexión',
       noEmail: 'sin email configurado',
+      fallbackNote: 'El dueño no ha publicado un email — tu mensaje llegará al contacto general del proyecto.',
+      privacyNote: 'No verás el email del destinatario — el mensaje se entrega de forma privada por el servidor.',
+      errorDisabled: 'El dueño de esta habitación ha desactivado los mensajes desde Mail.exe.',
+      errorNoEmail: 'Este usuario no tiene email de contacto configurado.',
+      errorRateLimit: 'Demasiados mensajes enviados. Espera una hora.',
+      cooldown: 'Espera {n} s antes de enviar otro mensaje.',
       back: '← Volver'
     },
     info: {
@@ -473,6 +495,14 @@ export const TRANSLATIONS = {
       myAccountTitle: 'Mi cuenta',
       idLabel: 'Identificador',
       emailLabel: 'Email',
+      emailUsageNote: 'Tu email se usará para que los visitantes te escriban mediante la app Mail.exe del PC del portfolio. Tu dirección NO será visible para nadie — el servidor entrega los mensajes por ti. Puedes desactivar esta función desde Ajustes → Mi cuenta cuando quieras.',
+      mailTitle: 'Recibir mensajes desde Mail.exe',
+      mailDesc: 'Controla si los visitantes pueden escribirte a través de la app Mail.exe del PC de tu habitación. Tu email nunca se expone — solo se usa internamente para entregar los mensajes.',
+      mailToggleOn: 'Mensajes activados',
+      mailToggleOff: 'Mensajes desactivados',
+      mailToggleHint: 'Cuando está activado, los visitantes verán el formulario y podrán mandarte un correo. Cuando está desactivado, el formulario queda bloqueado.',
+      mailEnabledOn: '✓ Mensajes activados',
+      mailEnabledOff: '✓ Mensajes desactivados',
       deleteTitle: 'Eliminar cuenta',
       deleteDesc: 'Elimina permanentemente tu cuenta, tu habitación, tu CV, tus posts/respuestas en la red social y el historial de quién ha visto tu CV. Esta acción NO se puede deshacer.',
       deleteBtn: 'Eliminar mi cuenta',
@@ -520,13 +550,14 @@ export const TRANSLATIONS = {
     cvKey: {
       title: 'Clave de acceso a mi CV',
       desc: 'Esta clave permite a otras personas ver tu CV. Compártela solo con quien autorices (reclutadores, contactos profesionales). Quien la use deberá dejar su email — verás todos los accesos en el historial.',
+      unifiedNote: 'Esta MISMA clave también desbloquea tu habitación si la marcas como privada en Ajustes → Privacidad. Una sola clave para CV y habitación.',
       currentKey: 'Tu clave actual',
       reveal: 'Mostrar clave',
       hide: 'Ocultar',
       copy: 'Copiar',
       copied: '¡Copiada!',
       regenerate: 'Regenerar clave',
-      regenerateWarn: 'Si la regeneras, la clave anterior dejará de funcionar inmediatamente.',
+      regenerateWarn: 'Si la regeneras, la clave anterior dejará de funcionar inmediatamente (tanto para tu CV como para tu habitación privada, si está activa).',
       regenerating: 'Regenerando…',
       viewsTitle: 'Quién ha visto tu CV',
       viewsEmpty: 'Aún no ha accedido nadie.',
@@ -545,8 +576,14 @@ export const TRANSLATIONS = {
     privacy: {
       title: 'Privacidad de tu habitación',
       explain: 'Por defecto tu habitación es pública y cualquiera con tu nombre de usuario puede verla. Si quieres restringir el acceso, genera un token de acceso y compártelo solo con quien tú decidas.',
+      explainUnified: 'Por defecto tu habitación es pública. Si la marcas como privada, los visitantes deberán introducir tu CLAVE DE CV (la misma que aparece en Ajustes → Clave del CV) para entrar. Una sola clave protege tanto el CV como la habitación.',
       statusPublic: 'Habitación pública',
-      statusPrivate: 'Habitación privada (requiere token)',
+      statusPrivate: 'Habitación privada (requiere clave)',
+      enableBtn: 'Activar privacidad',
+      disableBtn: 'Hacer pública',
+      disableConfirm: '¿Seguro? Cualquiera con tu ID podrá ver tu habitación.',
+      disableConfirmBtn: 'Confirmar',
+      unifiedKeyNote: '🔗 Esta es la misma clave que protege tu CV. Compártela solo con quien quieras que entre a tu habitación. Para cambiarla, ve a Ajustes → Clave del CV → Regenerar.',
       generateBtn: 'Activar privacidad',
       regenerateBtn: 'Regenerar token',
       removeBtn: 'Hacer pública',
@@ -557,6 +594,123 @@ export const TRANSLATIONS = {
       savedClose: 'Lo he guardado',
       devProfileNote: 'Khaled y Laura son perfiles dev públicos por diseño y no admiten token de acceso.',
       requiresAuth: 'Inicia sesión para gestionar la privacidad de tu habitación.'
+    },
+    manual: {
+      btnLabel: 'Manual de uso',
+      title: 'Manual de uso',
+      subtitle: 'Todas las funciones del portfolio 3D, paso a paso.',
+      tocTitle: 'Secciones',
+      close: 'Cerrar',
+      search: 'Buscar en el manual…',
+      searchEmpty: 'Sin resultados para tu búsqueda.',
+      sections: {
+        intro: {
+          title: '👋 Introducción',
+          body: 'K-ROOM & LAURA-ROOM es un portfolio 3D interactivo. Cada usuario tiene su propia habitación virtual con un PC funcional, un CV digital, una zona de descanso y una recreativa con minijuegos. Puedes visitar habitaciones ajenas o crear la tuya.'
+        },
+        access: {
+          title: '🚪 Cómo entrar',
+          items: [
+            'Desde la portada (Landing), escribe el ID de un usuario en "Acceso rápido" y pulsa Enter para visitar su habitación.',
+            'Pulsa "Acceso invitado" para crear una habitación TEMPORAL (caduca a los 3 días o tras 3 visitas).',
+            'Pulsa "Nuevo usuario" para crear una cuenta con email — habitación permanente y editable.',
+            'Si ya tienes cuenta, "Iniciar sesión" te lleva directo a tu habitación con tus datos.',
+            'Una habitación marcada como privada te pedirá una CLAVE para entrar. Pídesela al dueño.'
+          ]
+        },
+        navigation: {
+          title: '🕹️ Controles dentro de la habitación',
+          items: [
+            'W A S D — moverte por la escena.',
+            'Ratón — mirar alrededor (clic dentro de la escena para capturar el cursor).',
+            'E — interactuar con la zona resaltada (PC, CV, cama, arcade).',
+            'Esc — soltar el cursor o cerrar la app abierta.',
+            'La barra lateral izquierda tiene: info del proyecto, cambiar de habitación y, si eres el dueño, indicador de privacidad.'
+          ]
+        },
+        zones: {
+          title: '🎯 Zonas interactivas',
+          items: [
+            '💻 PC — abre el escritorio virtual con todas las apps.',
+            '📄 CV — abre tu CV digital en pantalla completa. Si no eres el dueño, te pedirá la clave del CV + email + consentimiento (RGPD).',
+            '🛏️ Cama — atajo para salir de la habitación / cerrar sesión.',
+            '🕹️ Arcade — minijuegos (Pong, Snake, Tetris, Breakout).'
+          ]
+        },
+        apps: {
+          title: '🖥️ Apps del escritorio',
+          items: [
+            'Spotlight — buscador rápido de apps (atajo desde el menú del PC).',
+            'Notes — bloc de notas guardado en tu navegador.',
+            'Calculator — calculadora.',
+            'Clock — reloj y temporizador.',
+            'Gallery — galería de imágenes.',
+            'Mail — formulario para escribir a Khaled (EmailJS).',
+            'Terminal — terminal interactiva con comandos del portfolio.',
+            'IDE — editor de código (Monaco) con K-Bot, el asistente IA del portfolio.',
+            'Encuesta — deja una valoración para el dueño de la habitación.',
+            'Info — info del proyecto y de los autores.',
+            'Social — feed social interno de los usuarios.',
+            'Arcade — los mismos minijuegos accesibles desde el escritorio.'
+          ]
+        },
+        settings: {
+          title: '⚙️ Ajustes (botón ⚙ a la derecha)',
+          items: [
+            '🎨 Tema — paleta de colores (claro, oscuro, etc.).',
+            '✨ Estilo — variante visual (actual, minimal, neón…).',
+            '🔤 Fuente — tipografía del sistema.',
+            '🌐 Idioma — español, inglés, chino, alemán.',
+            '♿ Accesibilidad — reducir animaciones y alto contraste.',
+            'ℹ️ Acerca de — versión, autores, stack, licencia.'
+          ]
+        },
+        myRoom: {
+          title: '🏠 Mi habitación (solo dueño)',
+          body: 'En Ajustes → "Mi habitación" puedes relanzar el asistente que personaliza tu espacio: tipo de habitación 3D, qué función tiene cada zona, qué apps aparecen en el PC, tu CV, fuente, etc. Solo aparece si has verificado tu email.'
+        },
+        privacy: {
+          title: '🔒 Privacidad de la habitación',
+          body: 'En Ajustes → "Privacidad" activas o desactivas el acceso restringido a tu habitación. Cuando está activa, los visitantes deben introducir tu CLAVE (la misma del CV) para entrar. El dueño y los admins entran sin clave.',
+          items: [
+            'Khaled y Laura son perfiles dev públicos por diseño: no pueden activar privacidad.',
+            'La habitación temporal (sin cuenta verificada) tampoco admite privacidad.',
+            'El indicador 🔒/🔓 en la barra lateral te recuerda el estado actual cuando eres el dueño.'
+          ]
+        },
+        cvKey: {
+          title: '🔑 Clave del CV (clave única)',
+          body: 'Tu clave del CV es ÚNICA y se genera automáticamente al crear la cuenta. Sirve para dos cosas a la vez:',
+          items: [
+            '1️⃣ Permitir a otras personas ver tu CV (deberán dejar su email — quedará en el historial).',
+            '2️⃣ Desbloquear tu habitación si la marcas como privada.',
+            'La encuentras en Ajustes → "Clave del CV". Puedes copiarla, mostrarla o regenerarla.',
+            'Si la regeneras, la anterior deja de funcionar inmediatamente — tendrás que volver a compartir la nueva.',
+            'El historial de accesos al CV se conserva 90 días (RGPD) y luego se borra solo.'
+          ]
+        },
+        cvView: {
+          title: '📄 Ver el CV de otra persona',
+          items: [
+            'Entra en la habitación del usuario y pulsa E sobre la zona del CV (o usa /cv/<id> directamente).',
+            'Introduce la clave que te haya facilitado el dueño.',
+            'Escribe tu email y acepta los términos (RGPD — tu email se registra en el audit log del dueño 90 días).',
+            'Si el visitante es el propio dueño autenticado, no hace falta ninguna clave.'
+          ]
+        },
+        account: {
+          title: '👤 Mi cuenta',
+          items: [
+            'Ajustes → "Mi cuenta" muestra tu ID y email.',
+            'Desde ahí puedes ejercer tu derecho de supresión (RGPD art. 17): la cuenta se borra tras una doble confirmación + escribir tu ID literal.',
+            'Para regenerar la clave del CV usa "Clave del CV". Para cambiar la privacidad de la habitación, "Privacidad".'
+          ]
+        },
+        help: {
+          title: '🆘 Ayuda y contacto',
+          body: 'Si algo no funciona o tienes dudas: usa la app Mail en el escritorio del PC (escribe directamente a Khaled), o consulta el aviso legal y la política de privacidad en /legal.'
+        }
+      }
     }
   },
 
@@ -658,6 +812,7 @@ export const TRANSLATIONS = {
     room: {
       sidebarLogo: 'SYSTEM',
       projectInfo: 'Project info',
+      editMyRoom: 'Edit my room',
       changeRoom: 'Change room',
       arcade: '🕹 Arcade',
       moveControls: 'WASD - Move',
@@ -757,6 +912,7 @@ export const TRANSLATIONS = {
       projectImg: 'Image / preview URL',
       systemFont: 'System font',
       pcApps: 'PC applications',
+      pcAppsHint: 'Pick the apps that will appear on your room PC desktop. Hover for descriptions.',
       creating: 'Creating...',
       createAccount: 'Create account',
       backToLogin: '← Previous',
@@ -839,6 +995,20 @@ export const TRANSLATIONS = {
       snake: 'Snake',
       github: 'GitHub'
     },
+    appsDesc: {
+      terminal: 'Interactive terminal with portfolio commands.',
+      ide: 'Code editor with K-Bot, the AI assistant.',
+      info: 'Project and author information.',
+      encuesta: 'Lets your visitors leave you a rating.',
+      cv: 'Your digital CV — visitors need your key to view it.',
+      mail: 'Contact form: visitors can email you without seeing your address.',
+      notes: 'Notepad saved in the visitor’s browser.',
+      calc: 'Standard calculator.',
+      clock: 'Clock and Pomodoro timer.',
+      gallery: 'Image gallery to showcase work.',
+      snake: 'Snake mini-game for fun.',
+      github: 'Direct link to your GitHub repo.'
+    },
     projectIntro: {
       title: '3D PORTFOLIO',
       subtitle: 'FINAL DEGREE PROJECT',
@@ -879,6 +1049,12 @@ export const TRANSLATIONS = {
       sentRecipientFallback: 'The recipient',
       error: '✗ Send failed — check your connection',
       noEmail: 'no email configured',
+      fallbackNote: 'The owner has not published an email — your message will be delivered to the project’s general contact.',
+      privacyNote: 'You won’t see the recipient’s email — the message is delivered privately by the server.',
+      errorDisabled: 'The owner of this room has disabled Mail.exe messages.',
+      errorNoEmail: 'This user has no contact email configured.',
+      errorRateLimit: 'Too many messages sent. Wait one hour.',
+      cooldown: 'Wait {n} s before sending another message.',
       back: '← Back'
     },
     info: {
@@ -1027,6 +1203,14 @@ export const TRANSLATIONS = {
       myAccountTitle: 'My account',
       idLabel: 'Identifier',
       emailLabel: 'Email',
+      emailUsageNote: 'Your email will be used so visitors can write to you through the Mail.exe app on your room PC. Your address will NEVER be visible to them — the server delivers the messages on your behalf. You can disable this from Settings → My account at any time.',
+      mailTitle: 'Receive Mail.exe messages',
+      mailDesc: 'Control whether visitors can write to you via the Mail.exe app on the PC of your room. Your email is never exposed — it’s only used internally to deliver messages.',
+      mailToggleOn: 'Messages enabled',
+      mailToggleOff: 'Messages disabled',
+      mailToggleHint: 'When enabled, visitors see the form and can email you. When disabled, the form is blocked.',
+      mailEnabledOn: '✓ Messages enabled',
+      mailEnabledOff: '✓ Messages disabled',
       deleteTitle: 'Delete account',
       deleteDesc: 'Permanently delete your account, your room, your CV, your posts/replies in the social network and the history of who has viewed your CV. This action CANNOT be undone.',
       deleteBtn: 'Delete my account',
@@ -1074,13 +1258,14 @@ export const TRANSLATIONS = {
     cvKey: {
       title: 'My CV access key',
       desc: 'This key lets others view your CV. Share it only with people you authorize (recruiters, professional contacts). Anyone using it must provide their email — you can see all accesses in the history.',
+      unifiedNote: 'This SAME key also unlocks your room if you mark it as private in Settings → Privacy. One single key for both CV and room.',
       currentKey: 'Your current key',
       reveal: 'Show key',
       hide: 'Hide',
       copy: 'Copy',
       copied: 'Copied!',
       regenerate: 'Regenerate key',
-      regenerateWarn: 'If you regenerate, the previous key stops working immediately.',
+      regenerateWarn: 'If you regenerate, the previous key stops working immediately (both for your CV and for your private room, if enabled).',
       regenerating: 'Regenerating…',
       viewsTitle: 'Who has viewed your CV',
       viewsEmpty: 'No one has accessed it yet.',
@@ -1099,8 +1284,14 @@ export const TRANSLATIONS = {
     privacy: {
       title: 'Room privacy',
       explain: 'By default your room is public — anyone with your username can see it. To restrict access, generate an access token and share it only with whoever you choose.',
+      explainUnified: 'By default your room is public. If you mark it as private, visitors must enter your CV KEY (the same one shown in Settings → CV key) to get in. One single key protects both your CV and your room.',
       statusPublic: 'Public room',
-      statusPrivate: 'Private room (token required)',
+      statusPrivate: 'Private room (key required)',
+      enableBtn: 'Enable privacy',
+      disableBtn: 'Make public',
+      disableConfirm: 'Sure? Anyone with your ID will be able to see your room.',
+      disableConfirmBtn: 'Confirm',
+      unifiedKeyNote: '🔗 This is the same key that protects your CV. Share it only with people you want inside your room. To change it, go to Settings → CV key → Regenerate.',
       generateBtn: 'Enable privacy',
       regenerateBtn: 'Regenerate token',
       removeBtn: 'Make public',
@@ -1111,6 +1302,123 @@ export const TRANSLATIONS = {
       savedClose: 'I saved it',
       devProfileNote: 'Khaled and Laura are public dev profiles by design and don’t support access tokens.',
       requiresAuth: 'Sign in to manage your room’s privacy.'
+    },
+    manual: {
+      btnLabel: 'User manual',
+      title: 'User manual',
+      subtitle: 'Every feature of the 3D portfolio, step by step.',
+      tocTitle: 'Sections',
+      close: 'Close',
+      search: 'Search the manual…',
+      searchEmpty: 'No results for your search.',
+      sections: {
+        intro: {
+          title: '👋 Introduction',
+          body: 'K-ROOM & LAURA-ROOM is an interactive 3D portfolio. Each user has their own virtual room with a working PC, a digital CV, a rest zone and an arcade with mini-games. You can visit other rooms or create your own.'
+        },
+        access: {
+          title: '🚪 How to enter',
+          items: [
+            'From the landing page, type a user ID in "Quick access" and press Enter to visit their room.',
+            'Tap "Guest access" to create a TEMPORARY room (expires after 3 days or 3 visits).',
+            'Tap "New user" to register with an email — permanent and editable room.',
+            'If you already have an account, "Sign in" takes you straight to your room.',
+            'A room marked as private will ask you for a KEY. Get it from the owner.'
+          ]
+        },
+        navigation: {
+          title: '🕹️ Controls inside the room',
+          items: [
+            'W A S D — move around the scene.',
+            'Mouse — look around (click inside the scene to lock the cursor).',
+            'E — interact with the highlighted zone (PC, CV, bed, arcade).',
+            'Esc — release the cursor or close the open app.',
+            'The left sidebar has: project info, change room and, if you are the owner, a privacy indicator.'
+          ]
+        },
+        zones: {
+          title: '🎯 Interactive zones',
+          items: [
+            '💻 PC — opens the virtual desktop with all the apps.',
+            '📄 CV — opens your digital CV full screen. If you are not the owner, it asks for the CV key + email + consent (GDPR).',
+            '🛏️ Bed — shortcut to leave the room / sign out.',
+            '🕹️ Arcade — mini-games (Pong, Snake, Tetris, Breakout).'
+          ]
+        },
+        apps: {
+          title: '🖥️ Desktop apps',
+          items: [
+            'Spotlight — quick app launcher (shortcut from the PC menu).',
+            'Notes — notepad saved in your browser.',
+            'Calculator — calculator.',
+            'Clock — clock and timer.',
+            'Gallery — image gallery.',
+            'Mail — form to write directly to Khaled (EmailJS).',
+            'Terminal — interactive terminal with portfolio commands.',
+            'IDE — code editor (Monaco) with K-Bot, the portfolio AI assistant.',
+            'Encuesta — leave a rating for the room owner.',
+            'Info — project and author information.',
+            'Social — internal social feed for users.',
+            'Arcade — same mini-games, accessible from the desktop too.'
+          ]
+        },
+        settings: {
+          title: '⚙️ Settings (⚙ button on the right)',
+          items: [
+            '🎨 Theme — color palette (light, dark, etc.).',
+            '✨ Style — visual variant (current, minimal, neon…).',
+            '🔤 Font — system typeface.',
+            '🌐 Language — Spanish, English, Chinese, German.',
+            '♿ Accessibility — reduce motion and high contrast.',
+            'ℹ️ About — version, authors, stack, license.'
+          ]
+        },
+        myRoom: {
+          title: '🏠 My room (owner only)',
+          body: 'In Settings → "My room" you can relaunch the wizard that customizes your space: 3D room type, what each zone does, which apps appear on the PC, your CV, font, etc. Only visible after email verification.'
+        },
+        privacy: {
+          title: '🔒 Room privacy',
+          body: 'In Settings → "Privacy" you toggle restricted access to your room. When enabled, visitors must enter your KEY (the same as the CV one) to get in. The owner and admins enter without a key.',
+          items: [
+            'Khaled and Laura are public dev profiles by design: they cannot enable privacy.',
+            'A temporary room (no verified account) does not support privacy either.',
+            'The 🔒/🔓 indicator in the sidebar reminds you of the current status when you are the owner.'
+          ]
+        },
+        cvKey: {
+          title: '🔑 CV key (single unified key)',
+          body: 'Your CV key is UNIQUE and generated automatically when the account is created. It serves two purposes at once:',
+          items: [
+            '1️⃣ Allows others to view your CV (they must provide their email — it stays in the history).',
+            '2️⃣ Unlocks your room if you mark it as private.',
+            'Find it in Settings → "CV key". You can copy, reveal or regenerate it.',
+            'If you regenerate it, the previous one stops working immediately — you will need to reshare the new one.',
+            'CV access history is kept for 90 days (GDPR) and then deleted automatically.'
+          ]
+        },
+        cvView: {
+          title: '📄 Viewing someone else’s CV',
+          items: [
+            'Enter the user’s room and press E on the CV zone (or open /cv/<id> directly).',
+            'Enter the key provided by the owner.',
+            'Type your email and accept the terms (GDPR — your email is logged in the owner’s audit log for 90 days).',
+            'If the visitor is the authenticated owner, no key is required.'
+          ]
+        },
+        account: {
+          title: '👤 My account',
+          items: [
+            'Settings → "My account" shows your ID and email.',
+            'From there you can exercise your right to erasure (GDPR art. 17): the account is deleted after a double confirmation + typing your ID literally.',
+            'To regenerate the CV key use "CV key". To change room privacy, use "Privacy".'
+          ]
+        },
+        help: {
+          title: '🆘 Help and contact',
+          body: 'If something doesn’t work or you have questions: use the Mail app on the PC desktop (writes directly to Khaled), or check the legal notice and privacy policy at /legal.'
+        }
+      }
     }
   },
 

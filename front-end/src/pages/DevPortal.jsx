@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useT } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import FloatingSettingsButton from '../components/ui/FloatingSettingsButton';
+import FloatingHelpButton from '../components/ui/FloatingHelpButton';
 import { API_BASE } from '../config';
 
 const PROTECTED_IDS = new Set(['khaled', 'laura']);
@@ -203,6 +204,7 @@ export default function DevPortal() {
     <div className="dev-portal-root">
       <div className="dev-portal-bg" aria-hidden="true" />
       <FloatingSettingsButton />
+      <FloatingHelpButton />
 
       <div className="dev-portal-shell">
         {!isAuth ? (

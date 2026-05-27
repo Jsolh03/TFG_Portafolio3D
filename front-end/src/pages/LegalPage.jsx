@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useT } from '../context/LanguageContext';
 import FloatingSettingsButton from '../components/ui/FloatingSettingsButton';
+import FloatingHelpButton from '../components/ui/FloatingHelpButton';
 
 /* LegalPage — documentos legales agrupados bajo /legal/:doc.
    Cumple RGPD art. 13-14, LSSI-CE arts. 9-10, EU AI Act art. 50.
@@ -276,6 +277,7 @@ export default function LegalPage() {
   return (
     <div className="legal-page">
       <FloatingSettingsButton />
+      <FloatingHelpButton />
 
       <header className="legal-header">
         <Link to="/" className="legal-back">← {t('common.back') || 'Volver'}</Link>

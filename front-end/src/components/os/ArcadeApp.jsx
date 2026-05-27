@@ -107,6 +107,22 @@ export default function ArcadeApp({ onClose }) {
     scriptRef.current = script;
 
     return () => {
+      // Detener el emulador antes de soltar el script y el mount. Sin esto,
+      // el audio del juego (música de fondo, SFX) seguía sonando aunque el
+      // modal se cerrara.
+      try {
+        const em = window.EJS_emulator;
+        if (em) {
+          if (typeof em.callEvent === 'function') em.callEvent('exit');
+          if (em.gameManager) {
+            if (typeof em.gameManager.stop === 'function') em.gameManager.stop();
+            if (typeof em.gameManager.destroy === 'function') em.gameManager.destroy();
+          }
+          if (typeof em.exit === 'function') em.exit();
+          if (typeof em.pause === 'function') em.pause();
+        }
+      } catch { /* el emulator pudo no haber llegado a inicializar */ }
+
       if (scriptRef.current && scriptRef.current.parentNode) {
         scriptRef.current.parentNode.removeChild(scriptRef.current);
       }
@@ -115,8 +131,39 @@ export default function ArcadeApp({ onClose }) {
       });
       const mount = document.getElementById('arcade-mount');
       if (mount) mount.innerHTML = '';
+
+      // Último recurso: pausar todos los <audio> y <video> que pudieran haberse
+      // quedado huérfanos en el documento tras cerrar el emulador.
+      try {
+        document.querySelectorAll('audio, video').forEach(el => {
+          try { el.pause(); el.currentTime = 0; } catch {}
+        });
+      } catch { /* noop */ }
     };
   }, [romUrl, core, romName]);
+
+  // Cleanup adicional al desmontar el componente entero (cerrar el arcade
+  // sin haber pulsado antes "Cambiar ROM"). Esto cubre el caso de cerrar
+  // directamente con la X o con Escape mientras un juego está sonando.
+  useEffect(() => {
+    return () => {
+      try {
+        const em = window.EJS_emulator;
+        if (em) {
+          if (em.gameManager?.stop) em.gameManager.stop();
+          if (em.pause) em.pause();
+          if (em.exit) em.exit();
+        }
+      } catch { /* noop */ }
+      try {
+        document.querySelectorAll('audio, video').forEach(el => {
+          try { el.pause(); el.currentTime = 0; } catch {}
+        });
+      } catch { /* noop */ }
+      cleanupBlob();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const cleanupBlob = () => {
     if (blobUrlRef.current) {

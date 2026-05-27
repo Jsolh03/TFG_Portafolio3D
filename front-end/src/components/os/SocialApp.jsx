@@ -19,6 +19,31 @@ function timeAgo(date) {
   return d.toLocaleDateString();
 }
 
+/* Avatar reutilizable: si hay foto la pinta, si no muestra la inicial.
+   Tamaños predefinidos para mantener consistencia (header, post, reply). */
+function SocialAvatar({ src, name, size = 36, className = '' }) {
+  const initial = (name || '?').slice(0, 1).toUpperCase();
+  const dim = `${size}px`;
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name || ''}
+        className={className}
+        style={{
+          width: dim,
+          height: dim,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0
+        }}
+        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.replaceWith(Object.assign(document.createElement('span'), { textContent: initial, className })); }}
+      />
+    );
+  }
+  return <div className={className}>{initial}</div>;
+}
+
 export default function SocialApp() {
   const t = useT();
   const { isAuthenticated, user, token, logout } = useAuth();
@@ -155,7 +180,13 @@ export default function SocialApp() {
           <h2 className="social-title">{t('social.title')}</h2>
           <span className="social-sub">{t('social.sub')}</span>
         </div>
-        <div className="social-user-info">
+        <div className="social-user-info" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <SocialAvatar
+            src={user?.profileImg}
+            name={user?.name || user?.id}
+            size={34}
+            className="social-post-avatar"
+          />
           <span className="social-user-id">@{user?.id}</span>
           <button type="button" className="social-logout-btn" onClick={logout} title={t('landing.sessionLogout')}>{t('social.logoutShort')}</button>
         </div>
@@ -193,7 +224,12 @@ export default function SocialApp() {
         {!loading && posts.map(post => (
           <article key={post._id} className="social-post">
             <header className="social-post-head">
-              <div className="social-post-avatar">{(post.authorName || post.authorId).slice(0, 1).toUpperCase()}</div>
+              <SocialAvatar
+                src={post.authorProfileImg || (post.authorId === user?.id ? user?.profileImg : null)}
+                name={post.authorName || post.authorId}
+                size={40}
+                className="social-post-avatar"
+              />
               <div className="social-post-meta">
                 <div className="social-post-author">{post.authorName || post.authorId} <span className="social-post-handle">@{post.authorId}</span></div>
                 <div className="social-post-time">{timeAgo(post.createdAt)}</div>
@@ -221,7 +257,12 @@ export default function SocialApp() {
               <div className="social-replies">
                 {post.replies.map(r => (
                   <div key={r._id} className="social-reply">
-                    <div className="social-reply-avatar">{(r.authorName || r.authorId).slice(0, 1).toUpperCase()}</div>
+                    <SocialAvatar
+                      src={r.authorProfileImg || (r.authorId === user?.id ? user?.profileImg : null)}
+                      name={r.authorName || r.authorId}
+                      size={28}
+                      className="social-reply-avatar"
+                    />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="social-reply-author">
                         {r.authorName || r.authorId} <span className="social-reply-handle">@{r.authorId}</span> · <span className="social-reply-time">{timeAgo(r.createdAt)}</span>
