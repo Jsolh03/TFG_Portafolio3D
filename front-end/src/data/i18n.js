@@ -68,6 +68,8 @@ export const TRANSLATIONS = {
       language: 'Idioma',
       accessibility: 'Accesibilidad',
       about: 'Acerca de',
+      myRoom: 'Mi habitación',
+      myRoomDesc: 'Edita el contenido de tu perfil 3D: tipo de habitación, foto, sobre ti, skills, experiencia, proyectos y apps del PC. Los cambios se guardan al instante.',
       privacy: 'Privacidad',
       licenseText: 'Este portfolio puede visualizarse libremente. NO está permitida la reutilización, copia ni redistribución de su código, diseño o contenido sin autorización expresa de los autores.',
       allRightsReserved: 'Todos los derechos reservados',
@@ -434,6 +436,8 @@ export const TRANSLATIONS = {
       registeredTitle: '¡Casi listo, {id}!',
       registeredEmailSentPrefix: '✅ Hemos enviado un email de verificación a',
       registeredCheckSpam: 'Revisa tu bandeja de entrada (y spam). El enlace caduca en 24h.',
+      registeredSpamWarningTitle: '📬 Importante: revisa tu carpeta de SPAM',
+      registeredSpamWarningBody: 'El primer correo casi siempre cae en Spam / Correo no deseado. Búscalo ahí antes de pedir reenvío y márcalo como "No es spam" para que los siguientes lleguen a tu bandeja principal.',
       registeredCanLoginAfter: 'Una vez verificado, podrás iniciar sesión.',
       registeredEmailFailedPrefix: '⚠️ Cuenta creada, pero no pudimos enviar el email automáticamente',
       registeredManualHint: 'Copia el enlace manualmente y ábrelo en el navegador (caduca en 24h):',
@@ -445,6 +449,18 @@ export const TRANSLATIONS = {
       resendBtn: 'Reenviar email',
       resending: 'Reenviando…',
       resendErrorGeneric: 'No se pudo reenviar. Inténtalo más tarde.'
+    },
+    authSetup: {
+      title: 'Configura tu habitación',
+      intro: 'Personaliza el espacio que verán quienes visiten tu perfil. Puedes hacerlo ahora o más tarde desde Ajustes.',
+      skip: 'Saltar por ahora',
+      save: 'Guardar y entrar',
+      saving: 'Guardando…',
+      editBtn: 'Editar mi habitación',
+      promptTitle: '¡Hola, {name}! Bienvenido a tu nuevo espacio',
+      promptBody: 'Tu cuenta está creada y verificada. Personaliza tu habitación 3D ahora para que tu perfil tenga datos reales. Si lo prefieres, puedes saltarlo y entrar con una habitación por defecto.',
+      promptStart: 'Personalizar ahora',
+      promptSkip: 'Entrar con habitación por defecto'
     },
     contact: {
       title: 'Contacto',
@@ -536,6 +552,8 @@ export const TRANSLATIONS = {
       language: 'Language',
       accessibility: 'Accessibility',
       about: 'About',
+      myRoom: 'My room',
+      myRoomDesc: 'Edit your 3D profile content: room type, photo, about, skills, experience, projects and PC apps. Changes save instantly.',
       privacy: 'Privacy',
       licenseText: 'This portfolio may be viewed freely. Reuse, copy or redistribution of its code, design or content WITHOUT explicit authorization from the authors is NOT allowed.',
       allRightsReserved: 'All rights reserved',
@@ -902,6 +920,8 @@ export const TRANSLATIONS = {
       registeredTitle: 'Almost there, {id}!',
       registeredEmailSentPrefix: '✅ We sent a verification email to',
       registeredCheckSpam: 'Check your inbox (and the spam folder). The link expires in 24h.',
+      registeredSpamWarningTitle: '📬 Important: check your SPAM folder',
+      registeredSpamWarningBody: 'The first email almost always ends up in Spam / Junk. Look there before requesting a resend, and mark it as "Not spam" so future ones land in your main inbox.',
       registeredCanLoginAfter: 'Once verified, you can sign in.',
       registeredEmailFailedPrefix: '⚠️ Account created, but we could not send the email automatically',
       registeredManualHint: 'Copy this link manually and open it in your browser (expires in 24h):',
@@ -913,6 +933,18 @@ export const TRANSLATIONS = {
       resendBtn: 'Resend email',
       resending: 'Resending…',
       resendErrorGeneric: 'Could not resend. Try later.'
+    },
+    authSetup: {
+      title: 'Set up your room',
+      intro: 'Customize the space visitors will see on your profile. You can do it now or later from Settings.',
+      skip: 'Skip for now',
+      save: 'Save and enter',
+      saving: 'Saving…',
+      editBtn: 'Edit my room',
+      promptTitle: 'Hi {name}! Welcome to your new space',
+      promptBody: 'Your account is created and verified. Customize your 3D room now so your profile shows real content. If you prefer, you can skip and enter with a default room.',
+      promptStart: 'Customize now',
+      promptSkip: 'Enter with default room'
     },
     contact: {
       title: 'Contact',

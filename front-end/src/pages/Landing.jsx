@@ -5,6 +5,7 @@ import { API_BASE } from '../config';
 import ProjectIntro from '../components/os/ProjectIntro';
 import Register from '../components/auth/Register';
 import RegisterAccount from '../components/auth/RegisterAccount';
+import AuthRoomSetup from '../components/auth/AuthRoomSetup';
 import Login from '../components/auth/Login';
 import SettingsPanel from '../components/ui/SettingsPanel';
 import ContactPanel from '../components/ui/ContactPanel';
@@ -154,12 +155,25 @@ function VisitRoomForm({ isLoading, loginError, onCancel, onSubmit }) {
   );
 }
 
+// Detecta si la habitación del usuario está "vacía" (cuenta nueva auth recién
+// verificada sin pasar por el wizard). Solo aplica a cuentas createdViaAuth —
+// los legacy (khaled, laura, temporales) nunca disparan este flujo.
+const isRoomEmpty = (u) => {
+  if (!u || !u.createdViaAuth) return false;
+  if (u.aboutMe && u.aboutMe.trim().length > 0) return false;
+  if (Array.isArray(u.skills) && u.skills.length > 0) return false;
+  if (Array.isArray(u.experience) && u.experience.length > 0) return false;
+  if (Array.isArray(u.projects) && u.projects.length > 0) return false;
+  return true;
+};
+
 export default function Landing() {
   const t = useT();
   const { user: authUser, isAuthenticated, logout } = useAuth();
 
   const [userData, setUserData] = useState(null);
   const [view, setView] = useState('login');
+  const [pendingSetupUser, setPendingSetupUser] = useState(null);
   const [loginId, setLoginId] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -181,6 +195,20 @@ export default function Landing() {
     window.addEventListener('tfg:switch-to-register', onSwitchToRegister);
     return () => window.removeEventListener('tfg:switch-to-register', onSwitchToRegister);
   }, []);
+
+  // Escucha el evento "editar mi habitación" disparado desde SettingsPanel.
+  // Necesita que el usuario tenga sesión activa; usa authUser (del contexto)
+  // como base de datos del wizard.
+  useEffect(() => {
+    const onEditMyRoom = () => {
+      if (!authUser) return;
+      setUserData(null);
+      setPendingSetupUser(authUser);
+      setView('auth-room-setup');
+    };
+    window.addEventListener('tfg:edit-my-room', onEditMyRoom);
+    return () => window.removeEventListener('tfg:edit-my-room', onEditMyRoom);
+  }, [authUser]);
 
   const phrases = t('landing.taglineRotator');
 
@@ -278,9 +306,38 @@ export default function Landing() {
       <div className="main-container login-screen lp-root">
         {bgLayer}
         <Login
-          onLoginSuccess={(user) => { setUserData(user); }}
+          onLoginSuccess={(user) => {
+            // Si la cuenta es nueva (auth + verificada) y la habitación está
+            // todavía con valores por defecto, ofrecemos personalizar primero.
+            if (isRoomEmpty(user)) {
+              setPendingSetupUser(user);
+              setView('auth-room-setup');
+            } else {
+              setUserData(user);
+            }
+          }}
           onCancel={() => setView('login')}
           onSwitchToRegister={() => setView('register-account')}
+        />
+      </div>
+    );
+  }
+
+  if (view === 'auth-room-setup' && pendingSetupUser) {
+    return (
+      <div className="main-container login-screen lp-root">
+        {bgLayer}
+        <AuthRoomSetup
+          initialUser={pendingSetupUser}
+          onComplete={(updatedUser) => {
+            setPendingSetupUser(null);
+            setUserData(updatedUser || pendingSetupUser);
+          }}
+          onSkip={() => {
+            const u = pendingSetupUser;
+            setPendingSetupUser(null);
+            setUserData(u);
+          }}
         />
       </div>
     );

@@ -43,10 +43,26 @@ function RegisteredScreen({ registered, onCancel, onSwitchToLogin }) {
             <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--text-color)' }}>
               {t('account.registeredEmailSentPrefix')} <strong>{registered.email}</strong>.
             </p>
-            <p style={{ color: 'var(--muted-color, #999)', fontSize: '0.85rem' }}>
+
+            <div style={{
+              marginTop: 14,
+              padding: '12px 14px',
+              background: 'rgba(245, 158, 11, 0.12)',
+              borderLeft: '3px solid #f59e0b',
+              borderRadius: 6
+            }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#fbbf24' }}>
+                {t('account.registeredSpamWarningTitle')}
+              </p>
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--text-color)' }}>
+                {t('account.registeredSpamWarningBody')}
+              </p>
+            </div>
+
+            <p style={{ marginTop: 16, fontSize: '0.85rem', color: 'var(--muted-color, #999)' }}>
               {t('account.registeredCheckSpam')}
             </p>
-            <p style={{ marginTop: 16, fontSize: '0.9rem' }}>
+            <p style={{ marginTop: 8, fontSize: '0.9rem' }}>
               {t('account.registeredCanLoginAfter')}
             </p>
           </>

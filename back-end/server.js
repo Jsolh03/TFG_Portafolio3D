@@ -238,6 +238,23 @@ app.get('/api/users/:userId', async (req, res) => {
     const user = await User.findOne({ id: req.params.userId });
     if (!user) return res.status(404).json({ error: 'No encontrado' });
 
+    // Check de email verificado: si la cuenta se creó vía /api/auth/register
+    // pero el email todavía NO está verificado, la habitación está oculta para
+    // todos excepto el propio dueño (que puede entrar para personalizar) y
+    // admin/impersonation. Así evitamos que se indexen habitaciones vacías
+    // creadas por bots o usuarios que abandonan a mitad del flujo.
+    if (user.createdViaAuth && !user.emailVerified) {
+      const auth = peekAuth(req);
+      const isOwner = auth?.id === user.id;
+      const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          error: 'Esta cuenta aún no ha verificado su email. La habitación no es accesible.',
+          unverified: true
+        });
+      }
+    }
+
     // Check de privacidad: si el user tiene accessToken activado, exigir match.
     // Excepciones permitidas: el propio dueño (JWT con su id), admin, o
     // admin-impersonation. Khaled/Laura nunca activan accessToken.
@@ -386,11 +403,19 @@ const buildVerificationEmail = (userId, verificationLink) => ({
       <strong>Hola ${userId},</strong> ¡bienvenido al portfolio 3D! Pulsa el botón de arriba para activar tu cuenta. El enlace caduca en 24 horas.
     </p>
   </div>
+  <div style="margin-top:20px;padding:14px 16px;background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;">
+    <p style="margin:0;font-size:13px;color:#78350f;line-height:1.5;">
+      📬 <strong>¿No ves este correo en tu bandeja?</strong> Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo no deseado</strong>. Marca el mensaje como "No es spam" para recibir los próximos en la bandeja principal.
+    </p>
+    <p style="margin:8px 0 0 0;font-size:12px;color:#92400e;line-height:1.4;">
+      📬 Can't find this email? Check your <strong>Spam</strong> or <strong>Junk</strong> folder and mark it as "Not spam".
+    </p>
+  </div>
   <div style="text-align:center;padding:20px 0 0 0;border-top:1px solid #e5e7eb;margin-top:24px;">
     <p style="font-size:11px;color:#94a3b8;margin:0;letter-spacing:1px;">— K-ROOM PORTFOLIO —</p>
   </div>
 </div>`,
-  text: `Hola ${userId},\n\nVerifica tu cuenta K-ROOM aquí:\n${verificationLink}\n\nEl enlace caduca en 24 horas.\n\n— K-ROOM`
+  text: `Hola ${userId},\n\nVerifica tu cuenta K-ROOM aquí:\n${verificationLink}\n\nEl enlace caduca en 24 horas.\n\n⚠️ Si no ves este correo en tu bandeja principal, revisa la carpeta de SPAM / Correo no deseado.\n\n— K-ROOM`
 });
 
 const sendVerificationEmail = async (toEmail, userId, verificationToken) => {

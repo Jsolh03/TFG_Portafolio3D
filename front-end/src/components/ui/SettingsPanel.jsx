@@ -13,6 +13,7 @@ const BASE_TABS = [
   { id: 'accessibility', icon: '♿' },
   { id: 'about',  icon: 'ℹ️' }
 ];
+const MY_ROOM_TAB = { id: 'myRoom', icon: '🏠' };
 const PRIVACY_TAB = { id: 'privacy', icon: '🔒' };
 
 export default function SettingsPanel({ open, onClose }) {
@@ -20,10 +21,22 @@ export default function SettingsPanel({ open, onClose }) {
   const [tab, setTab] = useState('theme');
   const { theme, font, style, setTheme, setFont, setStyle, reset } = useTheme();
   const { lang, setLang } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: authUser } = useAuth();
 
-  // Mostrar pestaña Privacidad solo si hay sesión activa
-  const TABS = isAuthenticated ? [...BASE_TABS, PRIVACY_TAB] : BASE_TABS;
+  // Mostrar pestañas "Mi habitación" y "Privacidad" solo si hay sesión activa
+  // y la cuenta es de tipo auth (las impersonaciones admin no editan rooms).
+  const canEditOwnRoom = isAuthenticated && authUser && authUser.createdViaAuth;
+  const TABS = isAuthenticated
+    ? [...BASE_TABS, ...(canEditOwnRoom ? [MY_ROOM_TAB] : []), PRIVACY_TAB]
+    : BASE_TABS;
+
+  const handleEditMyRoom = () => {
+    onClose();
+    // Disparamos un evento custom para que Landing (o quien escuche) abra
+    // el wizard AuthRoomSetup con el user actual. Así evitamos acoplar el
+    // panel a la navegación de Landing por props.
+    window.dispatchEvent(new CustomEvent('tfg:edit-my-room'));
+  };
 
   const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('reducedMotion') === '1');
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem('highContrast') === '1');
@@ -216,6 +229,22 @@ export default function SettingsPanel({ open, onClose }) {
                   <p className="settings-license-text">{t('settings.licenseText')}</p>
                   <p className="settings-copyright">© 2026 Khaled Solh El Hajji & Laura Jara Loro · {t('settings.allRightsReserved')}</p>
                 </div>
+              </div>
+            )}
+
+            {tab === 'myRoom' && canEditOwnRoom && (
+              <div className="settings-section">
+                <h3 className="settings-section-title">{t('settings.myRoom')}</h3>
+                <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--muted-color, #999)', marginBottom: 20 }}>
+                  {t('settings.myRoomDesc')}
+                </p>
+                <button
+                  className="settings-reset"
+                  onClick={handleEditMyRoom}
+                  style={{ background: '#58a6ff', color: 'white', borderColor: '#58a6ff' }}
+                >
+                  🏠 {t('authSetup.editBtn')}
+                </button>
               </div>
             )}
 
