@@ -238,20 +238,38 @@ app.get('/api/users/:userId', async (req, res) => {
     const user = await User.findOne({ id: req.params.userId });
     if (!user) return res.status(404).json({ error: 'No encontrado' });
 
-    // Check de email verificado: si la cuenta se creó vía /api/auth/register
-    // pero el email todavía NO está verificado, la habitación está oculta para
-    // todos excepto el propio dueño (que puede entrar para personalizar) y
-    // admin/impersonation. Así evitamos que se indexen habitaciones vacías
-    // creadas por bots o usuarios que abandonan a mitad del flujo.
+    // Check de email verificado: si la cuenta se creó vía /api/auth/register,
+    // todavía NO ha verificado el email Y está vacía (default sin contenido),
+    // la habitación se oculta excepto al dueño (con su JWT) y admin. Evita
+    // que se indexen rooms vacías de cuentas auth abandonadas a mitad del flujo.
+    //
+    // IMPORTANTE: si la habitación TIENE contenido (foto, skills, aboutMe,
+    // experiencia, proyectos), significa que viene de una conversión
+    // temporal→permanente y debe seguir VISIBLE aunque el email no esté
+    // verificado todavía. Si no, romperíamos el flujo donde un visitante
+    // crea su room temporal, ve contenido real, y luego decide registrarse
+    // para hacerla permanente — durante esa ventana de verificación la
+    // habitación temporal-convertida seguiría visible como antes.
     if (user.createdViaAuth && !user.emailVerified) {
-      const auth = peekAuth(req);
-      const isOwner = auth?.id === user.id;
-      const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
-      if (!isOwner && !isAdmin) {
-        return res.status(403).json({
-          error: 'Esta cuenta aún no ha verificado su email. La habitación no es accesible.',
-          unverified: true
-        });
+      const hasContent = (
+        (typeof user.aboutMe === 'string' && user.aboutMe.trim().length > 0) ||
+        (typeof user.tagline === 'string' && user.tagline.trim().length > 0) ||
+        (typeof user.profileImg === 'string' && user.profileImg.trim().length > 0) ||
+        (Array.isArray(user.skills) && user.skills.length > 0) ||
+        (Array.isArray(user.experience) && user.experience.length > 0) ||
+        (Array.isArray(user.education) && user.education.length > 0) ||
+        (Array.isArray(user.projects) && user.projects.length > 0)
+      );
+      if (!hasContent) {
+        const auth = peekAuth(req);
+        const isOwner = auth?.id === user.id;
+        const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
+        if (!isOwner && !isAdmin) {
+          return res.status(403).json({
+            error: 'Esta cuenta aún no ha verificado su email. La habitación no es accesible.',
+            unverified: true
+          });
+        }
       }
     }
 
