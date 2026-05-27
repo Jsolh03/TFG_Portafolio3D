@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import Spline from '@splinetool/react-spline';
 import { useT } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import ModalPC from '../components/os/ModalPC';
 import ProjectIntro from '../components/os/ProjectIntro';
 import KhaledWelcome from '../components/os/KhaledWelcome';
 import LauraWelcome from '../components/os/LauraWelcome';
 import FloatingSettingsButton from '../components/ui/FloatingSettingsButton';
+import PrivacyPanel from '../components/auth/PrivacyPanel';
 import { AVAILABLE_ROOMS } from '../data/roomUrls';
+
+const PROTECTED_PUBLIC_IDS = new Set(['khaled', 'laura']);
 
 const ArcadeApp = lazy(() => import('../components/os/ArcadeApp'));
 
@@ -14,11 +18,20 @@ const ARCADE_OBJECT_NAMES = new Set(['arcade_machine', 'arcade', 'recreativa', '
 
 export default function Room({ userData, onLogout }) {
   const t = useT();
+  const { user: authUser, isAuthenticated } = useAuth();
+
   // Las bienvenidas KhaledWelcome y LauraWelcome son personales — solo aparecen
   // si el visitante está mirando la habitación de su autor original. Cualquier
   // otro usuario que copie su roomType verá la bienvenida estándar.
   const isKhaledRoom = userData?.id === 'khaled';
   const isLauraRoom = userData?.id === 'laura';
+
+  // El chip de privacidad solo lo ve el DUEÑO de la habitación, autenticado, y
+  // siempre que no sea Khaled/Laura (que son perfiles dev públicos por diseño,
+  // bloqueados también en el backend).
+  const isOwnerHere = isAuthenticated && authUser?.id === userData?.id && !PROTECTED_PUBLIC_IDS.has(userData?.id);
+  const [roomIsPrivate, setRoomIsPrivate] = useState(!!userData?.hasAccessToken);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const [showDesktop, setShowDesktop] = useState(false);
   const [showBed, setShowBed] = useState(false);
@@ -161,6 +174,34 @@ export default function Room({ userData, onLogout }) {
               <p>{t('room.interactControl')}</p>
             </div>
             <p className="user-tag">{t('room.userTag')}: {userData?.id?.toUpperCase()}</p>
+            {isOwnerHere && (
+              <button
+                type="button"
+                onClick={() => setShowPrivacyModal(true)}
+                className="sidebar-privacy-chip"
+                title={roomIsPrivate ? t('privacy.statusPrivate') : t('privacy.statusPublic')}
+                style={{
+                  marginTop: 8,
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  border: '1px solid var(--border-color, rgba(255,255,255,0.15))',
+                  background: roomIsPrivate ? 'rgba(248, 113, 113, 0.12)' : 'rgba(34, 197, 94, 0.12)',
+                  color: roomIsPrivate ? '#f87171' : '#22c55e',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: 0.3
+                }}
+              >
+                <span>{roomIsPrivate ? '🔒' : '🔓'}</span>
+                <span>{roomIsPrivate ? t('privacy.statusPrivate') : t('privacy.statusPublic')}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -201,6 +242,21 @@ export default function Room({ userData, onLogout }) {
                 {t('room.exitNo')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPrivacyModal && isOwnerHere && (
+        <div className="modal-glass" onClick={() => setShowPrivacyModal(false)}>
+          <div
+            className="modal-content"
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: 480, width: '90%', padding: 0 }}
+          >
+            <PrivacyPanel
+              onClose={() => setShowPrivacyModal(false)}
+              onStateChange={(nextHasToken) => setRoomIsPrivate(nextHasToken)}
+            />
           </div>
         </div>
       )}

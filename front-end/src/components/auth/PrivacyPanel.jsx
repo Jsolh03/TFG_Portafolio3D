@@ -6,7 +6,7 @@ import { useT } from '../../context/LanguageContext';
 /* PrivacyPanel — el usuario logueado activa o desactiva la privacidad de
    su habitación. Khaled y Laura no pueden usarlo (perfiles dev públicos).
    El token solo se ve UNA vez al generarlo; si se pierde, hay que regenerar. */
-export default function PrivacyPanel({ onClose }) {
+export default function PrivacyPanel({ onClose, onStateChange }) {
   const t = useT();
   const { user, token, isAuthenticated } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -14,6 +14,10 @@ export default function PrivacyPanel({ onClose }) {
   const [revealedToken, setRevealedToken] = useState(null);
   const [hasToken, setHasToken] = useState(!!user?.hasAccessToken);
   const [confirmRemove, setConfirmRemove] = useState(false);
+
+  const notifyChange = (next) => {
+    if (typeof onStateChange === 'function') onStateChange(next);
+  };
 
   if (!isAuthenticated) {
     return (
@@ -42,10 +46,12 @@ export default function PrivacyPanel({ onClose }) {
       if (action === 'generate') {
         setRevealedToken(data.accessToken);
         setHasToken(true);
+        notifyChange(true);
       } else {
         setRevealedToken(null);
         setHasToken(false);
         setConfirmRemove(false);
+        notifyChange(false);
       }
     } catch (e) {
       setError(e.message);
