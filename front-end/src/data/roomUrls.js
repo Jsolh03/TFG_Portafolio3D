@@ -35,13 +35,13 @@ export const AVAILABLE_ROOMS = [
   {
     id: 'generic3',
     name: 'Habitación Genérica 3',
-    url: 'https://prod.spline.design/PMh-r-CmPT7MbHGy/scene.splinecode',
+    url: 'https://prod.spline.design/DEVoY7bJMstev2BD/scene.splinecode',
     image: imgRoom3
   },
   {
     id: 'generic4',
     name: 'Habitación Genérica 4',
-    url: 'https://prod.spline.design/zxKWbxBUGpm3-9hR/scene.splinecode',
+    url: 'https://prod.spline.design/mIcfzfed6G2J5cqs/scene.splinecode',
     image: imgRoom4
   }
 ];
