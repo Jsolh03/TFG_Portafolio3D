@@ -33,8 +33,14 @@ const APP_DEFS = (t) => [
   { id: 'snake',    label: t('apps.snake'),    iconClass: 'snake-icon',    Icon: APP_ICON_MAP.snake }
 ];
 
-// Apps exclusivas para Khaled (IDE_DEV + red social interna)
-const KHALED_ONLY_APPS = new Set(['ide', 'social']);
+// Apps exclusivas para Khaled (IDE_DEV)
+const KHALED_ONLY_APPS = new Set(['ide']);
+
+// Apps que aparecen en TODAS las habitaciones, independientemente de lo que
+// el usuario haya configurado en su apps[]. La red social es parte central
+// del producto y debe estar siempre accesible para que cualquier visitante
+// pueda interactuar desde cualquier perfil.
+const ALWAYS_VISIBLE_APPS = new Set(['social']);
 
 const systemNameFor = (user) => {
   if (user === 'khaled') return 'K-OS';
@@ -65,10 +71,13 @@ export default function ModalPC({ onClose, user, userData }) {
 
   const userApps = fullData?.apps || userData?.apps || ['terminal', 'cv'];
   const allApps = APP_DEFS(t);
-  // Filtra apps disponibles para este user + fuerza exclusividad de las apps Khaled-only
+  // Filtra apps disponibles para este user + fuerza exclusividad de las apps Khaled-only.
+  // Las ALWAYS_VISIBLE_APPS (red social, etc.) están siempre presentes aunque
+  // el usuario las haya quitado del wizard — son parte del producto.
   const apps = allApps.filter(a => {
     if (KHALED_ONLY_APPS.has(a.id) && user !== 'khaled') return false;
     if (KHALED_ONLY_APPS.has(a.id)) return true; // Khaled siempre las ve
+    if (ALWAYS_VISIBLE_APPS.has(a.id)) return true;
     return userApps.includes(a.id);
   });
   const githubUrl = fullData?.contact?.github || fullData?.githubUrl;
