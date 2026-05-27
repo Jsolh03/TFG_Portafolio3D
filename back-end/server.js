@@ -337,7 +337,11 @@ const smtpTransporter = (SMTP_HOST && SMTP_USER && SMTP_PASS)
       host: SMTP_HOST,
       port: SMTP_PORT,
       secure: SMTP_PORT === 465, // true para 465 (SSL), false para 587 (STARTTLS)
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      // Render free tier no enruta IPv6 saliente. Gmail resuelve a IPv6
+      // primero (ENETUNREACH 2a00:1450:...), así que forzamos IPv4.
+      family: 4,
+      connectionTimeout: 10000
     })
   : null;
 
@@ -1232,4 +1236,5 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log(" -- Backend en puerto 5000 --"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(` -- Backend en puerto ${PORT} --`));
