@@ -32,6 +32,11 @@ export default function Register({ onRegisterSuccess, onCancel }) {
   const [imgStatus, setImgStatus] = useState('idle');
   const [skillInput, setSkillInput] = useState('');
   const [roomIndex, setRoomIndex] = useState(0);
+  // Tras crear la habitación temporal con éxito, guardamos los datos del user
+  // para mostrar la cvAccessToken una vez antes de entrar. Como el usuario
+  // no tiene auth en este flujo, no puede recuperarla luego: tiene que anotarla.
+  const [createdTemporal, setCreatedTemporal] = useState(null);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -147,12 +152,28 @@ export default function Register({ onRegisterSuccess, onCancel }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t('common.error'));
-      onRegisterSuccess(data);
+      // Guardamos cvAccessToken en localStorage como fallback, pero el
+      // usuario debería anotarla porque el navegador puede limpiarse.
+      if (data.cvAccessToken && data.id) {
+        try {
+          localStorage.setItem(`tfg_cv_key_${data.id}`, data.cvAccessToken);
+        } catch { /* localStorage bloqueado */ }
+      }
+      setCreatedTemporal(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopyKey = async () => {
+    if (!createdTemporal?.cvAccessToken) return;
+    try {
+      await navigator.clipboard?.writeText(createdTemporal.cvAccessToken);
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 1500);
+    } catch { /* clipboard bloqueado */ }
   };
 
   const stepLabel = [
@@ -161,6 +182,79 @@ export default function Register({ onRegisterSuccess, onCancel }) {
     t('wizard.profileLabel'),
     t('wizard.cvLabel')
   ][step - 1];
+
+  // Pantalla intermedia: mostrar cvAccessToken UNA VEZ al usuario antes
+  // de entrar a su habitación temporal. Sin auth no podrá recuperarla.
+  if (createdTemporal?.cvAccessToken) {
+    return (
+      <div className="auth-form-wrap">
+        <div className="auth-form" style={{ maxWidth: 520 }}>
+          <h2 className="auth-title">🔑 {t('wizard.tempKeyTitle')}</h2>
+
+          <div style={{
+            padding: '12px 14px',
+            background: 'rgba(245, 158, 11, 0.12)',
+            borderLeft: '3px solid #f59e0b',
+            borderRadius: 6,
+            marginBottom: 16
+          }}>
+            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#fbbf24' }}>
+              ⚠️ {t('wizard.tempKeyWarnTitle')}
+            </p>
+            <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--text-color)' }}>
+              {t('wizard.tempKeyWarnBody')}
+            </p>
+          </div>
+
+          <div style={{
+            background: 'var(--bg-secondary, rgba(255,255,255,0.04))',
+            border: '1px solid var(--border-color, rgba(255,255,255,0.1))',
+            borderRadius: 8,
+            padding: 14,
+            marginBottom: 16
+          }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted-color, #888)', marginBottom: 6 }}>
+              {t('cvKey.currentKey')}
+            </div>
+            <div style={{
+              fontFamily: 'monospace',
+              fontSize: '0.85rem',
+              padding: '10px 12px',
+              background: 'rgba(0,0,0,0.3)',
+              borderRadius: 4,
+              wordBreak: 'break-all',
+              color: '#58a6ff',
+              marginBottom: 10
+            }}>
+              {createdTemporal.cvAccessToken}
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyKey}
+              className="auth-btn auth-btn--ghost"
+              style={{ fontSize: '0.85rem' }}
+            >
+              {keyCopied ? `✓ ${t('cvKey.copied')}` : `📋 ${t('cvKey.copy')}`}
+            </button>
+          </div>
+
+          <p style={{ fontSize: '0.82rem', color: 'var(--muted-color, #999)', lineHeight: 1.55, marginBottom: 16 }}>
+            {t('wizard.tempKeyDesc')}
+          </p>
+
+          <div className="auth-actions">
+            <button
+              type="button"
+              onClick={() => onRegisterSuccess(createdTemporal)}
+              className="auth-btn auth-btn--primary"
+            >
+              {t('wizard.tempKeyContinue')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="wizard-root" onKeyDown={e => e.stopPropagation()} onKeyUp={e => e.stopPropagation()}>

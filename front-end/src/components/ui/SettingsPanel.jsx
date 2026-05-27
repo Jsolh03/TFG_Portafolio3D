@@ -4,6 +4,7 @@ import { useLanguage, useT } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { LANGUAGES } from '../../data/i18n';
 import PrivacyPanel from '../auth/PrivacyPanel';
+import CvKeyPanel from '../auth/CvKeyPanel';
 
 const BASE_TABS = [
   { id: 'theme',  icon: '🎨' },
@@ -14,6 +15,7 @@ const BASE_TABS = [
   { id: 'about',  icon: 'ℹ️' }
 ];
 const MY_ROOM_TAB = { id: 'myRoom', icon: '🏠' };
+const CV_KEY_TAB = { id: 'cvKey', icon: '🔑' };
 const PRIVACY_TAB = { id: 'privacy', icon: '🔒' };
 
 export default function SettingsPanel({ open, onClose }) {
@@ -27,7 +29,7 @@ export default function SettingsPanel({ open, onClose }) {
   // y la cuenta es de tipo auth (las impersonaciones admin no editan rooms).
   const canEditOwnRoom = isAuthenticated && authUser && authUser.createdViaAuth;
   const TABS = isAuthenticated
-    ? [...BASE_TABS, ...(canEditOwnRoom ? [MY_ROOM_TAB] : []), PRIVACY_TAB]
+    ? [...BASE_TABS, ...(canEditOwnRoom ? [MY_ROOM_TAB] : []), CV_KEY_TAB, PRIVACY_TAB]
     : BASE_TABS;
 
   const handleEditMyRoom = () => {
@@ -245,6 +247,12 @@ export default function SettingsPanel({ open, onClose }) {
                 >
                   🏠 {t('authSetup.editBtn')}
                 </button>
+              </div>
+            )}
+
+            {tab === 'cvKey' && isAuthenticated && (
+              <div className="settings-section">
+                <CvKeyPanel />
               </div>
             )}
 

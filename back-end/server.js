@@ -117,6 +117,13 @@ const socialWriteLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Demasiados posts/replies. Espera unos minutos.' }
 });
+const cvViewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos de acceso a CVs. Espera una hora.' }
+});
 
 const uri = process.env.MONGODB_URI;
 if (!uri) {
@@ -169,7 +176,13 @@ const userSchema = new mongoose.Schema({
   // Token de acceso (privacidad opcional). Si está presente, la habitación
   // solo es visible pasando ?token=XXX al GET /api/users/:id. Si es null,
   // la habitación es pública. Khaled, Laura y temporales: SIEMPRE null.
-  accessToken: { type: String, default: null }
+  accessToken: { type: String, default: null },
+  // Clave de acceso al CV (GDPR). SIEMPRE presente y SIEMPRE obligatoria para
+  // visitantes (excepto el dueño con su JWT o admin). Se genera automáticamente
+  // al crear cuenta (auth o temporal). El dueño puede verla y regenerarla.
+  // El visitante debe introducirla + dejar su email + aceptar términos para
+  // ver el CV. Cada acceso queda registrado en la colección cvviews.
+  cvAccessToken: { type: String, default: null }
 }, {
   strict: false,
   timestamps: true
@@ -196,6 +209,19 @@ const encuestaSchema = new mongoose.Schema({
 });
 
 const Encuesta = mongoose.model('Encuesta', encuestaSchema, 'encuestas');
+
+// Audit log de accesos al CV (GDPR). Se inserta una fila cada vez que un
+// visitante (no dueño) accede al CV de alguien tras aceptar términos y
+// dejar su email. Permite al dueño consultar quién ha visto su CV y desde
+// cuándo, requisito habitual de cumplimiento de protección de datos.
+const cvViewSchema = new mongoose.Schema({
+  targetUserId: { type: String, required: true, index: true },
+  viewerEmail: { type: String, required: true },
+  acceptedTermsAt: { type: Date, default: Date.now },
+  viewedAt: { type: Date, default: Date.now }
+}, { versionKey: false });
+
+const CvView = mongoose.model('CvView', cvViewSchema, 'cvviews');
 
 // Esquema de posts de la red social interna
 const replySchema = new mongoose.Schema({
@@ -306,7 +332,20 @@ app.get('/api/users/:userId', async (req, res) => {
       }
     }
 
-    res.json(sanitizeUser(user));
+    // Lazy-generation del cvAccessToken para users creados antes de existir
+    // este campo. Asegura que todo user tiene clave de CV cuando se consulta.
+    if (!user.cvAccessToken) {
+      user.cvAccessToken = crypto.randomBytes(20).toString('hex');
+      await user.save();
+    }
+
+    // El dueño autenticado (o admin) ve datos completos. Visitantes solo
+    // ven la versión pública sin datos del CV; tendrán que pasar el gate
+    // de GET /api/users/:id/cv para verlos.
+    const auth = peekAuth(req);
+    const isOwner = auth?.id === user.id;
+    const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
+    res.json(isOwner || isAdmin ? sanitizeUser(user) : sanitizeUserPublic(user));
   } catch (err) {
     console.error('Error en GET /api/users/:userId:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -498,8 +537,10 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
   throw new Error('Email service not configured');
 };
 
-// Serializa el user sin info sensible. Sustituye accessToken por un boolean
-// para que el frontend pueda mostrar el estado de privacidad sin exponer el token.
+// Serializa el user sin info sensible. Sustituye accessToken/cvAccessToken
+// por booleans para que el frontend pueda mostrar el estado sin exponer las
+// claves. Esta versión INCLUYE los datos del CV (aboutMe, skills, experience,
+// education, projects) y solo debe enviarse al propio dueño o admin.
 const sanitizeUser = (u) => {
   if (!u) return null;
   const obj = u.toObject ? u.toObject() : { ...u };
@@ -507,7 +548,32 @@ const sanitizeUser = (u) => {
   delete obj.verificationToken;
   delete obj.verificationExpires;
   obj.hasAccessToken = !!obj.accessToken;
+  obj.hasCvAccessToken = !!obj.cvAccessToken;
   delete obj.accessToken;
+  delete obj.cvAccessToken;
+  return obj;
+};
+
+// Versión PÚBLICA: para visitantes que no son el dueño. Esconde los datos
+// personales del CV (datos GDPR). El visitante deberá pasar el cv-gate
+// (clave + email + consent) en GET /api/users/:id/cv para verlos.
+const sanitizeUserPublic = (u) => {
+  const obj = sanitizeUser(u);
+  if (!obj) return null;
+  delete obj.aboutMe;
+  delete obj.skills;
+  delete obj.experience;
+  delete obj.education;
+  delete obj.projects;
+  // contact se conserva parcialmente: linkedin/github son públicos por
+  // naturaleza (son perfiles ya públicos en sus respectivas redes), pero
+  // el email del dueño se considera dato personal y se oculta.
+  if (obj.contact && typeof obj.contact === 'object') {
+    obj.contact = {
+      linkedin: obj.contact.linkedin || '',
+      github: obj.contact.github || ''
+    };
+  }
   return obj;
 };
 
@@ -609,11 +675,22 @@ app.post('/api/register', registerLimiter, async (req, res) => {
       isGuest: false,
       isTemporary: true,
       expiresAt: new Date(Date.now() + TEMPORAL_TTL_MS),
-      temporalAccessesRemaining: TEMPORAL_ACCESSES
+      temporalAccessesRemaining: TEMPORAL_ACCESSES,
+      // Clave de acceso al CV — siempre presente. El frontend debe mostrarla
+      // al usuario tras crear la habitación temporal (no podrá recuperarla
+      // por endpoint porque no hay JWT en este flujo).
+      cvAccessToken: crypto.randomBytes(20).toString('hex')
     });
 
     await newUser.save();
-    res.status(201).json(newUser);
+    // Exponer la cvAccessToken UNA VEZ en este response para que el frontend
+    // la guarde/muestre al creador. Las próximas lecturas la sanitizan.
+    const responsePayload = newUser.toObject();
+    delete responsePayload.passwordHash;
+    delete responsePayload.verificationToken;
+    delete responsePayload.verificationExpires;
+    delete responsePayload.accessToken;
+    res.status(201).json(responsePayload);
   } catch (err) {
     console.error('Error en POST /api/register:', err.message);
     res.status(500).json({ error: 'Error interno del servidor al registrar usuario' });
@@ -863,6 +940,12 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
         existingById.isTemporary = false;
         existingById.expiresAt = null;
         existingById.temporalAccessesRemaining = null;
+        // Asegura que la cuenta tiene cvAccessToken aunque fuera de una
+        // temporal antigua. No regeneramos si ya existe — la clave que
+        // el dueño compartió como temporal sigue siendo válida.
+        if (!existingById.cvAccessToken) {
+          existingById.cvAccessToken = crypto.randomBytes(20).toString('hex');
+        }
         if (name) existingById.name = name;
         await existingById.save();
         createdUserId = existingById.id;
@@ -891,7 +974,9 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
         roomType: 'generic1',
         font: 'Inter',
         apps: ['terminal', 'cv'],
-        zoneFunctions: { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' }
+        zoneFunctions: { zona1: 'pc', zona2: 'cv', zona3: 'bed', zona4: 'arcade' },
+        // Clave de CV auto-generada — el usuario la verá desde Ajustes con su JWT
+        cvAccessToken: crypto.randomBytes(20).toString('hex')
       });
       await newUser.save();
       createdUserId = newUser.id;
@@ -1255,6 +1340,129 @@ app.put('/api/users/me/access-token', requireAuth, async (req, res) => {
     return res.status(400).json({ error: "action debe ser 'generate' o 'remove'" });
   } catch (err) {
     console.error('Error en PUT /api/users/me/access-token:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─────────────────────── CV: clave + consentimiento (GDPR) ───────────────────────
+// El CV contiene datos personales (formación, experiencia, contacto). Para
+// cumplir GDPR/LOPDGDD, cualquier visitante NO dueño debe:
+//   1. Aportar la cvAccessToken del dueño (compartida previamente)
+//   2. Dejar su email
+//   3. Aceptar términos de uso de los datos personales
+// Cada acceso queda registrado en cvviews para que el dueño pueda auditar.
+
+// GET /api/users/:id/cv — devuelve datos completos del CV tras pasar el gate
+app.get('/api/users/:id/cv', cvViewLimiter, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (typeof id !== 'string' || !ID_RE.test(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const auth = peekAuth(req);
+    const isOwner = auth?.id === user.id;
+    const isAdmin = auth?.role === 'admin' || auth?.role === 'admin-impersonation';
+
+    if (!isOwner && !isAdmin) {
+      const { token, email, consent } = req.query;
+
+      // Validación del gate: clave + email + consentimiento
+      if (!user.cvAccessToken) {
+        // Por seguridad, si por alguna razón no hay clave (no debería pasar),
+        // bloqueamos el acceso en vez de dejarlo abierto.
+        return res.status(403).json({ error: 'Este CV no tiene clave configurada', requiresKey: true });
+      }
+      if (typeof token !== 'string' || !safeTokenEqual(token, user.cvAccessToken)) {
+        return res.status(403).json({ error: 'Clave de acceso al CV inválida', requiresKey: true });
+      }
+      if (typeof email !== 'string' || !EMAIL_RE.test(email) || email.length > 200) {
+        return res.status(400).json({ error: 'Email del solicitante inválido', requiresEmail: true });
+      }
+      if (consent !== 'true' && consent !== true) {
+        return res.status(400).json({ error: 'Debes aceptar los términos antes de ver el CV', requiresConsent: true });
+      }
+
+      // Registrar audit log (fire-and-forget si falla, no bloqueamos el acceso)
+      try {
+        await CvView.create({
+          targetUserId: user.id,
+          viewerEmail: email.toLowerCase().trim()
+        });
+      } catch (logErr) {
+        console.error('Error registrando CvView:', logErr.message);
+      }
+    }
+
+    // Devolver SOLO los campos del CV (no toda la info del user)
+    res.json({
+      id: user.id,
+      name: user.name,
+      tagline: user.tagline,
+      profileImg: user.profileImg,
+      aboutMe: user.aboutMe,
+      skills: user.skills,
+      experience: user.experience,
+      education: user.education,
+      projects: user.projects,
+      contact: user.contact,
+      font: user.font,
+      cvLang: user.cvLang
+    });
+  } catch (err) {
+    console.error('Error en GET /api/users/:id/cv:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/users/me/cv-access-token — el dueño consulta su clave
+app.get('/api/users/me/cv-access-token', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    // Lazy generation por si la cuenta es anterior a este campo
+    if (!user.cvAccessToken) {
+      user.cvAccessToken = crypto.randomBytes(20).toString('hex');
+      await user.save();
+    }
+    res.json({ cvAccessToken: user.cvAccessToken });
+  } catch (err) {
+    console.error('Error en GET /api/users/me/cv-access-token:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// PUT /api/users/me/cv-access-token — regenerar (invalida la clave anterior)
+app.put('/api/users/me/cv-access-token', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    user.cvAccessToken = crypto.randomBytes(20).toString('hex');
+    await user.save();
+    res.json({ cvAccessToken: user.cvAccessToken });
+  } catch (err) {
+    console.error('Error en PUT /api/users/me/cv-access-token:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/users/me/cv-views — historial de quién ha visto mi CV (audit GDPR)
+app.get('/api/users/me/cv-views', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+    const views = await CvView.find({ targetUserId: id })
+      .sort({ viewedAt: -1 })
+      .limit(100);
+    res.json({ views });
+  } catch (err) {
+    console.error('Error en GET /api/users/me/cv-views:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

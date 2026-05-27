@@ -3,6 +3,7 @@ import { useT } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import DynamicCV from './DynamicCV';
 import Desktop from './Desktop';
+import CvAccessGate from '../auth/CvAccessGate';
 import { APP_ICON_MAP } from './AppIcons';
 import { API_BASE } from '../../config';
 
@@ -50,15 +51,36 @@ const systemNameFor = (user) => {
 
 export default function ModalPC({ onClose, user, userData }) {
   const t = useT();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: authUser } = useAuth();
   const [activeApp, setActiveApp] = useState(null);
   const [fullData, setFullData] = useState(userData || null);
 
+  // Datos del CV cargados tras pasar el gate (o automáticamente si es el dueño).
+  // Separados de fullData porque ahora /api/users/:id NO incluye los datos del CV
+  // para visitantes (protección GDPR — pasan por /api/users/:id/cv con clave).
+  const [cvData, setCvData] = useState(null);
+
+  // El dueño autenticado puede ver su CV sin gate. Cargamos sus datos completos
+  // desde /api/users/me directamente para que la app CV se abra sin fricción.
+  const isCvOwner = isAuthenticated && authUser?.id === user;
+
   useEffect(() => {
     if (user && user !== 'guest') {
-      fetch(`${API_BASE}/api/users/${user}`)
+      // Si soy el dueño, mando el JWT para que el backend devuelva los datos
+      // completos (sanitizeUser en vez de sanitizeUserPublic).
+      const headers = {};
+      const jwt = localStorage.getItem('tfg_auth_token');
+      if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+      fetch(`${API_BASE}/api/users/${user}`, { headers })
         .then(res => res.json())
-        .then(data => setFullData(data))
+        .then(data => {
+          setFullData(data);
+          // Si el response trae los datos del CV (porque soy dueño/admin),
+          // los precargo para que la app CV no tenga que pasar por el gate.
+          if (data && (data.aboutMe !== undefined || data.skills !== undefined)) {
+            setCvData(data);
+          }
+        })
         .catch(err => console.error('Error cargando datos API:', err));
     }
   }, [user]);
@@ -91,7 +113,22 @@ export default function ModalPC({ onClose, user, userData }) {
         return (
           <div style={{ overflowY: 'auto', height: '100%', width: '100%', background: 'var(--bg-color)' }}>
             <div className="cv-internal-view">
-              <DynamicCV user={fullData} />
+              {cvData ? (
+                // Datos del CV ya disponibles: dueño autenticado (precargados)
+                // o visitante que ya pasó el gate.
+                <DynamicCV user={{ ...fullData, ...cvData }} />
+              ) : isCvOwner ? (
+                // El dueño todavía no tiene cvData cargado — placeholder breve
+                <div style={{ padding: 24, color: 'var(--muted-color)' }}>
+                  {t('common.loading') || 'Loading…'}
+                </div>
+              ) : (
+                // Visitante: gate obligatorio (clave + email + consent)
+                <CvAccessGate
+                  targetUserId={user}
+                  onUnlock={(data) => setCvData(data)}
+                />
+              )}
             </div>
           </div>
         );
