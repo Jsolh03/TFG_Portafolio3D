@@ -317,15 +317,22 @@ const isStringArray = (v, maxLen = 50, maxItem = 100) =>
 
 // ─────────────────────── Email transaccional ───────────────────────
 // El verificationToken NUNCA debe viajar al frontend. El backend manda el
-// email directamente. Dos proveedores soportados, en este orden:
-//   1) SMTP genérico vía Nodemailer (Gmail App Password recomendado — gratis,
-//      500/día). Se activa si SMTP_HOST + SMTP_USER + SMTP_PASS están definidos.
-//   2) Resend (fallback) si solo RESEND_API_KEY está definido.
+// email directamente. Tres proveedores soportados, en este orden:
+//   1) Brevo (Sendinblue) API REST vía HTTPS — gratis 300/día, funciona en
+//      Render porque no usa SMTP saliente. Se activa con BREVO_API_KEY.
+//   2) SMTP genérico vía Nodemailer (Gmail App Password). BLOQUEADO en Render
+//      free tier. Útil solo en entornos sin restricciones de puertos salientes.
+//   3) Resend (fallback) si solo RESEND_API_KEY está definido.
 // Si el envío falla, el token queda en BBDD y el usuario puede pedir
 // reenvío con /api/auth/resend-verification.
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tfg-portafolio3-d.vercel.app';
 
-// SMTP / Nodemailer (preferido)
+// Brevo (preferido — funciona en Render porque va vía HTTPS)
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || '';
+const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || 'K-ROOM Portfolio';
+
+// SMTP / Nodemailer (preferido solo si Render no bloquea SMTP)
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
 const SMTP_USER = process.env.SMTP_USER || '';
@@ -390,7 +397,33 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
   const verificationLink = `${FRONTEND_URL}/?verify=${verificationToken}`;
   const { subject, html, text } = buildVerificationEmail(userId, verificationLink);
 
-  // 1) SMTP (Nodemailer) — vía Gmail App Password u otro SMTP
+  // 1) Brevo API (preferido — HTTPS, funciona en Render)
+  if (BREVO_API_KEY && BREVO_FROM_EMAIL) {
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
+        to: [{ email: toEmail, name: userId }],
+        subject,
+        htmlContent: html,
+        textContent: text
+      })
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => '');
+      console.error(`Brevo error ${resp.status}:`, errBody.slice(0, 300));
+      throw new Error(`Brevo send failed: ${resp.status}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    return data?.messageId || null;
+  }
+
+  // 2) SMTP (Nodemailer) — solo donde Render no bloquee
   if (smtpTransporter) {
     const info = await smtpTransporter.sendMail({
       from: SMTP_FROM,
@@ -402,7 +435,7 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
     return info?.messageId || null;
   }
 
-  // 2) Resend (fallback)
+  // 3) Resend (fallback)
   if (resendClient) {
     const result = await resendClient.emails.send({
       from: RESEND_FROM,
@@ -418,7 +451,7 @@ const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
     return result?.data?.id || null;
   }
 
-  console.error('Email service no configurado: define SMTP_HOST+SMTP_USER+SMTP_PASS o RESEND_API_KEY');
+  console.error('Email service no configurado: define BREVO_API_KEY+BREVO_FROM_EMAIL, SMTP_*, o RESEND_API_KEY');
   throw new Error('Email service not configured');
 };
 
