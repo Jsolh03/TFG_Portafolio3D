@@ -1107,10 +1107,17 @@ canvas { outline: none; }
 .stat-card-k { color: var(--muted-color); font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase; }
 .stat-card-v {
   font-size: 26px; font-weight: 800; margin-top: 4px;
-  background: linear-gradient(135deg, var(--accent-color), var(--text-color));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* Fallback sólido — visible en cualquier navegador y bajo overrides */
+  color: var(--accent-color);
+}
+/* Gradient cosmético — solo si el navegador soporta background-clip:text */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .stat-card-v {
+    background: linear-gradient(135deg, var(--accent-color), var(--text-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .dev-portal-toolbar {
@@ -5062,7 +5069,12 @@ canvas { outline: none; }
   color: #1f2937;
 }
 [data-theme="light"] .stat-card-v {
-  -webkit-text-fill-color: var(--accent-color);
+  /* Anulamos el gradient + clip:text en light para garantizar contraste.
+     Si dejábamos el background-clip activo, el número podía verse blanco
+     sobre tarjeta blanca según el orden de propiedades del navegador. */
+  background: none !important;
+  -webkit-text-fill-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
 }
 
 /* Wizard en claro */
