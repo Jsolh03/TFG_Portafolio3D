@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { setDefaultResultOrder } from 'node:dns';
 import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
 
@@ -314,13 +315,35 @@ const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const isStringArray = (v, maxLen = 50, maxItem = 100) =>
   Array.isArray(v) && v.length <= maxLen && v.every(s => typeof s === 'string' && s.length <= maxItem);
 
-// ─────────────────────── Email transaccional (Resend) ───────────────────────
+// ─────────────────────── Email transaccional ───────────────────────
 // El verificationToken NUNCA debe viajar al frontend. El backend manda el
-// email directamente. Si Resend falla, devolvemos un error pero el token
-// queda guardado y el usuario puede pedir reenvío con /api/auth/resend-verification.
+// email directamente. Dos proveedores soportados, en este orden:
+//   1) SMTP genérico vía Nodemailer (Gmail App Password recomendado — gratis,
+//      500/día). Se activa si SMTP_HOST + SMTP_USER + SMTP_PASS están definidos.
+//   2) Resend (fallback) si solo RESEND_API_KEY está definido.
+// Si el envío falla, el token queda en BBDD y el usuario puede pedir
+// reenvío con /api/auth/resend-verification.
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tfg-portafolio3-d.vercel.app';
+
+// SMTP / Nodemailer (preferido)
+const SMTP_HOST = process.env.SMTP_HOST || '';
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_USER = process.env.SMTP_USER || '';
+const SMTP_PASS = process.env.SMTP_PASS || '';
+const SMTP_FROM = process.env.SMTP_FROM || (SMTP_USER ? `K-ROOM <${SMTP_USER}>` : '');
+
+const smtpTransporter = (SMTP_HOST && SMTP_USER && SMTP_PASS)
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465, // true para 465 (SSL), false para 587 (STARTTLS)
+      auth: { user: SMTP_USER, pass: SMTP_PASS }
+    })
+  : null;
+
+// Resend (fallback)
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const RESEND_FROM = process.env.RESEND_FROM || 'K-ROOM <onboarding@resend.dev>';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tfg-portafolio3-d.vercel.app';
 
 const buildVerificationEmail = (userId, verificationLink) => ({
   subject: 'Verify your K-ROOM account / Verifica tu cuenta',
@@ -360,24 +383,39 @@ const buildVerificationEmail = (userId, verificationLink) => ({
 });
 
 const sendVerificationEmail = async (toEmail, userId, verificationToken) => {
-  if (!resendClient) {
-    console.error('Resend no configurado: falta RESEND_API_KEY');
-    throw new Error('Email service not configured');
-  }
   const verificationLink = `${FRONTEND_URL}/?verify=${verificationToken}`;
   const { subject, html, text } = buildVerificationEmail(userId, verificationLink);
-  const result = await resendClient.emails.send({
-    from: RESEND_FROM,
-    to: [toEmail],
-    subject,
-    html,
-    text
-  });
-  if (result?.error) {
-    console.error('Resend error:', result.error);
-    throw new Error(result.error?.message || 'Email send failed');
+
+  // 1) SMTP (Nodemailer) — vía Gmail App Password u otro SMTP
+  if (smtpTransporter) {
+    const info = await smtpTransporter.sendMail({
+      from: SMTP_FROM,
+      to: toEmail,
+      subject,
+      html,
+      text
+    });
+    return info?.messageId || null;
   }
-  return result?.data?.id || null;
+
+  // 2) Resend (fallback)
+  if (resendClient) {
+    const result = await resendClient.emails.send({
+      from: RESEND_FROM,
+      to: [toEmail],
+      subject,
+      html,
+      text
+    });
+    if (result?.error) {
+      console.error('Resend error:', result.error);
+      throw new Error(result.error?.message || 'Email send failed');
+    }
+    return result?.data?.id || null;
+  }
+
+  console.error('Email service no configurado: define SMTP_HOST+SMTP_USER+SMTP_PASS o RESEND_API_KEY');
+  throw new Error('Email service not configured');
 };
 
 // Serializa el user sin info sensible. Sustituye accessToken por un boolean
