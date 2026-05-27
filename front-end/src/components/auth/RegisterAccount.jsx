@@ -114,6 +114,8 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
     password: '',
     confirmPassword: ''
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState(null);
@@ -129,6 +131,8 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
     if (!EMAIL_RE.test(form.email.trim())) return t('account.errorEmail');
     if (form.password.length < PASSWORD_MIN) return t('account.errorPasswordShort');
     if (form.password !== form.confirmPassword) return t('account.errorPasswordMismatch');
+    if (!confirmedAge) return t('account.errorAge');
+    if (!acceptedTerms) return t('account.errorTerms');
     return null;
   };
 
@@ -241,13 +245,40 @@ export default function RegisterAccount({ onCancel, onSwitchToLogin, prefillId, 
           />
         </div>
 
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', fontSize: '0.82rem', lineHeight: 1.5, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={confirmedAge}
+            onChange={e => setConfirmedAge(e.target.checked)}
+            disabled={submitting}
+            style={{ marginTop: 3 }}
+          />
+          <span>{t('account.confirmAge')}</span>
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0 12px', fontSize: '0.82rem', lineHeight: 1.5, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={e => setAcceptedTerms(e.target.checked)}
+            disabled={submitting}
+            style={{ marginTop: 3 }}
+          />
+          <span>
+            {t('account.acceptTermsPre')}{' '}
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">{t('legal.privacyShort')}</a>
+            {' '}{t('common.and') || 'y'}{' '}
+            <a href="/legal/terms" target="_blank" rel="noopener noreferrer">{t('legal.termsShort')}</a>.
+          </span>
+        </label>
+
         {error && <div className="auth-error">{error}</div>}
 
         <div className="auth-actions">
           <button type="button" onClick={onCancel} className="auth-btn auth-btn--ghost" disabled={submitting}>
             {t('common.cancel')}
           </button>
-          <button type="submit" className="auth-btn auth-btn--primary" disabled={submitting}>
+          <button type="submit" className="auth-btn auth-btn--primary" disabled={submitting || !acceptedTerms || !confirmedAge}>
             {submitting ? t('account.creating') : t('account.createAccount')}
           </button>
         </div>

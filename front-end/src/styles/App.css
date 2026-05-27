@@ -7724,4 +7724,151 @@ canvas { outline: none; }
   .kw-reason-grid { grid-template-columns: 1fr; }
 }
 
+/* ─────────────────────────────────────────────
+   LEGAL PAGE — /legal/privacy, /legal/legal, /legal/terms
+────────────────────────────────────────────── */
+.legal-page {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 30px 20px;
+  overflow-y: auto;
+}
+.legal-header {
+  max-width: 820px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.legal-back {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.legal-back:hover { text-decoration: underline; }
+.legal-nav { display: flex; gap: 12px; flex-wrap: wrap; }
+.legal-nav a {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  color: var(--muted-color);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s;
+}
+.legal-nav a:hover { color: var(--text-color); }
+.legal-nav a.active {
+  background: var(--accent-color);
+  color: #fff;
+  border-color: var(--accent-color);
+}
+.legal-main {
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 36px 44px;
+  line-height: 1.65;
+}
+.legal-doc h1 {
+  margin: 0 0 4px;
+  color: var(--text-color);
+  font-size: 1.8rem;
+}
+.legal-doc .legal-updated {
+  color: var(--muted-color);
+  font-size: 0.82rem;
+  margin: 0 0 28px;
+}
+.legal-doc section { margin-bottom: 24px; }
+.legal-doc h2 {
+  font-size: 1.1rem;
+  margin: 18px 0 10px;
+  color: var(--accent-color);
+}
+.legal-doc p { margin: 0 0 10px; font-size: 0.92rem; }
+.legal-doc ul { padding-left: 22px; margin: 0 0 12px; }
+.legal-doc li { margin-bottom: 6px; font-size: 0.92rem; }
+.legal-doc a {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+.legal-doc code {
+  background: var(--card-bg-lighter);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+.legal-footer {
+  max-width: 820px;
+  margin: 24px auto 0;
+  text-align: center;
+  color: var(--muted-color);
+  font-size: 0.78rem;
+}
+
+/* ─────────────────────────────────────────────
+   COOKIE BANNER (LSSI-CE 22.2)
+────────────────────────────────────────────── */
+.cookie-banner {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  max-width: 520px;
+  margin: 0 auto;
+  z-index: 9999;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  font-size: 0.85rem;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cookie-banner p { margin: 0; line-height: 1.5; }
+.cookie-banner a { color: var(--accent-color); text-decoration: underline; }
+.cookie-banner-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.cookie-banner button {
+  padding: 7px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+.cookie-banner button.primary {
+  background: var(--accent-color);
+  color: #fff;
+  border-color: var(--accent-color);
+}
+
+/* ─────────────────────────────────────────────
+   AI DISCLAIMER (EU AI Act art. 50)
+────────────────────────────────────────────── */
+.ai-disclaimer {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: rgba(88, 166, 255, 0.12);
+  border-left: 3px solid #58a6ff;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+.ai-disclaimer strong { color: #58a6ff; }
+[data-theme="light"] .ai-disclaimer {
+  background: rgba(30, 58, 138, 0.10);
+  border-left-color: #1e3a8a;
+}
+[data-theme="light"] .ai-disclaimer strong { color: #1e3a8a; }
+
 

@@ -13,7 +13,18 @@ export const TRANSLATIONS = {
       back: 'Volver', next: 'Siguiente', prev: 'Anterior', retry: 'Reintentar',
       loading: 'Cargando...', error: 'Error', success: 'Éxito', search: 'Buscar',
       add: 'Añadir', remove: 'Eliminar', edit: 'Editar', open: 'Abrir',
-      notAvailable: 'No disponible'
+      notAvailable: 'No disponible',
+      and: 'y'
+    },
+    legal: {
+      privacyShort: 'Política de Privacidad',
+      noticeShort: 'Aviso Legal',
+      termsShort: 'Términos y Condiciones'
+    },
+    cookies: {
+      title: 'Datos en tu navegador',
+      accept: 'Entendido',
+      body: 'Esta web usa localStorage para guardar tu sesión y preferencias (idioma, tema). No usamos cookies de terceros ni de seguimiento. Más info en la'
     },
     landing: {
       title: 'Portfolio',
@@ -72,6 +83,7 @@ export const TRANSLATIONS = {
       myRoomDesc: 'Edita el contenido de tu perfil 3D: tipo de habitación, foto, sobre ti, skills, experiencia, proyectos y apps del PC. Los cambios se guardan al instante.',
       cvKey: 'Clave del CV',
       privacy: 'Privacidad',
+      myAccount: 'Mi cuenta',
       licenseText: 'Este portfolio puede visualizarse libremente. NO está permitida la reutilización, copia ni redistribución de su código, diseño o contenido sin autorización expresa de los autores.',
       allRightsReserved: 'Todos los derechos reservados',
       reducedMotion: 'Reducir animaciones',
@@ -416,7 +428,11 @@ export const TRANSLATIONS = {
       replyBtn: 'Responder',
       replying: 'Enviando…',
       logoutShort: 'salir',
-      errorLoad: 'No se pudo cargar el feed'
+      errorLoad: 'No se pudo cargar el feed',
+      deletePost: 'Borrar este post',
+      deleteReply: 'Borrar esta respuesta',
+      confirmDeletePost: '¿Borrar este post para siempre? No se puede deshacer.',
+      confirmDeleteReply: '¿Borrar esta respuesta para siempre? No se puede deshacer.'
     },
     account: {
       title: 'Crear cuenta',
@@ -450,6 +466,22 @@ export const TRANSLATIONS = {
       copyLink: 'Copiar enlace',
       goToLogin: 'Ir al login',
       prefillNotice: 'Usaremos el mismo nombre de usuario y email que pusiste al crear tu habitación temporal. Al verificar el email, tu habitación pasará a ser permanente sin perder los datos.',
+      confirmAge: 'Confirmo que tengo al menos 16 años (requisito legal RGPD art. 8).',
+      acceptTermsPre: 'He leído y acepto la',
+      errorAge: 'Debes confirmar que tienes al menos 16 años.',
+      errorTerms: 'Debes aceptar la política de privacidad y los términos.',
+      myAccountTitle: 'Mi cuenta',
+      idLabel: 'Identificador',
+      emailLabel: 'Email',
+      deleteTitle: 'Eliminar cuenta',
+      deleteDesc: 'Elimina permanentemente tu cuenta, tu habitación, tu CV, tus posts/respuestas en la red social y el historial de quién ha visto tu CV. Esta acción NO se puede deshacer.',
+      deleteBtn: 'Eliminar mi cuenta',
+      deleteConfirmTitle: '¿Seguro? Esto es irreversible.',
+      deleteConfirmBody: 'Se borrarán: tu perfil, tu habitación 3D, tu CV, todos tus posts y respuestas, y el audit log de visitantes a tu CV. La acción no se puede deshacer ni recuperar.',
+      deleteConfirmContinue: 'Sí, quiero borrarla',
+      deleteTypeId: 'Escribe tu identificador exacto ({id}) para confirmar:',
+      deleteFinal: 'Borrar definitivamente',
+      deleting: 'Borrando…',
       emailDeliveryFailed: 'No pudimos enviar el email automáticamente. Por seguridad, no podemos mostrarte el enlace de verificación aquí.',
       resendInstructions: 'Pulsa el botón de abajo para que volvamos a intentarlo. Si el problema persiste, contacta con el administrador.',
       resendBtn: 'Reenviar email',
@@ -476,7 +508,8 @@ export const TRANSLATIONS = {
       keyPh: 'Pega aquí la clave (40 caracteres)',
       emailLabel: 'Tu email',
       emailHint: 'Se registra junto con la fecha del acceso. El dueño del CV podrá verlo.',
-      consentLabel: 'Acepto que mi email quede registrado a efectos de auditoría y entiendo que este CV contiene datos personales que no debo redistribuir sin permiso del titular.',
+      consentLabel: 'Acepto que mi email quede registrado a efectos de auditoría (RGPD) y entiendo que este CV contiene datos personales que no debo redistribuir sin permiso del titular. He leído la',
+      retentionNote: 'Tu email se conservará durante 90 días en el audit log del titular del CV y luego se eliminará automáticamente.',
       unlock: 'Acceder al CV',
       unlocking: 'Verificando…',
       errorKey: 'La clave de acceso no es válida.',
@@ -534,7 +567,18 @@ export const TRANSLATIONS = {
       back: 'Back', next: 'Next', prev: 'Previous', retry: 'Retry',
       loading: 'Loading...', error: 'Error', success: 'Success', search: 'Search',
       add: 'Add', remove: 'Remove', edit: 'Edit', open: 'Open',
-      notAvailable: 'Not available'
+      notAvailable: 'Not available',
+      and: 'and'
+    },
+    legal: {
+      privacyShort: 'Privacy Policy',
+      noticeShort: 'Legal Notice',
+      termsShort: 'Terms and Conditions'
+    },
+    cookies: {
+      title: 'Data in your browser',
+      accept: 'Got it',
+      body: 'This site uses localStorage to store your session and preferences (language, theme). We do not use third-party or tracking cookies. More info in the'
     },
     landing: {
       title: 'Portfolio',
@@ -593,6 +637,7 @@ export const TRANSLATIONS = {
       myRoomDesc: 'Edit your 3D profile content: room type, photo, about, skills, experience, projects and PC apps. Changes save instantly.',
       cvKey: 'CV key',
       privacy: 'Privacy',
+      myAccount: 'My account',
       licenseText: 'This portfolio may be viewed freely. Reuse, copy or redistribution of its code, design or content WITHOUT explicit authorization from the authors is NOT allowed.',
       allRightsReserved: 'All rights reserved',
       reducedMotion: 'Reduce animations',
@@ -937,7 +982,11 @@ export const TRANSLATIONS = {
       replyBtn: 'Reply',
       replying: 'Sending…',
       logoutShort: 'exit',
-      errorLoad: 'Could not load the feed'
+      errorLoad: 'Could not load the feed',
+      deletePost: 'Delete this post',
+      deleteReply: 'Delete this reply',
+      confirmDeletePost: 'Delete this post forever? This cannot be undone.',
+      confirmDeleteReply: 'Delete this reply forever? This cannot be undone.'
     },
     account: {
       title: 'Create account',
@@ -971,6 +1020,22 @@ export const TRANSLATIONS = {
       copyLink: 'Copy link',
       goToLogin: 'Go to sign in',
       prefillNotice: 'We will use the same username and email you set when creating your temporary room. Once you verify the email, your room becomes permanent without losing any data.',
+      confirmAge: 'I confirm I am at least 16 years old (GDPR art. 8 legal requirement).',
+      acceptTermsPre: 'I have read and accept the',
+      errorAge: 'You must confirm you are at least 16 years old.',
+      errorTerms: 'You must accept the privacy policy and terms.',
+      myAccountTitle: 'My account',
+      idLabel: 'Identifier',
+      emailLabel: 'Email',
+      deleteTitle: 'Delete account',
+      deleteDesc: 'Permanently delete your account, your room, your CV, your posts/replies in the social network and the history of who has viewed your CV. This action CANNOT be undone.',
+      deleteBtn: 'Delete my account',
+      deleteConfirmTitle: 'Sure? This is irreversible.',
+      deleteConfirmBody: 'The following will be deleted: your profile, your 3D room, your CV, all your posts and replies, and the audit log of visitors to your CV. The action cannot be undone or recovered.',
+      deleteConfirmContinue: 'Yes, delete it',
+      deleteTypeId: 'Type your exact identifier ({id}) to confirm:',
+      deleteFinal: 'Delete permanently',
+      deleting: 'Deleting…',
       emailDeliveryFailed: 'We could not send the email automatically. For security reasons we cannot display the verification link here.',
       resendInstructions: 'Click the button below to try again. If the problem persists, contact the administrator.',
       resendBtn: 'Resend email',
@@ -997,7 +1062,8 @@ export const TRANSLATIONS = {
       keyPh: 'Paste the key here (40 characters)',
       emailLabel: 'Your email',
       emailHint: 'Stored together with the access date. The CV owner can see it.',
-      consentLabel: 'I accept my email being logged for audit purposes and understand this CV contains personal data I must not redistribute without permission from its owner.',
+      consentLabel: 'I accept my email being logged for audit purposes (GDPR) and understand this CV contains personal data I must not redistribute without permission from its owner. I have read the',
+      retentionNote: 'Your email will be kept for 90 days in the CV owner audit log and then deleted automatically.',
       unlock: 'Open CV',
       unlocking: 'Verifying…',
       errorKey: 'Invalid access key.',

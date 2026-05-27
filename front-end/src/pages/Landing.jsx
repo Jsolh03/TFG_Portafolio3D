@@ -500,6 +500,12 @@ export default function Landing() {
         <span>{t('landing.footer')}</span>
         <span className="lp-footer-sep">·</span>
         <span className="lp-footer-copyright">{t('landing.copyrightShort')}</span>
+        <span className="lp-footer-sep">·</span>
+        <a href="/legal/privacy" className="lp-footer-link">{t('legal.privacyShort')}</a>
+        <span className="lp-footer-sep">·</span>
+        <a href="/legal/legal" className="lp-footer-link">{t('legal.noticeShort')}</a>
+        <span className="lp-footer-sep">·</span>
+        <a href="/legal/terms" className="lp-footer-link">{t('legal.termsShort')}</a>
       </footer>
 
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />

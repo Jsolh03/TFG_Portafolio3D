@@ -221,6 +221,11 @@ const cvViewSchema = new mongoose.Schema({
   viewedAt: { type: Date, default: Date.now }
 }, { versionKey: false });
 
+// TTL: cada documento se borra automáticamente 90 días después de viewedAt.
+// Política de retención documentada en /legal/privacy. Cumple RGPD art. 5.1.e
+// (minimización y limitación del plazo de conservación).
+cvViewSchema.index({ viewedAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+
 const CvView = mongoose.model('CvView', cvViewSchema, 'cvviews');
 
 // Esquema de posts de la red social interna
@@ -910,7 +915,7 @@ app.post('/api/auth/register', authRegisterLimiter, async (req, res) => {
     }
 
     const emailLower = email.toLowerCase().trim();
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpires = new Date(Date.now() + VERIFICATION_TTL_MS);
 
@@ -1463,6 +1468,85 @@ app.get('/api/users/me/cv-views', requireAuth, async (req, res) => {
     res.json({ views });
   } catch (err) {
     console.error('Error en GET /api/users/me/cv-views:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─────────────────────── DERECHO DE SUPRESIÓN (RGPD art. 17) ───────────────────────
+// El usuario autenticado puede borrar su propia cuenta de forma irreversible.
+// Borra: el User, sus Encuestas (valoraciones), sus posts/replies de la red social
+// interna y los CvView donde es el targetUser. Khaled y Laura están bloqueados
+// (cuentas demo del TFG, no se pueden borrar accidentalmente).
+const PROTECTED_DELETE_IDS = new Set(['khaled', 'laura']);
+
+app.delete('/api/auth/me', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.auth || {};
+    if (!id) return res.status(401).json({ error: 'Token sin id' });
+    if (PROTECTED_DELETE_IDS.has(id)) {
+      return res.status(403).json({ error: 'Las cuentas demo del TFG no se pueden eliminar' });
+    }
+    const user = await User.findOne({ id });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    // Borrado en cascada (no usamos transacciones porque Mongo Atlas free
+    // tier las soporta limitadamente; cada delete es idempotente y atómico).
+    await User.deleteOne({ id: user.id });
+    await Encuesta.deleteMany({ targetUserId: user.id });
+    await Post.deleteMany({ authorId: user.id });
+    // Replies que el user ha hecho en posts ajenos: usar $pull
+    await Post.updateMany(
+      { 'replies.authorId': user.id },
+      { $pull: { replies: { authorId: user.id } } }
+    );
+    await CvView.deleteMany({ targetUserId: user.id });
+
+    res.json({ ok: true, deleted: user.id });
+  } catch (err) {
+    console.error('Error en DELETE /api/auth/me:', err.message);
+    res.status(500).json({ error: 'Error interno al borrar la cuenta' });
+  }
+});
+
+// ─────────────────────── DELETE de posts y replies propios ───────────────────────
+// El autor (o admin) puede eliminar sus propios posts y replies de la red social.
+// Requisito de moderación / derecho de eliminación de contenido propio.
+
+app.delete('/api/posts/:id', requireAuth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+
+    const isAuthor = req.auth?.id === post.authorId;
+    const isAdmin = req.auth?.role === 'admin' || req.auth?.role === 'admin-impersonation';
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({ error: 'Solo el autor (o admin) puede borrar este post' });
+    }
+    await Post.deleteOne({ _id: post._id });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error en DELETE /api/posts/:id:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+app.delete('/api/posts/:postId/replies/:replyId', requireAuth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    const reply = post.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ error: 'Respuesta no encontrada' });
+
+    const isAuthor = req.auth?.id === reply.authorId;
+    const isAdmin = req.auth?.role === 'admin' || req.auth?.role === 'admin-impersonation';
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({ error: 'Solo el autor (o admin) puede borrar esta respuesta' });
+    }
+    reply.deleteOne();
+    await post.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error en DELETE /api/posts/:postId/replies/:replyId:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

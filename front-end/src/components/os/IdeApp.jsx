@@ -1029,6 +1029,17 @@ export default function IdeApp() {
           </div>
 
           <div className="ide-agent-chat" ref={scrollRef}>
+            {/* Disclaimer obligatorio EU AI Act art. 50: informar al usuario
+                de que interactúa con una IA generativa y que las respuestas
+                pueden contener errores. */}
+            <div className="ai-disclaimer">
+              <strong>K-Bot es un asistente de IA generativa</strong>. Las respuestas
+              pueden contener errores, estar desactualizadas o ser inexactas.
+              No es consejo profesional, médico ni legal. No envíes datos
+              sensibles (contraseñas, datos médicos o bancarios) en tus consultas.
+              Los prompts se procesan a través de Hugging Face Inference.
+              Más info en <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.
+            </div>
             {messages.map(m => <Message key={m.id} m={m} />)}
             {busy && <div className="ide-typing"><span></span><span></span><span></span></div>}
           </div>

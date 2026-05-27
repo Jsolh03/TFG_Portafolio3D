@@ -73,6 +73,44 @@ export default function SocialApp() {
     }
   };
 
+  const deletePost = async (postId) => {
+    if (!window.confirm(t('social.confirmDeletePost'))) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Error');
+      }
+      setPosts(prev => prev.filter(p => p._id !== postId));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const deleteReply = async (postId, replyId) => {
+    if (!window.confirm(t('social.confirmDeleteReply'))) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}/replies/${replyId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Error');
+      }
+      setPosts(prev => prev.map(p =>
+        p._id === postId
+          ? { ...p, replies: (p.replies || []).filter(r => r._id !== replyId) }
+          : p
+      ));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const submitReply = async (postId) => {
     const text = replyDraft.trim();
     if (!text || submittingReply || !isAuthenticated) return;
@@ -160,6 +198,22 @@ export default function SocialApp() {
                 <div className="social-post-author">{post.authorName || post.authorId} <span className="social-post-handle">@{post.authorId}</span></div>
                 <div className="social-post-time">{timeAgo(post.createdAt)}</div>
               </div>
+              {post.authorId === user?.id && (
+                <button
+                  type="button"
+                  onClick={() => deletePost(post._id)}
+                  title={t('social.deletePost')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--muted-color, #888)',
+                    cursor: 'pointer',
+                    fontSize: '1.1rem',
+                    padding: '2px 6px',
+                    marginLeft: 'auto'
+                  }}
+                >🗑️</button>
+              )}
             </header>
             <div className="social-post-body">{post.text}</div>
 
@@ -168,8 +222,26 @@ export default function SocialApp() {
                 {post.replies.map(r => (
                   <div key={r._id} className="social-reply">
                     <div className="social-reply-avatar">{(r.authorName || r.authorId).slice(0, 1).toUpperCase()}</div>
-                    <div>
-                      <div className="social-reply-author">{r.authorName || r.authorId} <span className="social-reply-handle">@{r.authorId}</span> · <span className="social-reply-time">{timeAgo(r.createdAt)}</span></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="social-reply-author">
+                        {r.authorName || r.authorId} <span className="social-reply-handle">@{r.authorId}</span> · <span className="social-reply-time">{timeAgo(r.createdAt)}</span>
+                        {r.authorId === user?.id && (
+                          <button
+                            type="button"
+                            onClick={() => deleteReply(post._id, r._id)}
+                            title={t('social.deleteReply')}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--muted-color, #888)',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              padding: '0 4px',
+                              marginLeft: 6
+                            }}
+                          >🗑️</button>
+                        )}
+                      </div>
                       <div className="social-reply-body">{r.text}</div>
                     </div>
                   </div>

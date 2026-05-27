@@ -37,6 +37,9 @@ export default function Register({ onRegisterSuccess, onCancel }) {
   // no tiene auth en este flujo, no puede recuperarla luego: tiene que anotarla.
   const [createdTemporal, setCreatedTemporal] = useState(null);
   const [keyCopied, setKeyCopied] = useState(false);
+  // Consentimiento RGPD + edad. Sin marcar ambos no se puede crear.
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -529,6 +532,33 @@ export default function Register({ onRegisterSuccess, onCancel }) {
                 ))}
               </div>
             </div>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '12px 0 4px', fontSize: '0.82rem', lineHeight: 1.5, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={confirmedAge}
+                onChange={e => setConfirmedAge(e.target.checked)}
+                disabled={loading}
+                style={{ marginTop: 3 }}
+              />
+              <span>{t('account.confirmAge')}</span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '4px 0 8px', fontSize: '0.82rem', lineHeight: 1.5, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                disabled={loading}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                {t('account.acceptTermsPre')}{' '}
+                <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">{t('legal.privacyShort')}</a>
+                {' '}{t('common.and') || 'y'}{' '}
+                <a href="/legal/terms" target="_blank" rel="noopener noreferrer">{t('legal.termsShort')}</a>.
+              </span>
+            </label>
           </div>
         )}
 
@@ -545,7 +575,12 @@ export default function Register({ onRegisterSuccess, onCancel }) {
             {t('common.next')} →
           </button>
         ) : (
-          <button type="button" className="wizard-btn wizard-btn--primary" onClick={handleSubmit} disabled={loading}>
+          <button
+            type="button"
+            className="wizard-btn wizard-btn--primary"
+            onClick={handleSubmit}
+            disabled={loading || !acceptedTerms || !confirmedAge}
+          >
             {loading ? t('wizard.creating') : t('wizard.createAccount')}
           </button>
         )}

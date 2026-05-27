@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LANGUAGES } from '../../data/i18n';
 import PrivacyPanel from '../auth/PrivacyPanel';
 import CvKeyPanel from '../auth/CvKeyPanel';
+import AccountPanel from '../auth/AccountPanel';
 
 const BASE_TABS = [
   { id: 'theme',  icon: '🎨' },
@@ -17,6 +18,7 @@ const BASE_TABS = [
 const MY_ROOM_TAB = { id: 'myRoom', icon: '🏠' };
 const CV_KEY_TAB = { id: 'cvKey', icon: '🔑' };
 const PRIVACY_TAB = { id: 'privacy', icon: '🔒' };
+const ACCOUNT_TAB = { id: 'myAccount', icon: '👤' };
 
 export default function SettingsPanel({ open, onClose }) {
   const t = useT();
@@ -29,7 +31,7 @@ export default function SettingsPanel({ open, onClose }) {
   // y la cuenta es de tipo auth (las impersonaciones admin no editan rooms).
   const canEditOwnRoom = isAuthenticated && authUser && authUser.createdViaAuth;
   const TABS = isAuthenticated
-    ? [...BASE_TABS, ...(canEditOwnRoom ? [MY_ROOM_TAB] : []), CV_KEY_TAB, PRIVACY_TAB]
+    ? [...BASE_TABS, ...(canEditOwnRoom ? [MY_ROOM_TAB] : []), CV_KEY_TAB, PRIVACY_TAB, ACCOUNT_TAB]
     : BASE_TABS;
 
   const handleEditMyRoom = () => {
@@ -259,6 +261,12 @@ export default function SettingsPanel({ open, onClose }) {
             {tab === 'privacy' && isAuthenticated && (
               <div className="settings-section">
                 <PrivacyPanel />
+              </div>
+            )}
+
+            {tab === 'myAccount' && isAuthenticated && (
+              <div className="settings-section">
+                <AccountPanel />
               </div>
             )}
 

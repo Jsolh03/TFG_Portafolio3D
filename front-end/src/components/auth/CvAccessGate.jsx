@@ -129,8 +129,14 @@ export default function CvAccessGate({ targetUserId, onUnlock }) {
             disabled={busy}
             style={{ marginTop: 3 }}
           />
-          <span>{t('cvGate.consentLabel')}</span>
+          <span>
+            {t('cvGate.consentLabel')}{' '}
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">{t('legal.privacyShort')}</a>.
+          </span>
         </label>
+        <p style={{ margin: '0 0 12px', fontSize: '0.75rem', color: 'var(--muted-color, #888)', lineHeight: 1.5 }}>
+          📅 {t('cvGate.retentionNote')}
+        </p>
 
         {error && <div className="auth-error" style={{ marginTop: 10 }}>{error}</div>}
 
