@@ -135,6 +135,44 @@
   --glass-border: rgba(229,229,229,0.18);
 }
 
+/* TEMA MONO — overrides de botones PRIMARY.
+   El accent-color del tema mono es #e5e5e5 (casi blanco), así que el
+   gradient + color:white por defecto del primary se ve blanco-sobre-blanco
+   e ilegible. Forzamos un sólido oscuro con texto blanco. */
+[data-theme="mono"] .wizard-btn--primary,
+[data-theme="mono"] .auth-btn--primary,
+[data-theme="mono"] .dev-portal-btn,
+[data-theme="mono"] .lp-quick-btn,
+[data-theme="mono"] .kw-cta,
+[data-theme="mono"] .mail-submit,
+[data-theme="mono"] .social-publish-btn,
+[data-theme="mono"] .contact-cta {
+  background: #404040 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid #525252 !important;
+  text-shadow: none !important;
+}
+[data-theme="mono"] .wizard-btn--primary:hover:not(:disabled),
+[data-theme="mono"] .auth-btn--primary:hover:not(:disabled),
+[data-theme="mono"] .dev-portal-btn:hover:not(:disabled),
+[data-theme="mono"] .lp-quick-btn:hover:not(:disabled),
+[data-theme="mono"] .kw-cta:hover:not(:disabled),
+[data-theme="mono"] .mail-submit:hover:not(:disabled),
+[data-theme="mono"] .social-publish-btn:hover:not(:disabled),
+[data-theme="mono"] .contact-cta:hover:not(:disabled) {
+  background: #525252 !important;
+  border-color: #737373 !important;
+  filter: none !important;
+}
+[data-theme="mono"] .wizard-btn--primary:disabled,
+[data-theme="mono"] .auth-btn--primary:disabled,
+[data-theme="mono"] .dev-portal-btn:disabled {
+  background: #2e2e2e !important;
+  color: #909090 !important;
+  border-color: #404040 !important;
+}
+
 /* Slate (light): paleta papel slate-blue con texto siempre OSCURO sobre fondo CLARO */
 [data-theme="light"] {
   --bg-color: #e4e9f1;        /* slate-200 — fondo notable, no blanco puro */
@@ -1047,7 +1085,18 @@ canvas { outline: none; }
   filter: brightness(1.05);
   box-shadow: 0 14px 40px rgba(var(--accent-rgb), 0.28);
 }
-.dev-portal-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+/* dev-portal-btn es el primary del portal — azul oscuro con texto blanco
+   cuando está desactivado. */
+.dev-portal-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border: 1px solid #1e3a8a !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
 
 .dev-portal-btn--ghost {
   width: auto;
@@ -1599,7 +1648,34 @@ canvas { outline: none; }
   border-color: var(--accent-color);
   background: rgba(var(--accent-rgb), 0.08);
 }
-.wizard-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Estado disabled robusto. El opacity: 0.4 anterior dejaba el botón primary
+   blanco con texto blanco (texto white sobre gradient accent muy aclarado),
+   imposible de leer especialmente en tema claro. Ahora:
+   - .wizard-btn (ghost/secundario) → gris suave
+   - .wizard-btn--primary           → azul oscuro con texto blanco */
+.wizard-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  background: var(--card-bg-lighter) !important;
+  color: var(--muted-color) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+[data-theme="light"] .wizard-btn:disabled {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  border-color: #cbd5e1 !important;
+}
+.wizard-btn--primary:disabled {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border: 1px solid #1e3a8a !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
 .wizard-btn--primary {
   background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.95), rgba(var(--accent-rgb-light), 0.75));
   border-color: transparent;
@@ -2275,7 +2351,36 @@ canvas { outline: none; }
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(var(--accent-rgb), 0.3);
 }
-.auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Disabled robusto:
+   - .auth-btn / .auth-btn--ghost  → gris suave
+   - .auth-btn--primary            → azul oscuro con texto blanco */
+.auth-btn:disabled,
+.auth-btn--ghost:disabled {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  background: var(--card-bg-lighter) !important;
+  color: var(--muted-color) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+[data-theme="light"] .auth-btn:disabled,
+[data-theme="light"] .auth-btn--ghost:disabled {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  border-color: #cbd5e1 !important;
+}
+.auth-btn--primary:disabled {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border: 1px solid #1e3a8a !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+}
 .auth-switch {
   text-align: center;
   margin-top: 18px;
