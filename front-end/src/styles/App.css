@@ -2677,6 +2677,15 @@ canvas { outline: none; }
 }
 .contact-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(var(--accent-rgb), 0.3); }
 
+.contact-cta-group + .contact-cta-group { margin-top: 14px; }
+.contact-cta-group-title {
+  margin: 0 0 8px 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
 .contact-legal-text {
   color: var(--muted-color, #94a3b8);
   font-size: 0.82rem;

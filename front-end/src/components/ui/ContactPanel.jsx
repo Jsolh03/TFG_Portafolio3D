@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useT } from '../../context/LanguageContext';
 
-const CONTACT_EMAIL = 'khaledsolhelhajji@gmail.com';
-const MAILTO_URL = `mailto:${CONTACT_EMAIL}?subject=Contacto%20desde%20K-ROOM`;
-const GMAIL_COMPOSE = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_EMAIL}&su=Contacto%20desde%20K-ROOM`;
+const KHALED_EMAIL = 'khaledsolhelhajji@gmail.com';
+const LAURA_EMAIL  = 'laurajaraloro@gmail.com';
+
+const buildMailto = (email) =>
+  `mailto:${email}?subject=Contacto%20desde%20K-ROOM`;
+const buildGmail = (email) =>
+  `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=Contacto%20desde%20K-ROOM`;
 
 /* ContactPanel — modal con información de los desarrolladores, formas de
    contacto directo y aviso de copyright/licencia. Se abre desde el botón
@@ -17,11 +21,11 @@ const GMAIL_COMPOSE = `https://mail.google.com/mail/?view=cm&fs=1&to=${CONTACT_E
    correo configurado no hacía nada visible y daba la impresión de "no funciona". */
 export default function ContactPanel({ open, onClose }) {
   const t = useT();
-  const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(null);
 
   useEffect(() => {
     if (!open) return;
-    setCopied(false);
+    setCopiedEmail(null);
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -29,18 +33,50 @@ export default function ContactPanel({ open, onClose }) {
 
   if (!open) return null;
 
-  const copyEmail = async () => {
+  const copyEmail = async (email) => {
     try {
-      await navigator.clipboard?.writeText(CONTACT_EMAIL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      await navigator.clipboard?.writeText(email);
+      setCopiedEmail(email);
+      setTimeout(() => setCopiedEmail(null), 1800);
     } catch { /* clipboard bloqueado */ }
   };
 
-  const openMailto = () => {
-    // window.open con _self evita popup blockers y respeta el handler nativo
-    window.location.href = MAILTO_URL;
+  const openMailto = (email) => {
+    window.location.href = buildMailto(email);
   };
+
+  const renderCTAs = (email) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <button type="button" onClick={() => openMailto(email)} className="contact-cta">
+        ✉ {t('contact.emailMe')}
+      </button>
+      <a
+        href={buildGmail(email)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="contact-cta"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--glass-border, rgba(255,255,255,0.18))',
+          color: 'var(--text-color)'
+        }}
+      >
+        🌐 Gmail (web)
+      </a>
+      <button
+        type="button"
+        onClick={() => copyEmail(email)}
+        className="contact-cta"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--glass-border, rgba(255,255,255,0.18))',
+          color: 'var(--text-color)'
+        }}
+      >
+        {copiedEmail === email ? `✓ ${email}` : `📋 ${email}`}
+      </button>
+    </div>
+  );
 
   return (
     <div className="contact-overlay" onClick={onClose}>
@@ -56,11 +92,12 @@ export default function ContactPanel({ open, onClose }) {
             <div className="contact-dev">
               <strong>Khaled Solh El Hajji</strong>
               <span className="contact-dev-role">Full-Stack Developer</span>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="contact-link">{CONTACT_EMAIL}</a>
+              <a href={`mailto:${KHALED_EMAIL}`} className="contact-link">{KHALED_EMAIL}</a>
             </div>
             <div className="contact-dev">
               <strong>Laura Jara Loro</strong>
               <span className="contact-dev-role">Back-End Developer</span>
+              <a href={`mailto:${LAURA_EMAIL}`} className="contact-link">{LAURA_EMAIL}</a>
             </div>
           </div>
         </section>
@@ -69,35 +106,13 @@ export default function ContactPanel({ open, onClose }) {
           <h3 className="contact-section-title">{t('contact.directTitle')}</h3>
           <p className="contact-direct-text">{t('contact.directText')}</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button type="button" onClick={openMailto} className="contact-cta">
-              ✉ {t('contact.emailMe')}
-            </button>
-            <a
-              href={GMAIL_COMPOSE}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contact-cta"
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--glass-border, rgba(255,255,255,0.18))',
-                color: 'var(--text-color)'
-              }}
-            >
-              🌐 Gmail (web)
-            </a>
-            <button
-              type="button"
-              onClick={copyEmail}
-              className="contact-cta"
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--glass-border, rgba(255,255,255,0.18))',
-                color: 'var(--text-color)'
-              }}
-            >
-              {copied ? `✓ ${CONTACT_EMAIL}` : `📋 ${CONTACT_EMAIL}`}
-            </button>
+          <div className="contact-cta-group">
+            <h4 className="contact-cta-group-title">Khaled</h4>
+            {renderCTAs(KHALED_EMAIL)}
+          </div>
+          <div className="contact-cta-group">
+            <h4 className="contact-cta-group-title">Laura</h4>
+            {renderCTAs(LAURA_EMAIL)}
           </div>
         </section>
 
