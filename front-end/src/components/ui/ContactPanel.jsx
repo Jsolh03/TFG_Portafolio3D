@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useT } from '../../context/LanguageContext';
 
 const KHALED_EMAIL = 'khaledsolhelhajji@gmail.com';
-const LAURA_EMAIL  = 'laurajaraloro@gmail.com';
+const LAURA_EMAIL = 'laurajaraloro@gmail.com';
 
 const buildMailto = (email) =>
   `mailto:${email}?subject=Contacto%20desde%20K-ROOM`;
@@ -61,7 +61,7 @@ export default function ContactPanel({ open, onClose }) {
           color: 'var(--text-color)'
         }}
       >
-        🌐 Gmail (web)
+        🌐 Abrir Gmail en web.
       </a>
       <button
         type="button"
